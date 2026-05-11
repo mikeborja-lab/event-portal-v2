@@ -491,7 +491,19 @@
         const savedRole = localStorage.getItem('msval27_role');
         if (savedRole === "undefined" || !savedRole) localStorage.clear();
 
-        // 1. Establish the Real-Time Settings Listener (Updates ALL devices instantly)
+        // 1. Fetch the data FIRST (Criteria, Candidates, Users)
+        // This ensures the candidates list is full BEFORE we try to draw the screen.
+        const [criteriaSnap, candSnap, usersSnap] = await Promise.all([
+          getDocs(collection(db, "Criteria")),
+          getDocs(collection(db, "Candidates")),
+          getDocs(collection(db, "Users"))
+        ]);
+
+        criteriaSnap.forEach(doc => { window.criteria.push({ id: doc.id, ...doc.data() }); });
+        candSnap.forEach(doc => { window.candidates.push({ id: doc.id, ...doc.data() }); });
+        usersSnap.forEach(doc => { window.users.push({ id: doc.id, ...doc.data() }); });
+
+        // 2. Establish the Real-Time Settings Listener AFTER base data is loaded
         onSnapshot(collection(db, "Settings"), (snapshot) => {
             snapshot.forEach(doc => { window.settings[doc.id] = doc.data().value; });
 
@@ -504,20 +516,11 @@
             window.applyTheme(window.settings['theme_color'] || 'red');
             document.title = (window.settings['app_title'] || "Event Portal") + " - Secure Access";
             
-            // If the admin toggles "Public Voting" ON/OFF, immediately update the home page
-            if(document.getElementById('carousel-track')) window.renderHomeGallery();
+            // Re-render the gallery in case the Admin toggles "Public Voting" ON/OFF
+            if(document.getElementById('carousel-track') && window.candidates.length > 0) {
+                window.renderHomeGallery();
+            }
         });
-
-        // 2. Fetch the rest of the data (Criteria, Candidates, Users)
-        const [criteriaSnap, candSnap, usersSnap] = await Promise.all([
-          getDocs(collection(db, "Criteria")),
-          getDocs(collection(db, "Candidates")),
-          getDocs(collection(db, "Users"))
-        ]);
-
-        criteriaSnap.forEach(doc => { window.criteria.push({ id: doc.id, ...doc.data() }); });
-        candSnap.forEach(doc => { window.candidates.push({ id: doc.id, ...doc.data() }); });
-        usersSnap.forEach(doc => { window.users.push({ id: doc.id, ...doc.data() }); });
 
         if(document.getElementById('status-text')) document.getElementById('status-text').classList.add('hidden');
 
@@ -530,9 +533,12 @@
         const loader = document.getElementById('loader');
         if (loader) loader.classList.add('hidden');
         
-        window.renderTabs(); window.renderCandidates();
+        // 3. Render ALL UI elements now that data is loaded
+        window.renderHomeGallery(); 
+        window.renderTabs(); 
+        window.renderCandidates();
 
-        // 3. Handle Auto-Login Routing
+        // 4. Handle Auto-Login Routing
         if (savedName && savedRole && savedRole !== "undefined") {
           window.activeUser = { name: savedName, role: savedRole };
           window.updateNavForRole();
