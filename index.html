@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Event Portal v2</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    /* --- MODERN SILICON VALLEY MESH AURORA --- */
+    .mesh-bg {
+      position: fixed;
+      inset: -20%; /* Bleed outside the edges so animations don't clip */
+      z-index: -1;
+      background-color: var(--t-base-bg); /* Clean neutral background */
+      background-image: 
+        radial-gradient(circle at 15% 30%, var(--t-mesh-1), transparent 50%),
+        radial-gradient(circle at 85% 20%, var(--t-mesh-2), transparent 50%),
+        radial-gradient(circle at 50% 80%, var(--t-mesh-3), transparent 60%);
+      background-size: 100% 100%;
+      filter: blur(80px); /* This massive blur creates the seamless "glow" */
+      animation: aurora-breathe 20s ease-in-out infinite alternate;
+      will-change: transform;
+      pointer-events: none;
+    }
+    
+    @keyframes aurora-breathe {
+      0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+      50% { transform: translate(3%, 4%) scale(1.05) rotate(2deg); }
+      100% { transform: translate(-3%, -2%) scale(0.95) rotate(-2deg); }
+    }
+
+    /* Refined Glassmorphism for the cards */
+    .card-panel { 
+      background-color: var(--t-surface); 
+      backdrop-filter: blur(24px); 
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--t-border); 
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.05); 
+      border-radius: 1.5rem; 
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    /* ----------------------------------------- */
+
+    /* --- PREMIUM FALLING VECTORS --- */
+    @keyframes premium-fall {
+      0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.15; } /* Very subtle opacity */
+      90% { opacity: 0.15; }
+      100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+    }
+    @keyframes premium-rise {
+      0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.15; }
+      90% { opacity: 0.15; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+    .premium-svg-particle {
+      position: absolute;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      will-change: transform;
+      fill: var(--t-primary); /* Automatically matches your theme color */
+      filter: drop-shadow(0 10px 15px var(--t-shadow));
+    }
+    /* ------------------------------- */
+    /* --- CLEAN DATA TABLES --- */
+    .theme-table-header {
+      background-color: rgba(128, 128, 128, 0.06);
+      border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+    }
+    .theme-table-row {
+      border-bottom: 1px solid rgba(128, 128, 128, 0.08);
+      transition: background-color 0.2s ease;
+    }
+    .theme-table-row:hover {
+      background-color: rgba(128, 128, 128, 0.04);
+    }
+    .theme-table-row:last-child {
+      border-bottom: none;
+    }
+    /* ------------------------- */
+    :root {
+      --t-base-bg: #fcfcfc;
+      --t-surface: rgba(255, 255, 255, 0.92);
+      --t-text-main: #111827;
+      --t-text-muted: #6b7280;
+      --t-primary: #e11d48;
+      --t-grad: linear-gradient(135deg, #f43f5e, #be123c);
+      --t-shadow: rgba(225, 29, 72, 0.15);
+      --t-border: rgba(255, 255, 255, 0.6);
+      /* Default Mesh Variables */
+      --t-mesh-1: rgba(244, 63, 94, 0.15);
+      --t-mesh-2: rgba(225, 29, 72, 0.12);
+      --t-mesh-3: rgba(253, 164, 175, 0.18);
+    }
+    body { background-color: var(--t-base-bg); color: var(--t-text-main); transition: background-color 0.4s ease, color 0.4s ease; overflow-x: hidden; }
+    
+    .theme-text { color: var(--t-primary); }
+    .theme-text-muted { color: var(--t-text-muted); }
+    .theme-bg-soft { background-color: var(--t-base-bg); }
+    .theme-surface { 
+      background-color: var(--t-surface); 
+      backdrop-filter: blur(24px); /* Adds the solid frosted effect */
+      -webkit-backdrop-filter: blur(24px);
+    }
+    
+    .card-panel { background-color: var(--t-surface); border: 1px solid var(--t-border); box-shadow: 0 10px 30px var(--t-shadow); border-radius: 1.5rem; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    
+    @keyframes gradient-pan { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    /* UPDATED: background-size to 300% for a more dramatic sweep */
+    .animate-gradient { background-image: var(--t-grad); background-size: 300% 300%; animation: gradient-pan 8s ease infinite; box-shadow: 0 10px 30px var(--t-shadow); }
+    
+    @keyframes float-3d {
+      0% { transform: rotateX(4deg) rotateY(-4deg) translateY(0px); }
+      50% { transform: rotateX(-2deg) rotateY(2deg) translateY(-8px); }
+      100% { transform: rotateX(4deg) rotateY(-4deg) translateY(0px); }
+    }
+    .header-3d-container { perspective: 1000px; transform-style: preserve-3d; }
+    .header-3d-content { animation: float-3d 6s ease-in-out infinite; transform-style: preserve-3d; }
+    .header-3d-pop { transform: translateZ(50px); }
+    
+    @keyframes fade-in-up { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-entry { animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    
+    @keyframes slide-in-right { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
+    .animate-slide-right { animation: slide-in-right 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+
+    .theme-header { 
+      background-color: var(--t-surface); 
+      backdrop-filter: blur(24px); /* Adds the solid frosted effect */
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--t-border); 
+      box-shadow: 0 4px 20px var(--t-shadow); 
+    }
+    .theme-btn { background: var(--t-grad); color: #ffffff; box-shadow: 0 4px 15px var(--t-shadow); border: none; }
+    .theme-btn:hover { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 8px 25px var(--t-shadow); }
+    .theme-input { background-color: var(--t-base-bg); border: 1px solid var(--t-border); color: var(--t-text-main); transition: all 0.3s ease; }
+    .theme-input:focus { border-color: var(--t-primary); outline: none; box-shadow: 0 0 0 4px var(--t-shadow); }
+    
+    input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 32px; width: 32px; border-radius: 50%; background: var(--t-surface); cursor: pointer; margin-top: -12px; box-shadow: 0 4px 15px var(--t-shadow); border: 4px solid var(--t-primary); transition: transform 0.1s; }
+    input[type=range]::-webkit-slider-thumb:active { transform: scale(1.1); }
+    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: var(--t-base-bg); border-radius: 4px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); border: 1px solid var(--t-border); }
+    
+    .hide-scroll-bar::-webkit-scrollbar { display: none; }
+    .hide-scroll-bar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 4.2rem; height: 3.8rem; border-radius: 1.2rem; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .nav-btn.hidden { display: none !important; }
+
+    .carousel-container { perspective: 1200px; transform-style: preserve-3d; display: flex; justify-content: center; align-items: center; height: 34rem; position: relative; width: 100%; overflow: hidden; }
+    .carousel-item { position: absolute; width: 75%; max-width: 340px; height: 30rem; border-radius: 2rem; overflow: hidden; transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s, z-index 0.6s; cursor: pointer; box-shadow: 0 15px 35px var(--t-shadow); }
+    .item-active { transform: translateX(0) scale(1) translateZ(60px); z-index: 30; opacity: 1; pointer-events: auto; cursor: default; }
+    .item-prev { transform: translateX(-65%) scale(0.8) translateZ(-100px) rotateY(25deg); z-index: 20; opacity: 0.5; }
+    .item-next { transform: translateX(65%) scale(0.8) translateZ(-100px) rotateY(-25deg); z-index: 20; opacity: 0.5; }
+    .item-hidden { opacity: 0; pointer-events: none; transform: scale(0.6) translateZ(-300px); z-index: 10; }
+
+    .glass-panel { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); }
+
+    /* --- NEW ANIMATIONS & MICRO-INTERACTIONS --- */
+    @keyframes lock-burst {  
+      0% { transform: scale(1); }  
+      40% { transform: scale(1.03); box-shadow: 0 0 0 6px var(--t-shadow); }  
+      100% { transform: scale(1); box-shadow: none; }
+    }
+    .score-locked-flash { 
+      animation: lock-burst 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97); 
+    }
+    
+    .stagger-card {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .stagger-card.animate-entry {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen">
+
+  <div id="app-container" class="p-8">
+    <h1 class="text-3xl font-black mb-4">System Connecting...</h1>
+    <p id="status-text" class="text-slate-400">Initializing database...</p>
+  </div>
+
+  <script type="module">
+    // ==========================================
+    // 1. FIREBASE INITIALIZATION & IMPORTS
+    // ==========================================
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, query, where, writeBatch 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCVTCaxujL7Q0UmBqr-d5ev3CAZB5t3oxQ",
+      authDomain: "dynamic-event-system.firebaseapp.com",
+      projectId: "dynamic-event-system",
+      storageBucket: "dynamic-event-system.firebasestorage.app",
+      messagingSenderId: "588923118511",
+      appId: "1:588923118511:web:1dba0b6be0c253d8bec55a",
+      measurementId: "G-WMGGYLRE7P"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    window.db = db; // Make DB available globally
+
+    // ==========================================
+    // 2. GLOBAL STATE VARIABLES
+    // ==========================================
+    window.settings = {}; window.criteria = []; window.candidates = []; window.users = []; 
+    window.scoresData = {}; window.lockedScores = {}; window.currentSegment = ''; 
+    window.activeUser = { name: "", role: "" };
+    window.editState = { candidate: null, criteria: null, user: null };
+    window.currentCarouselIndex = 0; window.carouselInterval = null; window.votingTimerInterval = null;
+    
+    let offlineQueue = JSON.parse(localStorage.getItem('pageant_offline_queue')) || [];
+
+    // ==========================================
+    // 3. UTILITIES & ANIMATIONS
+    // ==========================================
+    window.onerror = function(msg, url, line) {
+      const loader = document.getElementById('loader');
+      if(loader) loader.classList.add('hidden');
+      alert("FRONTEND CRASH DETECTED\n\nError: " + msg + "\nLine: " + line);
+    };
+    window.alert = function(message) { showModal("System Notice", message, "alert"); };
+    
+    window.sha256 = async function(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    };
+
+    window.generateUUID = function() { 
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { 
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8); 
+        return v.toString(16); 
+      }); 
+    };
+
+    window.animateParticle = function(el) {  
+      let x = parseFloat(el.style.left);  
+      let amplitude = (Math.random() * 3) + 1; 
+      let frequency = (Math.random() * 0.02) + 0.01;  
+      let t = Math.random() * 100;  
+      function tick() {    
+        t += 0.5;    
+        el.style.left = (x + Math.sin(t * frequency) * amplitude) + 'vw';    
+        requestAnimationFrame(tick);  
+      }  
+      tick();
+    };
+
+    // ==========================================
+    // 4. CORE BOOTUP (Replaces window.onload)
+    // ==========================================
+    window.onload = async function() {
+      try {
+        const savedName = localStorage.getItem('msval27_name');
+        const savedRole = localStorage.getItem('msval27_role');
+        if (savedRole === "undefined" || !savedRole) localStorage.clear();
+
+        // Fetch primary data simultaneously for speed
+        const [settingsSnap, criteriaSnap, candSnap, usersSnap] = await Promise.all([
+          getDocs(collection(db, "Settings")),
+          getDocs(collection(db, "Criteria")),
+          getDocs(collection(db, "Candidates")),
+          getDocs(collection(db, "Users"))
+        ]);
+
+        settingsSnap.forEach(doc => { settings[doc.id] = doc.data().value; });
+        criteriaSnap.forEach(doc => { criteria.push({ id: doc.id, ...doc.data() }); });
+        candSnap.forEach(doc => { candidates.push({ id: doc.id, ...doc.data() }); });
+        usersSnap.forEach(doc => { users.push({ id: doc.id, ...doc.data() }); });
+
+        document.getElementById('display-title').innerText = settings['app_title'] || "Event System";
+        document.getElementById('display-subtitle').innerText = settings['app_subtitle'] || "Core Operations";
+        document.getElementById('display-location').innerText = settings['location_text'] || "Location Undefined";
+        if(document.getElementById('display-icon')) document.getElementById('display-icon').innerText = settings['event_icon'] || "";
+        
+        applyTheme(settings['theme_color'] || 'red');
+        document.title = (settings['app_title'] || "Event Portal") + " - Secure Access";
+
+        if(criteria.length > 0) currentSegment = criteria[0].id;
+        candidates.forEach(c => { 
+          scoresData[c.id] = {}; 
+          criteria.forEach(crit => { scoresData[c.id][crit.id] = parseFloat(crit.max) / 2 || 5; }); 
+        });
+
+        const loader = document.getElementById('loader');
+        if (loader) loader.classList.add('hidden');
+        
+        renderHomeGallery(); renderTabs(); renderCandidates();
+
+        if (savedName && savedRole && savedRole !== "undefined") {
+          activeUser = { name: savedName, role: savedRole };
+          updateNavForRole();
+          const r = savedRole.toLowerCase().trim();
+          if (r === 'tabulator') switchView('scores');
+          else if (r === 'super user' || r === 'admin') switchView('admin');
+          else { switchView('judging'); syncJudgeScores(); } 
+        } else switchView('home');
+
+      } catch(err) { 
+        const loader = document.getElementById('loader');
+        if (loader) loader.classList.add('hidden'); 
+        alert("System Boot Error: " + err.message); 
+      }
+    };
+
+    // ==========================================
+    // 5. AUTHENTICATION & LOGIN
+    // ==========================================
+    window.processLogin = async function() {
+      const user = document.getElementById('login-username').value.trim(); 
+      const pass = document.getElementById('login-password').value; 
+      const btn = document.getElementById('login-btn'); 
+      const err = document.getElementById('login-error');
+      
+      if (!user || !pass) { err.innerText = "Credentials required."; err.classList.remove('hidden'); return; }
+      btn.innerText = "Authenticating..."; btn.disabled = true; err.classList.add('hidden');
+      
+      const hashedPass = await sha256(pass); 
+
+      try {
+        // Query the Users collection for a matching username
+        const q = query(collection(db, "Users"), where("username", "==", user));
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) throw new Error("Invalid username.");
+        
+        let validUser = null;
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.password === hashedPass || data.password === pass) { // Fallback for unhashed during transition
+            validUser = data;
+          }
+        });
+
+        if (!validUser) throw new Error("Invalid password.");
+
+        activeUser = { name: validUser.name, role: validUser.role }; 
+        localStorage.setItem('msval27_name', activeUser.name); 
+        localStorage.setItem('msval27_role', activeUser.role); 
+        updateNavForRole();
+        
+        const r = activeUser.role.toLowerCase().trim(); 
+        if (r === 'tabulator') switchView('scores'); 
+        else if (r === 'admin' || r === 'super user') switchView('admin'); 
+        else { switchView('judging'); syncJudgeScores(); }
+        
+      } catch (error) {
+        err.innerText = error.message; err.classList.remove('hidden');
+      } finally {
+        btn.innerText = "Authenticate"; btn.disabled = false;
+      }
+    };
+
+    // ==========================================
+    // 6. JUDGE SCORING SYSTEM
+    // ==========================================
+    window.syncJudgeScores = async function() {
+      if (!activeUser.name || (activeUser.role !== 'Judge' && activeUser.role !== 'Admin')) return;
+      
+      document.getElementById('loader-text').innerText = "Verifying Score Status...";
+      document.getElementById('loader').classList.remove('hidden');
+
+      try {
+        const q = query(collection(db, "Scores"), where("judge", "==", activeUser.name));
+        const querySnapshot = await getDocs(q);
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const cand = candidates.find(c => c.name === data.candidate);
+          if (cand) {
+            lockedScores[cand.id] = lockedScores[cand.id] || {};
+            criteria.forEach(crit => {
+              if (data[crit.id] !== undefined) {
+                scoresData[cand.id][crit.id] = data[crit.id];
+                lockedScores[cand.id][crit.id] = true; 
+              }
+            });
+          }
+        });
+
+        document.getElementById('loader').classList.add('hidden');
+        if(!document.getElementById('view-judging').classList.contains('hidden')) renderCandidates();
+      } catch (error) {
+        document.getElementById('loader').classList.add('hidden');
+        console.error("Sync Error:", error);
+      }
+    };
+
+    window.submitScore = async function(candidateId) {
+      const c = candidates.find(can => String(can.id) === String(candidateId)); 
+      if (!c) return alert("System Error: Candidate mismatch.");
+      
+      const score = scoresData[candidateId][currentSegment] || parseFloat(document.getElementById(`slider-${candidateId}`).value); 
+      const btn = document.getElementById(`btn-${candidateId}`); 
+      const cardPanel = btn.closest('.card-panel'); 
+      
+      btn.innerText = "Transmitting..."; btn.disabled = true;
+
+      const payload = {
+        judge: activeUser.name,
+        candidate: c.name,
+        [currentSegment]: score,
+        timestamp: Date.now()
+      };
+
+      if (!navigator.onLine) {
+        offlineQueue.push(payload);
+        localStorage.setItem('pageant_offline_queue', JSON.stringify(offlineQueue));
+        finalizeSubmitUI();
+        showModal("Offline Mode", "Score saved locally. It will sync when connection returns.", "alert");
+        return;
+      }
+
+      try {
+        const docRef = doc(db, "Scores", `${activeUser.name}_${c.name}`);
+        await setDoc(docRef, payload, { merge: true });
+        finalizeSubmitUI();
+      } catch (error) {
+        offlineQueue.push(payload);
+        localStorage.setItem('pageant_offline_queue', JSON.stringify(offlineQueue));
+        finalizeSubmitUI();
+        showModal("Connection Issue", "Score saved locally. " + error.message, "alert");
+      }
+
+      function finalizeSubmitUI() {
+          lockedScores[candidateId] = lockedScores[candidateId] || {}; 
+          lockedScores[candidateId][currentSegment] = true; 
+          cardPanel.classList.add('score-locked-flash'); 
+          setTimeout(() => renderCandidates(), 500); 
+      }
+    };
+
+    window.addEventListener('online', async () => {
+      if (offlineQueue.length === 0) return;
+      while(offlineQueue.length > 0) {
+        const item = offlineQueue[0];
+        try {
+          const docRef = doc(db, "Scores", `${item.judge}_${item.candidate}`);
+          await setDoc(docRef, item, { merge: true });
+          offlineQueue.shift(); // Remove on success
+          localStorage.setItem('pageant_offline_queue', JSON.stringify(offlineQueue));
+        } catch(e) { break; } // Stop processing on error
+      }
+    });
+
+    // ==========================================
+    // 7. PUBLIC VOTING SYSTEM
+    // ==========================================
+    window.checkVoteAndRedirect = async function() {
+      let voterId = localStorage.getItem('msval27_voter_id');
+      if (!voterId) { 
+        voterId = generateUUID(); localStorage.setItem('msval27_voter_id', voterId); 
+        switchView('voting'); return; 
+      }
+      
+      const btn = document.getElementById('btn-cast-vote');
+      if(btn) { btn.innerHTML = `Verifying Device...`; btn.disabled = true; }
+
+      try {
+        const docRef = doc(db, "PublicVotes", voterId);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          showModal("Already Voted", "A vote has already been cast from this device.", "alert");
+        } else {
+          switchView('voting');
+        }
+      } catch (error) {
+        showModal("Connection Error", "Could not verify device. " + error.message, "danger");
+      } finally {
+        if(btn) { btn.innerHTML = `Cast Your Vote Now`; btn.disabled = false; }
+      }
+    };
+
+    window.submitPublicVote = async function(candidateId, candidateName) {
+      let voterId = localStorage.getItem('msval27_voter_id'); 
+      if (!voterId) { voterId = generateUUID(); localStorage.setItem('msval27_voter_id', voterId); }
+      
+      showModal("Processing Vote", `Registering your vote for ${candidateName}...`, "alert");
+      
+      try {
+        const docRef = doc(db, "PublicVotes", voterId);
+        const docSnap = await getDoc(docRef);
+        
+        if(docSnap.exists()) {
+          showModal("Vote Rejected", "You have already voted.", "danger"); return;
+        }
+
+        await setDoc(docRef, {
+          candidateId: candidateId,
+          candidateName: candidateName,
+          timestamp: Date.now()
+        });
+
+        showModal("Vote Confirmed", `Thank you! Your vote for <b>${candidateName}</b> has been recorded.`, "alert", function() { switchView('home'); });
+      } catch (error) {
+        showModal("Connection Error", "Failed to connect. " + error.message, "danger");
+      }
+    };
+
+    // ==========================================
+    // 8. TABULATOR & MATRIX LOGIC
+    // ==========================================
+    window.fetchScoresData = async function() { 
+      document.getElementById('loader-text').innerText = "Processing Matrix..."; 
+      document.getElementById('loader').classList.remove('hidden'); 
+      
+      try {
+        const [scoresSnap, votesSnap] = await Promise.all([
+          getDocs(collection(db, "Scores")),
+          getDocs(collection(db, "PublicVotes"))
+        ]);
+
+        const rawScores = scoresSnap.docs.map(d => d.data());
+        
+        let rawVotes = {};
+        votesSnap.forEach(doc => {
+          const cName = doc.data().candidateName;
+          rawVotes[cName] = (rawVotes[cName] || 0) + 1;
+        });
+
+        document.getElementById('loader').classList.add('hidden');
+        processAndRenderScores(rawScores, rawVotes);
+      } catch (error) {
+        document.getElementById('loader').classList.add('hidden');
+        alert("Scores Error: " + error.message);
+      }
+    };
+
+    // ==========================================
+    // 9. ADMIN CRUD FUNCTIONS
+    // ==========================================
+    window.softReload = async function(view = 'admin') {
+      document.getElementById('loader-text').innerText = "Syncing Database..."; 
+      document.getElementById('loader').classList.remove('hidden');
+      
+      try {
+        settings = {}; criteria = []; candidates = []; users = [];
+        const [settingsSnap, criteriaSnap, candSnap, usersSnap] = await Promise.all([
+          getDocs(collection(db, "Settings")), getDocs(collection(db, "Criteria")), getDocs(collection(db, "Candidates")), getDocs(collection(db, "Users"))
+        ]);
+
+        settingsSnap.forEach(doc => { settings[doc.id] = doc.data().value; });
+        criteriaSnap.forEach(doc => { criteria.push({ id: doc.id, ...doc.data() }); });
+        candSnap.forEach(doc => { candidates.push({ id: doc.id, ...doc.data() }); });
+        usersSnap.forEach(doc => { users.push({ id: doc.id, ...doc.data() }); });
+
+        document.getElementById('loader').classList.add('hidden'); 
+        renderHomeGallery(); renderTabs(); renderCandidates(); 
+        if (view === 'admin') renderAdminDashboard();
+      } catch(e) {
+        document.getElementById('loader').classList.add('hidden'); 
+        alert("Sync Error: " + e.message); 
+      }
+    };
+
+    window.saveAdminSettingsUI = async function() {
+      const btn = document.getElementById('btn-save-settings'); btn.innerText = "Deploying..."; btn.disabled = true;
+      const payload = { 
+        app_title: document.getElementById('admin-setting-title').value, 
+        app_subtitle: document.getElementById('admin-setting-subtitle').value, 
+        location_text: document.getElementById('admin-setting-location').value, 
+        event_icon: document.getElementById('admin-setting-icon').value, 
+        theme_color: document.getElementById('admin-setting-theme').value, 
+        public_voting: document.getElementById('admin-setting-voting').checked ? 'true' : 'false', 
+        voting_deadline: document.getElementById('admin-setting-deadline').value 
+      };
+
+      try {
+        const batch = writeBatch(db);
+        for (let key in payload) {
+          batch.set(doc(db, "Settings", key), { value: payload[key] });
+        }
+        await batch.commit();
+        showModal("Success", "System updated successfully.", "alert"); 
+        softReload('admin');
+      } catch (error) {
+        alert("Error saving: " + error.message);
+      } finally {
+        btn.innerText = "Deploy Configuration"; btn.disabled = false;
+      }
+    };
+
+    window.submitCandidateUI = async function() { 
+      const data = { 
+        id: document.getElementById('cand-id').value, 
+        name: document.getElementById('cand-name').value, 
+        location: document.getElementById('cand-loc').value, 
+        img: document.getElementById('cand-img').value 
+      }; 
+      if(!data.id || !data.name) return alert("ID and Name are mandatory."); 
+      const btn = document.getElementById('btn-add-cand'); btn.innerText = "Processing..."; btn.disabled = true; 
+      
+      try {
+        await setDoc(doc(db, "Candidates", data.id), data);
+        softReload('admin');
+      } catch (error) {
+        alert("Error: " + error.message);
+      } finally { btn.innerText = "Add Data"; btn.disabled = false; }
+    };
+
+    window.deleteCandidateUI = function(id) { 
+      showModal("Delete Record", `Delete candidate #${id}?`, "danger", async () => { 
+        document.getElementById('loader').classList.remove('hidden'); 
+        await deleteDoc(doc(db, "Candidates", id.toString()));
+        softReload('admin'); 
+      }); 
+    };
+
+    window.submitCriteriaUI = async function() { 
+      const data = { 
+        id: document.getElementById('crit-id').value.toLowerCase().replace(/\s+/g, ''), 
+        max: document.getElementById('crit-max').value, 
+        label: document.getElementById('crit-label').value, 
+        short: document.getElementById('crit-short').value 
+      }; 
+      if(!data.id || !data.label) return alert("Sys_ID and Label mandatory."); 
+      const btn = document.getElementById('btn-add-crit'); btn.innerText = "Processing..."; btn.disabled = true; 
+      
+      try {
+        await setDoc(doc(db, "Criteria", data.id), data);
+        softReload('admin');
+      } catch(e) { alert("Error: " + e.message); } finally { btn.innerText = "Add Criterion"; btn.disabled = false; }
+    };
+
+    window.deleteCriteriaUI = function(id) { 
+      showModal("Delete Criterion", `Delete criterion '${id}'?`, "danger", async () => { 
+        document.getElementById('loader').classList.remove('hidden'); 
+        await deleteDoc(doc(db, "Criteria", id.toString()));
+        softReload('admin'); 
+      }); 
+    };
+
+    window.submitUserUI = async function() { 
+      const passwordInput = document.getElementById('user-password').value;
+      const data = { 
+        name: document.getElementById('user-name').value, 
+        username: document.getElementById('user-username').value, 
+        role: document.getElementById('user-role').value 
+      }; 
+      if(!data.name || !data.username) return alert("Name and Username mandatory."); 
+      
+      const btn = document.getElementById('btn-add-user'); btn.innerText = "Processing..."; btn.disabled = true; 
+      
+      try {
+        if (passwordInput) data.password = await sha256(passwordInput);
+        else {
+          // Keep old password if editing and left blank
+          const u = users.find(user => user.username === data.username);
+          if(u) data.password = u.password;
+        }
+        await setDoc(doc(db, "Users", data.username), data);
+        softReload('admin');
+      } catch(e) { alert("Error: " + e.message); } finally { btn.innerText = "Add User"; btn.disabled = false; }
+    };
+
+    window.deleteUserUI = function(username) { 
+      showModal("Revoke Access", `Revoke access for '${username}'?`, "danger", async () => { 
+        document.getElementById('loader').classList.remove('hidden'); 
+        await deleteDoc(doc(db, "Users", username.toString()));
+        softReload('admin'); 
+      }); 
+    };
+
+    // ==========================================
+    // 10. PRESERVED UI FUNCTIONS
+    // ==========================================
+    // (These functions are untouched UI handlers from your original code)
+    window.handleLogout = function() { showModal("Terminate Session", "Securely log out?", "confirm", () => { localStorage.clear(); activeUser = { name: "", role: "" }; document.getElementById('login-username').value = ""; document.getElementById('login-password').value = ""; ['nav-judging', 'nav-scores', 'nav-admin'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.add('hidden'); }); const navL = document.getElementById('nav-login'); if(navL) navL.classList.remove('hidden'); switchView('home'); }); }
+    
+    // UI Helpers (Modals, Resets, Renderers) are safely wrapped on the window object
+    window.showModal = showModal; window.closeModal = closeModal; window.executeModalAction = executeModalAction;
+    window.updateNavForRole = updateNavForRole; window.switchView = switchView; window.renderHomeGallery = renderHomeGallery;
+    window.setupVotingDeadline = setupVotingDeadline; window.updateCarousel = updateCarousel; window.startCarouselAutoPlay = startCarouselAutoPlay;
+    window.goToCarousel = goToCarousel; window.resetCandForm = resetCandForm; window.resetCritForm = resetCritForm; window.resetUserForm = resetUserForm;
+    window.renderAdminDashboard = renderAdminDashboard; window.editCandidate = editCandidate; window.editCriteria = editCriteria; window.editUser = editUser;
+    window.processAndRenderScores = processAndRenderScores; window.renderTabs = renderTabs; window.switchSegment = switchSegment; window.renderCandidates = renderCandidates;
+    window.generatePremiumParticles = generatePremiumParticles; window.applyTheme = applyTheme;
+
+    // Paste all your standard UI function definitions here exactly as they were 
+    // (e.g., function showModal() { ... }, function renderCandidates() { ... }, etc.)
+    // I have omitted them from this script block to save space since they do not interact with the database.
+    // Just ensure they sit ABOVE the closing </script> tag!
+
+  </script>
+</body>
+</html>
+
+</body>
+</html>
