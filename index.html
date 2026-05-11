@@ -149,24 +149,304 @@
     .stagger-card.animate-entry { opacity: 1; transform: translateY(0); }
   </style>
 </head>
-<body class="bg-slate-900 text-white min-h-screen">
-
+<body class="pb-28 font-sans min-h-screen relative">
+  
   <div class="mesh-bg"></div>
-  <div id="premium-particles" class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden"></div>
+  
+  <div id="premium-particles" class="fixed inset-0 z-0 pointer-events-none overflow-hidden select-none"></div>
 
-  <div id="loader" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
-      <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center">
-          <svg class="animate-spin h-10 w-10 text-emerald-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          <span id="loader-text" class="text-sm font-black text-slate-800 tracking-widest uppercase">Connecting...</span>
+  <div id="custom-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity opacity-0">
+    <div id="custom-modal-content" class="card-panel w-11/12 max-w-sm overflow-hidden transform scale-95 transition-all duration-300">
+      <div class="px-6 py-5 border-b border-black/5 flex items-center gap-3">
+        <span id="modal-icon" class="text-2xl">🔔</span>
+        <h3 id="modal-title" class="text-lg font-black tracking-wide">Notification</h3>
       </div>
+      <div class="p-6"><p id="modal-message" class="theme-text-muted font-medium leading-relaxed"></p></div>
+      <div id="modal-actions" class="px-6 py-4 theme-bg-soft flex justify-end gap-3 border-t border-black/5"></div>
+    </div>
+  </div>
+  
+  <div id="loader" class="fixed inset-0 z-[100] theme-bg-soft flex flex-col justify-center items-center">
+    <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 theme-text mb-4" style="border-color: var(--t-primary); border-left-color: transparent; border-right-color: transparent;"></div>
+    <p class="theme-text-muted font-black tracking-widest uppercase text-sm animate-pulse" id="loader-text">Loading System...</p>
   </div>
 
-  <div id="app-container" class="p-8">
-    <h1 class="text-3xl font-black mb-4" id="display-title">System Connecting...</h1>
-    <p id="status-text" class="text-slate-400">Initializing database...</p>
+  <div id="view-home" class="hidden">    
+    <header class="header-3d-container relative overflow-visible py-16 text-center mb-6 bg-black rounded-b-[3rem] border-b border-black/10 shadow-[0_20px_40px_rgba(0,0,0,0.2)]">
+      <div class="absolute inset-0 animate-gradient opacity-90 rounded-b-[3rem]"></div>
+      <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 mix-blend-overlay rounded-b-[3rem]"></div>
+      <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-white/20 blur-[60px] rounded-full pointer-events-none"></div>
+      
+      <div class="header-3d-content relative z-10 flex flex-col items-center px-6">
+        <div id="display-icon" class="header-3d-pop text-7xl mb-5 drop-shadow-[0_15px_25px_rgba(0,0,0,0.4)]">👑</div>
+        <h1 id="display-title" class="header-3d-pop text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 tracking-tight leading-none mb-3 drop-shadow-xl">Loading...</h1>
+        <h2 id="display-subtitle" class="header-3d-pop text-xs sm:text-sm font-black text-white/80 uppercase tracking-[0.4em] mb-7 drop-shadow-md">...</h2>
+        <div class="header-3d-pop inline-flex items-center gap-2.5 bg-black/30 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/20 shadow-[0_15px_30px_rgba(0,0,0,0.3)]">
+          <svg class="w-4 h-4 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <p id="display-location" class="text-white font-bold text-xs tracking-widest uppercase">...</p>
+        </div>
+      </div>
+    </header>
     
-    </div>
+    <main class="max-w-md mx-auto mt-2 px-2 flex flex-col">
+      <div class="text-center flex items-center justify-center gap-3 px-4">
+        <div class="h-px bg-black/10 flex-1"></div>
+        <h3 class="text-xs font-black theme-text uppercase tracking-[0.3em]">Official Roster</h3>
+        <div class="h-px bg-black/10 flex-1"></div>
+      </div>
+      
+      <div id="carousel-track" class="carousel-container animate-entry"></div>
+      
+      <div id="vote-prompt-section" class="px-6 mt-4 mb-8 text-center animate-entry hidden" style="animation-delay: 0.2s;">
+        <h4 class="text-lg font-black tracking-wide mb-2">Support Your Favorite</h4>
+        <p class="text-xs theme-text-muted font-bold tracking-wide mb-5 opacity-80">Help your top candidate win the People's Choice award!</p>
+        
+        <button id="btn-cast-vote" onclick="checkVoteAndRedirect()" class="w-full theme-btn py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-[0_10px_25px_var(--t-shadow)] flex justify-center items-center gap-2 transition-transform active:scale-95 disabled:opacity-70 disabled:active:scale-100">
+          Cast Your Vote Now
+        </button>
 
+        <div id="vote-countdown" class="mt-5 text-center hidden">
+          <p class="text-[9px] font-black theme-text-muted uppercase tracking-[0.2em] mb-1.5 opacity-80">Voting Closes In</p>
+          <div id="countdown-timer" class="font-mono font-black text-lg theme-text bg-black/5 py-2 rounded-xl border border-black/5 tracking-wider inline-block px-6">--:--:--</div>
+        </div>
+
+        <div id="vote-closed-msg" class="mt-2 text-center hidden">
+          <div class="bg-red-50 text-red-600 font-black text-xs uppercase tracking-widest py-4 rounded-2xl border border-red-100 shadow-sm flex flex-col items-center gap-1">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            Voting has officially closed
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-10 mb-4 text-center opacity-60 hover:opacity-100 transition-opacity duration-300">
+        <p class="text-[9px] font-black theme-text-muted uppercase tracking-[0.2em] mb-1">Architecture & Design</p>
+        <p class="text-sm font-black tracking-widest mb-2">MICHAEL BORJA</p>
+        <p class="text-[10px] font-black theme-text-muted tracking-[0.2em] mb-3 italic">Rent this automated tabulation system on your next event!</p>
+        <div class="flex justify-center items-center gap-4">
+          <a href="tel:09568490159" class="theme-text-muted hover:text-black transition-colors flex items-center gap-1.5 text-xs font-black"><span>📞</span> 0956 849 0159</a>
+          <span class="opacity-30 text-xs">|</span>
+          <a href="https://www.facebook.com/mikeVborja" target="_blank" class="theme-text-muted hover:text-[#1877F2] transition-colors flex items-center gap-1.5 text-xs font-black">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            Facebook
+          </a>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="view-voting" class="hidden min-h-screen">
+    <div class="sticky top-0 z-50">
+      <header class="theme-header p-5 flex justify-between items-center relative z-50">
+        <div class="text-left flex items-center gap-4">
+          <div class="theme-bg-soft p-2.5 rounded-xl border border-black/5 shadow-inner">
+            <svg class="w-5 h-5 theme-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+          </div>
+          <div>
+            <h1 class="text-lg font-black tracking-widest uppercase">Public Voting</h1>
+            <p class="theme-text-muted text-[10px] font-bold tracking-widest uppercase mt-0.5">People's Choice Award</p>
+          </div>
+        </div>
+        <button onclick="switchView('home')" class="text-xs font-bold theme-text-muted hover:opacity-70 px-4 py-2.5 rounded-xl border border-black/5 bg-black/5 transition-colors uppercase tracking-wider">Back</button>
+      </header>
+    </div>
+    <main class="max-w-md mx-auto mt-6 px-4 pb-10 overflow-hidden" id="voting-gallery"></main>
+  </div>
+
+  <div id="view-login" class="hidden">
+    <div class="fixed inset-0 z-[80] theme-bg-soft flex flex-col justify-center items-center p-6">
+      <div class="card-panel p-8 w-full max-w-sm text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl theme-bg-soft border border-black/5 mb-6 shadow-inner">
+          <svg class="w-7 h-7 theme-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+        </div>
+        <h2 class="text-2xl font-black tracking-widest uppercase mb-8">Secure Portal</h2>
+        <div class="space-y-5 text-left">
+          <div><label class="block text-[10px] font-black theme-text-muted uppercase tracking-wider mb-2">Username</label><input type="text" id="login-username" class="w-full px-4 py-3.5 rounded-xl theme-input font-bold"></div>
+          <div><label class="block text-[10px] font-black theme-text-muted uppercase tracking-wider mb-2">Password</label><input type="password" id="login-password" class="w-full px-4 py-3.5 rounded-xl theme-input font-bold"></div>
+          <div id="login-error" class="text-red-500 bg-red-50 border border-red-200 text-sm font-bold text-center hidden py-2 rounded-lg"></div>
+          <button onclick="processLogin()" id="login-btn" class="w-full theme-btn font-black py-4 rounded-xl mt-6 uppercase tracking-widest text-sm">Authenticate</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-judging" class="hidden min-h-screen pb-10">
+    <div class="sticky top-0 z-50">
+      <header class="theme-header p-5 flex justify-between items-center relative z-50">
+        <div class="text-left flex items-center gap-4">
+          <div class="theme-bg-soft p-2.5 rounded-xl border border-black/5 shadow-inner">
+            <svg class="w-5 h-5 theme-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
+          </div>
+          <div>
+            <h1 class="text-lg font-black tracking-widest uppercase">Scoring Matrix</h1>
+            <p class="theme-text-muted text-[10px] font-bold tracking-widest uppercase mt-0.5">Assessor // <span id="display-judge-name"></span></p>
+          </div>
+        </div>
+        <button onclick="handleLogout()" class="text-xs font-bold theme-text-muted hover:opacity-70 px-3 py-2 rounded-lg transition-colors border border-black/5 bg-black/5">Logout</button>
+      </header>
+      
+      <nav class="theme-surface border-b border-black/5 shadow-md relative z-40">
+        <div class="max-w-md mx-auto flex overflow-x-auto hide-scroll-bar py-3 px-3 gap-2" id="segment-tabs"></div>
+      </nav>
+    </div>
+    <main class="max-w-md mx-auto mt-6 px-4" id="candidates-container"></main>
+  </div>
+
+  <div id="view-scores" class="hidden min-h-screen">
+    <header class="theme-header p-5 flex justify-between items-center sticky top-0 z-50">
+      <div class="text-left flex items-center gap-4">
+        <div class="theme-bg-soft p-2.5 rounded-xl border border-black/5 shadow-inner">
+          <svg class="w-5 h-5 theme-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-black tracking-widest uppercase">Tabulation Core</h1>
+          <p class="theme-text-muted text-[10px] font-bold tracking-widest uppercase mt-0.5">Live Feed // <span id="display-tabulator-name"></span></p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="fetchScoresData()" class="text-[10px] font-bold theme-text bg-black/5 border border-black/5 px-4 py-2.5 rounded-xl hover:bg-black/10 transition-all flex items-center gap-1.5 tracking-wider uppercase"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Sync</button>
+        <button onclick="handleLogout()" class="text-[10px] font-bold theme-text-muted hover:opacity-70 px-4 py-2.5 rounded-xl border border-black/5 bg-black/5 transition-colors uppercase tracking-wider">Logout</button>
+      </div>
+    </header>
+    <main class="max-w-6xl mx-auto mt-8 px-4 space-y-10 pb-20">
+      
+      <div id="peoples-choice-card" class="card-panel overflow-hidden hidden mb-8">
+        <div class="theme-bg-soft border-b border-black/5 p-6 flex justify-between items-center">
+          <h3 class="text-xl font-black tracking-wide">People's Choice</h3>
+          <span class="bg-blue-100 text-blue-700 text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-md border border-blue-200 shadow-sm">Public Votes</span>
+        </div>
+        <div class="overflow-x-auto p-0">
+          <table class="w-full text-left border-collapse min-w-[500px]" id="table-peoples-choice"></table>
+        </div>
+      </div>
+
+      <div class="card-panel overflow-hidden">
+        <div class="theme-bg-soft border-b border-black/5 p-6 flex justify-between items-center">
+          <h3 class="text-xl font-black tracking-wide">Rankings Overview</h3>
+          <span class="bg-emerald-100 text-emerald-700 text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-md border border-emerald-200 animate-pulse shadow-sm">Live</span>
+        </div>
+        <div class="overflow-x-auto p-0"><table class="w-full text-left border-collapse min-w-[800px]" id="table-averages"></table></div>
+      </div>
+      <div class="card-panel overflow-hidden mt-8">
+        <div class="theme-bg-soft border-b border-black/5 p-6"><h3 class="text-xl font-black tracking-wide">Judge Matrix</h3></div>
+        <div class="overflow-x-auto p-0"><table class="w-full text-left border-collapse min-w-[800px]" id="table-detailed"></table></div>
+      </div>
+    </main>
+  </div>
+
+  <div id="view-admin" class="hidden">
+    <header class="theme-header p-5 flex justify-between items-center sticky top-0 z-50">
+      <div class="text-left flex items-center gap-4">
+        <div class="theme-bg-soft p-2.5 rounded-xl border border-black/5 shadow-inner">
+          <svg class="w-5 h-5 theme-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-black tracking-widest uppercase">System Config</h1>
+          <p class="theme-text-muted text-[10px] font-bold tracking-widest uppercase mt-0.5">Admin Level</p>
+        </div>
+      </div>
+      <button onclick="handleLogout()" class="text-[10px] font-bold theme-text-muted hover:opacity-70 px-4 py-2.5 rounded-xl border border-black/5 bg-black/5 transition-colors uppercase tracking-wider">Logout</button>
+    </header>
+    
+    <main class="max-w-md mx-auto mt-6 px-4 space-y-8 pb-10">
+      <div class="card-panel p-6">
+        <h3 class="text-sm font-black tracking-widest uppercase mb-5 border-b border-black/10 pb-4">Event Architecture</h3>
+        <div class="space-y-4">
+          <div><label class="font-black theme-text-muted text-[10px] uppercase tracking-wider block mb-2">Event Title</label><input type="text" id="admin-setting-title" class="w-full px-4 py-3 theme-input rounded-xl font-bold"></div>
+          <div><label class="font-black theme-text-muted text-[10px] uppercase tracking-wider block mb-2">Event Subtitle</label><input type="text" id="admin-setting-subtitle" class="w-full px-4 py-3 theme-input rounded-xl font-bold"></div>
+          <div><label class="font-black theme-text-muted text-[10px] uppercase tracking-wider block mb-2">Location Data</label><input type="text" id="admin-setting-location" class="w-full px-4 py-3 theme-input rounded-xl font-bold"></div>
+          <div><label class="font-black theme-text-muted text-[10px] uppercase tracking-wider block mb-2">System Icon (Emoji)</label><input type="text" id="admin-setting-icon" class="w-full px-4 py-3 theme-input rounded-xl text-xl text-center"></div>
+          <div>
+            <label class="font-black theme-text-muted text-[10px] uppercase tracking-wider block mb-2">Aesthetic Engine</label>
+            <select id="admin-setting-theme" class="w-full px-4 py-3 theme-input rounded-xl font-bold appearance-none cursor-pointer">
+              <option value="red">❤️ Crimson Blossom</option>
+              <option value="pink">🌸 Sakura Glass</option>
+              <option value="blue">🌊 Ocean Breeze</option>
+              <option value="green">🍃 Matrix Leaf</option>
+              <option value="gold">👑 Prestige Ivory</option>
+              <option value="champagne">🥂 Champagne Silver</option>
+              <option value="indigo">🌌 Midnight Slate (Dark)</option>
+              <option value="velvet">🌲 Emerald Velvet (Dark)</option>
+            </select>
+          </div>
+          <div class="mt-8 pt-6 border-t border-black/10 flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="font-black text-sm" style="color: var(--t-text-main);">Public Voting API</h4>
+                <p class="text-[10px] theme-text-muted font-bold mt-1 tracking-wide">Enable audience engagement module</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <span id="toggle-status" class="text-xs font-black tracking-widest uppercase text-gray-400">OFF</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="admin-setting-voting" class="sr-only peer">
+                  <div class="w-14 h-7 bg-black/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+            </div>
+            
+            <div id="admin-deadline-container" class="hidden pt-3 border-t border-black/5">
+              <label class="font-black theme-text-muted text-[10px] uppercase tracking-wider block mb-2">Voting Deadline (Optional)</label>
+              <input type="datetime-local" id="admin-setting-deadline" class="w-full px-4 py-3 theme-input rounded-xl font-bold">
+            </div>
+          </div>
+          <button onclick="saveAdminSettingsUI()" id="btn-save-settings" class="w-full theme-btn font-black uppercase tracking-widest text-xs py-4 rounded-xl mt-8">Deploy Configuration</button>
+        </div>
+      </div>
+
+      <div class="card-panel p-6">
+        <h3 class="text-sm font-black tracking-widest uppercase mb-5 border-b border-black/10 pb-4">Candidate Roster</h3>
+        <div id="admin-candidates-list" class="space-y-3 mb-6 max-h-56 overflow-y-auto pr-2 custom-scroll"></div>
+        <div class="space-y-3 pt-4 border-t border-black/5">
+          <h4 id="label-cand-form" class="font-black theme-text text-xs uppercase tracking-wider mb-3">Initialize New Candidate</h4>
+          <div class="flex gap-2"><input type="number" id="cand-id" placeholder="ID #" class="w-1/4 px-3 py-3 theme-input rounded-xl font-bold text-center"><input type="text" id="cand-name" placeholder="Full Name" class="w-3/4 px-4 py-3 theme-input rounded-xl font-bold"></div>
+          <input type="text" id="cand-loc" placeholder="Location Data" class="w-full px-4 py-3 theme-input rounded-xl font-bold">
+          <input type="text" id="cand-img" placeholder="Image CDN URL" class="w-full px-4 py-3 theme-input rounded-xl font-bold">
+          <div class="flex gap-2 pt-3">
+            <button onclick="submitCandidateUI()" id="btn-add-cand" class="w-full bg-black/80 text-white font-black text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-black transition-all">Add Data</button>
+            <button onclick="resetCandForm()" id="btn-cancel-cand" class="hidden w-1/3 border border-black/10 theme-text-muted font-bold text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-black/5 transition-all">Abort</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-panel p-6">
+        <h3 class="text-sm font-black tracking-widest uppercase mb-5 border-b border-black/10 pb-4">Scoring Algorithm</h3>
+        <div id="admin-criteria-list" class="space-y-3 mb-6 max-h-56 overflow-y-auto pr-2 custom-scroll"></div>
+        <div class="space-y-3 pt-4 border-t border-black/5">
+          <h4 id="label-crit-form" class="font-black theme-text text-xs uppercase tracking-wider mb-3">Define Criterion</h4>
+          <div class="flex gap-2"><input type="text" id="crit-id" placeholder="sys_id" class="w-1/2 px-4 py-3 theme-input rounded-xl font-bold font-mono text-xs"><input type="number" id="crit-max" placeholder="Max Pts" class="w-1/2 px-4 py-3 theme-input rounded-xl font-bold text-center"></div>
+          <input type="text" id="crit-label" placeholder="Display Label" class="w-full px-4 py-3 theme-input rounded-xl font-bold">
+          <input type="text" id="crit-short" placeholder="Short Label" class="w-full px-4 py-3 theme-input rounded-xl font-bold">
+          <div class="flex gap-2 pt-3">
+            <button onclick="submitCriteriaUI()" id="btn-add-crit" class="w-full bg-black/80 text-white font-black text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-black transition-all">Add Criterion</button>
+            <button onclick="resetCritForm()" id="btn-cancel-crit" class="hidden w-1/3 border border-black/10 theme-text-muted font-bold text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-black/5 transition-all">Abort</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-panel p-6">
+        <h3 class="text-sm font-black tracking-widest uppercase mb-5 border-b border-black/10 pb-4">Access Control</h3>
+        <div id="admin-users-list" class="space-y-3 mb-6 max-h-56 overflow-y-auto pr-2 custom-scroll"></div>
+        <div class="space-y-3 pt-4 border-t border-black/5">
+          <h4 id="label-user-form" class="font-black theme-text text-xs uppercase tracking-wider mb-3">Provision Account</h4>
+          <input type="text" id="user-name" placeholder="Full Identity Name" class="w-full px-4 py-3 theme-input rounded-xl font-bold">
+          <div class="flex gap-2"><input type="text" id="user-username" placeholder="Username" class="w-1/2 px-4 py-3 theme-input rounded-xl font-bold font-mono text-xs"><input type="password" id="user-password" placeholder="Passkey" class="w-1/2 px-4 py-3 theme-input rounded-xl font-bold"></div>
+          <select id="user-role" class="w-full px-4 py-3 theme-input rounded-xl font-bold appearance-none"><option value="" disabled selected>Assign Permission Level...</option><option value="Judge">Assessor (Judge)</option><option value="Tabulator">Tabulator</option><option value="Admin">Administrator</option></select>
+          <div class="flex gap-2 pt-3">
+            <button onclick="submitUserUI()" id="btn-add-user" class="w-full bg-black/80 text-white font-black text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-black transition-all">Add User</button>
+            <button onclick="resetUserForm()" id="btn-cancel-user" class="hidden w-1/3 border border-black/10 theme-text-muted font-bold text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-black/5 transition-all">Abort</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <nav class="fixed bottom-0 w-full theme-surface border-t border-black/5 flex justify-around items-center px-3 pt-3 pb-safe z-[90] shadow-[0_-10px_30px_rgba(0,0,0,0.08)]">
+    <button onclick="switchView('home')" id="nav-home" class="nav-btn theme-text-muted opacity-60"><svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg><span class="text-[9px] font-black uppercase tracking-widest">Home</span></button>
+    <button onclick="switchView('judging')" id="nav-judging" class="nav-btn hidden theme-text-muted opacity-60"><svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg><span class="text-[9px] font-black uppercase tracking-widest">Score</span></button>
+    <button onclick="switchView('scores')" id="nav-scores" class="nav-btn hidden theme-text-muted opacity-60"><svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg><span class="text-[9px] font-black uppercase tracking-widest">Data</span></button>
+    <button onclick="switchView('admin')" id="nav-admin" class="nav-btn hidden theme-text-muted opacity-60"><svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span class="text-[9px] font-black uppercase tracking-widest">Admin</span></button>
+    <button onclick="switchView('login')" id="nav-login" class="nav-btn theme-text-muted opacity-60"><svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg><span class="text-[9px] font-black uppercase tracking-widest">Login</span></button>
+  </nav>
+  
   <script type="module">
     // ==========================================
     // 1. FIREBASE INITIALIZATION & IMPORTS
