@@ -784,6 +784,19 @@
     window.sha256 = async function(message) { const msgBuffer = new TextEncoder().encode(message); const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer); return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join(''); };
     window.generateUUID = function() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); }); };
 
+    window.animateParticle = function(el) {  
+      let x = parseFloat(el.style.left);  
+      let amplitude = (Math.random() * 3) + 1; 
+      let frequency = (Math.random() * 0.02) + 0.01;  
+      let t = Math.random() * 100;  
+      function tick() {    
+        t += 0.5;    
+        el.style.left = (x + Math.sin(t * frequency) * amplitude) + 'vw';    
+        requestAnimationFrame(tick);  
+      }  
+      tick();
+    };
+    
     window.showModal = function(title, message, type = 'alert', callback = null) {
       const modal = document.getElementById('custom-modal'); const content = document.getElementById('custom-modal-content'); const actionsEl = document.getElementById('modal-actions');
       if(!modal) return;
