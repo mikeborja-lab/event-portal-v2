@@ -491,26 +491,35 @@
         const savedRole = localStorage.getItem('msval27_role');
         if (savedRole === "undefined" || !savedRole) localStorage.clear();
 
-        const [settingsSnap, criteriaSnap, candSnap, usersSnap] = await Promise.all([
-          getDocs(collection(db, "Settings")),
+        // 1. Establish the Real-Time Settings Listener (Updates ALL devices instantly)
+        onSnapshot(collection(db, "Settings"), (snapshot) => {
+            snapshot.forEach(doc => { window.settings[doc.id] = doc.data().value; });
+
+            // Instantly inject new settings into the UI
+            if(document.getElementById('display-title')) document.getElementById('display-title').innerText = window.settings['app_title'] || "Event System";
+            if(document.getElementById('display-subtitle')) document.getElementById('display-subtitle').innerText = window.settings['app_subtitle'] || "Core Operations";
+            if(document.getElementById('display-location')) document.getElementById('display-location').innerText = window.settings['location_text'] || "Location Undefined";
+            if(document.getElementById('display-icon')) document.getElementById('display-icon').innerText = window.settings['event_icon'] || "";
+            
+            window.applyTheme(window.settings['theme_color'] || 'red');
+            document.title = (window.settings['app_title'] || "Event Portal") + " - Secure Access";
+            
+            // If the admin toggles "Public Voting" ON/OFF, immediately update the home page
+            if(document.getElementById('carousel-track')) window.renderHomeGallery();
+        });
+
+        // 2. Fetch the rest of the data (Criteria, Candidates, Users)
+        const [criteriaSnap, candSnap, usersSnap] = await Promise.all([
           getDocs(collection(db, "Criteria")),
           getDocs(collection(db, "Candidates")),
           getDocs(collection(db, "Users"))
         ]);
 
-        settingsSnap.forEach(doc => { window.settings[doc.id] = doc.data().value; });
         criteriaSnap.forEach(doc => { window.criteria.push({ id: doc.id, ...doc.data() }); });
         candSnap.forEach(doc => { window.candidates.push({ id: doc.id, ...doc.data() }); });
         usersSnap.forEach(doc => { window.users.push({ id: doc.id, ...doc.data() }); });
 
-        if(document.getElementById('display-title')) document.getElementById('display-title').innerText = window.settings['app_title'] || "Event System";
-        if(document.getElementById('display-subtitle')) document.getElementById('display-subtitle').innerText = window.settings['app_subtitle'] || "Core Operations";
-        if(document.getElementById('display-location')) document.getElementById('display-location').innerText = window.settings['location_text'] || "Location Undefined";
-        if(document.getElementById('display-icon')) document.getElementById('display-icon').innerText = window.settings['event_icon'] || "";
         if(document.getElementById('status-text')) document.getElementById('status-text').classList.add('hidden');
-        
-        window.applyTheme(window.settings['theme_color'] || 'red');
-        document.title = (window.settings['app_title'] || "Event Portal") + " - Secure Access";
 
         if(window.criteria.length > 0) window.currentSegment = window.criteria[0].id;
         window.candidates.forEach(c => { 
@@ -521,8 +530,9 @@
         const loader = document.getElementById('loader');
         if (loader) loader.classList.add('hidden');
         
-        window.renderHomeGallery(); window.renderTabs(); window.renderCandidates();
+        window.renderTabs(); window.renderCandidates();
 
+        // 3. Handle Auto-Login Routing
         if (savedName && savedRole && savedRole !== "undefined") {
           window.activeUser = { name: savedName, role: savedRole };
           window.updateNavForRole();
