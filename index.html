@@ -147,6 +147,17 @@
     
     .stagger-card { opacity: 0; transform: translateY(30px); transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
     .stagger-card.animate-entry { opacity: 1; transform: translateY(0); }
+
+    @keyframes score-update-pulse {
+      0% { background-color: var(--t-shadow); transform: scale(1.05); }
+      100% { background-color: transparent; transform: scale(1); }
+    }
+    .animate-score-update {
+      animation: score-update-pulse 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .rolling-number {
+      transition: all 0.5s ease-out;
+    }
   </style>
 </head>
 <body class="pb-28 font-sans min-h-screen relative">
@@ -556,6 +567,38 @@
         if (loader) loader.classList.add('hidden'); 
         alert("System Boot Error: " + err.message); 
       }
+    };
+
+    window.animateNumber = function(elementId, endValue, duration = 1000) {
+      const obj = document.getElementById(elementId);
+      if (!obj) return;
+      
+      const startValue = parseFloat(obj.innerText) || 0;
+      if (startValue === endValue) return; // No change, no animation
+
+      const startTime = performance.now();
+      
+      // Add the visual flash class
+      obj.parentElement.classList.add('animate-score-update');
+      setTimeout(() => obj.parentElement.classList.remove('animate-score-update'), 1000);
+
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Use an "out-cube" easing for a professional feel
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        const currentValue = startValue + (endValue - startValue) * easeProgress;
+        
+        obj.innerText = currentValue.toFixed(2);
+
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        } else {
+          obj.innerText = endValue.toFixed(2);
+        }
+      }
+      requestAnimationFrame(update);
     };
 
     // ==========================================
@@ -1054,6 +1097,7 @@
 
       const avgTable = document.getElementById('table-averages'); 
       if (avgTable) {
+        if (avgTable.innerHTML.trim() === "") {
         let avgHTML = `<tr class="theme-table-header text-[10px] uppercase tracking-widest"><th class="p-5 font-black text-center w-24 theme-text-muted">Rank</th><th class="p-5 font-black theme-text-muted">Identity</th>`;
         window.criteria.forEach(crit => { avgHTML += `<th class="p-5 font-black theme-text-muted text-center">${crit.short} <span class="font-mono text-[9px] opacity-70">(${crit.max})</span></th>`; }); 
         avgHTML += `<th class="p-5 font-black theme-text text-right">Aggregated</th></tr>`;
@@ -1068,10 +1112,21 @@
           avgHTML += `<td class="p-5 font-black theme-text text-xl text-right align-middle">${c.total.toFixed(2)}</td></tr>`;
         }); 
         avgTable.innerHTML = avgHTML;
+      } else {
+            // Table exists! Just animate the numbers that changed
+            aggregated.forEach(c => {
+                const candSlug = c.name.replace(/\s+/g, '');
+                window.criteria.forEach(crit => {
+                    window.animateNumber(`avg-${candSlug}-${crit.id}`, c[crit.id]);
+                });
+                window.animateNumber(`total-${candSlug}`, c.total);
+            });
+        }
       }
 
       const detailTable = document.getElementById('table-detailed'); 
       if (detailTable) {
+        if (detailTable.innerHTML.trim() === "") {
         let detailHTML = `<tr class="theme-table-header text-[10px] uppercase tracking-widest"><th class="p-5 font-black theme-text-muted">Assessor</th><th class="p-5 font-black theme-text-muted">Identity</th>`;
         window.criteria.forEach(crit => { detailHTML += `<th class="p-5 font-black theme-text-muted text-center">${crit.short}</th>`; }); 
         detailHTML += `<th class="p-5 font-black theme-text text-right">Summation</th></tr>`;
@@ -1088,8 +1143,17 @@
           detailHTML += `<td class="p-5 font-black theme-text text-right text-sm align-middle">${rowSum}</td></tr>`;
         }); 
         detailTable.innerHTML = detailHTML;
+      } else {
+            // Table exists! Just animate the numbers that changed
+            aggregated.forEach(c => {
+                const candSlug = c.name.replace(/\s+/g, '');
+                window.criteria.forEach(crit => {
+                    window.animateNumber(`avg-${candSlug}-${crit.id}`, c[crit.id]);
+                });
+                window.animateNumber(`total-${candSlug}`, c.total);
+            });
+        }
       }
-    }
 
     window.renderTabs = function() { const t = document.getElementById('segment-tabs'); if(t) t.innerHTML = window.criteria.map(crit => `<button onclick="switchSegment('${crit.id}')" class="flex-shrink-0 px-6 py-3 m-1 font-black text-[10px] uppercase tracking-widest rounded-2xl transition-all border ${window.currentSegment === crit.id ? 'theme-bg-soft theme-text border-black/10 shadow-sm' : 'bg-transparent theme-text-muted border-transparent hover:theme-bg-soft hover:border-black/5'}">${crit.short}</button>`).join(''); }
     window.switchSegment = function(id) { window.currentSegment = id; window.renderTabs(); window.renderCandidates(); }
