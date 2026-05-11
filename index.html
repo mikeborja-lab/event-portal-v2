@@ -453,7 +453,7 @@
     // ==========================================
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { 
-      getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, query, where, writeBatch 
+      getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, query, where, writeBatch, onSnapshot 
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -696,17 +696,52 @@
       } catch (error) { window.showModal("Connection Error", "Failed to connect. " + error.message, "danger"); }
     };
 
+    // ==========================================
+    // 8. AUTOMATED TABULATOR LOGIC
+    // ==========================================
+    window.activeListeners = []; // Array to manage background listeners
+    window.latestScores = [];
+    window.latestVotes = {};
+
     window.fetchScoresData = async function() { 
-      document.getElementById('loader-text').innerText = "Processing Matrix..."; 
+      document.getElementById('loader-text').innerText = "Initializing Live Matrix..."; 
       document.getElementById('loader').classList.remove('hidden'); 
+      
+      // Clean up old listeners if the user switches views and comes back
+      window.activeListeners.forEach(unsub => unsub());
+      window.activeListeners = [];
+
       try {
-        const [scoresSnap, votesSnap] = await Promise.all([ getDocs(collection(db, "Scores")), getDocs(collection(db, "PublicVotes")) ]);
-        const rawScores = scoresSnap.docs.map(d => d.data());
-        let rawVotes = {};
-        votesSnap.forEach(doc => { const cName = doc.data().candidateName; rawVotes[cName] = (rawVotes[cName] || 0) + 1; });
-        document.getElementById('loader').classList.add('hidden');
-        window.processAndRenderScores(rawScores, rawVotes);
-      } catch (error) { document.getElementById('loader').classList.add('hidden'); alert("Scores Error: " + error.message); }
+        // 1. REAL-TIME LISTENER: Judges Scores (Instant, Low Cost)
+        const unsubScores = onSnapshot(collection(db, "Scores"), (snapshot) => {
+            window.latestScores = snapshot.docs.map(d => d.data());
+            window.processAndRenderScores(window.latestScores, window.latestVotes);
+            document.getElementById('loader').classList.add('hidden');
+        });
+        window.activeListeners.push(unsubScores);
+
+        // 2. POLLING ENGINE: Public Votes (Updates every 60 seconds, High Safety)
+        const fetchVotes = async () => {
+            const votesSnap = await getDocs(collection(db, "PublicVotes"));
+            window.latestVotes = {};
+            votesSnap.forEach(doc => { 
+                const cName = doc.data().candidateName; 
+                window.latestVotes[cName] = (window.latestVotes[cName] || 0) + 1; 
+            });
+            window.processAndRenderScores(window.latestScores, window.latestVotes);
+        };
+        
+        // Fetch votes immediately, then start the 60-second loop
+        await fetchVotes();
+        const voteInterval = setInterval(fetchVotes, 60000); 
+        
+        // Save the interval so we can clear it later if needed
+        window.activeListeners.push(() => clearInterval(voteInterval));
+
+      } catch (error) { 
+        document.getElementById('loader').classList.add('hidden'); 
+        alert("Matrix Error: " + error.message); 
+      }
     };
 
     window.softReload = async function(view = 'admin') {
