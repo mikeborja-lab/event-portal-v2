@@ -290,7 +290,13 @@
         <h2 class="text-2xl font-black tracking-widest uppercase mb-8">Secure Portal</h2>
         <div class="space-y-5 text-left">
           <div><label class="block text-[10px] font-black theme-text-muted uppercase tracking-wider mb-2">Username</label><input type="text" id="login-username" class="w-full px-4 py-3.5 rounded-xl theme-input font-bold"></div>
-          <div><label class="block text-[10px] font-black theme-text-muted uppercase tracking-wider mb-2">Password</label><input type="password" id="login-password" class="w-full px-4 py-3.5 rounded-xl theme-input font-bold"></div>
+          <div><label class="block text-[10px] font-black theme-text-muted uppercase tracking-wider mb-2">Password</label>
+            <div class="relative w-full mb-6">
+              <input type="password" id="login-password" placeholder="Password" class="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-400 pr-12 text-black" onkeydown="if(event.key === 'Enter') window.processLogin();">
+              <button type="button" onclick="const p=document.getElementById('login-password'); const i=document.getElementById('eye-icon'); if(p.type==='password'){p.type='text'; i.className='fas fa-eye-slash';}else{p.type='password'; i.className='fas fa-eye';}" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-800 transition-colors">
+                <i id="eye-icon" class="fas fa-eye text-lg"></i>
+              </button>
+            </div>
           <div id="login-error" class="text-red-500 bg-red-50 border border-red-200 text-sm font-bold text-center hidden py-2 rounded-lg"></div>
           <button onclick="processLogin()" id="login-btn" class="w-full theme-btn font-black py-4 rounded-xl mt-6 uppercase tracking-widest text-sm">Authenticate</button>
         </div>
@@ -553,6 +559,7 @@
             if(document.getElementById('carousel-track') && window.candidates.length > 0) {
                 window.renderHomeGallery();
             }
+          if (typeof window.renderAdminDashboard === 'function') window.renderAdminDashboard();
         });
 
         if(document.getElementById('status-text')) document.getElementById('status-text').classList.add('hidden');
@@ -1214,7 +1221,15 @@
         }); 
         return candData; 
       });
+
+      // Sort by total highest to lowest
       aggregated.sort((a, b) => b.total - a.total); 
+
+      // Find max scores per criteria to highlight
+      let maxScores = {};
+      window.criteria.forEach(crit => {
+        maxScores[crit.id] = Math.max(...aggregated.map(c => c[crit.id] || 0));
+      });
 
       const avgTable = document.getElementById('table-averages'); 
       if (avgTable) {
@@ -1224,29 +1239,56 @@
           avgHTML += `<th class="p-5 font-black theme-text text-right">Aggregated</th></tr>`;
           
           aggregated.forEach((c, index) => {
-            avgHTML += `<tr class="theme-table-row" data-id="${c.name.replace(/\s+/g, '')}"><td class="p-4 align-middle text-center"><div class="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 theme-text-muted font-bold text-xs mx-auto">${index + 1}</div></td><td class="p-5 font-black uppercase-tracking text-sm align-middle">${c.name}</td>`;
-            window.criteria.forEach(crit => { avgHTML += `<td class="p-4 text-center align-middle"><span id="avg-${c.name.replace(/\s+/g, '')}-${crit.id}" class="score-number font-bold text-sm" data-current="${c[crit.id]}">${c[crit.id].toFixed(2)}</span></td>`; });
+            // Top 3 Badge Logic
+            let rankBadge = `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 theme-text-muted font-bold text-xs mx-auto">${index + 1}</div>`;
+            if (index === 0) rankBadge = `<div class="flex items-center justify-center w-12 h-10 rounded-full bg-yellow-100 text-yellow-600 font-black text-sm mx-auto shadow-md border border-yellow-300">🥇 1st</div>`;
+            if (index === 1) rankBadge = `<div class="flex items-center justify-center w-12 h-9 rounded-full bg-slate-100 text-slate-500 font-black text-sm mx-auto shadow-md border border-slate-300">🥈 2nd</div>`;
+            if (index === 2) rankBadge = `<div class="flex items-center justify-center w-12 h-9 rounded-full bg-orange-100 text-orange-700 font-black text-sm mx-auto shadow-md border border-orange-300">🥉 3rd</div>`;
+
+            avgHTML += `<tr class="theme-table-row" data-id="${c.name.replace(/\s+/g, '')}"><td class="p-4 align-middle text-center">${rankBadge}</td><td class="p-5 font-black uppercase-tracking text-sm align-middle">${c.name}</td>`;
+            
+            window.criteria.forEach(crit => { 
+              let val = c[crit.id] || 0;
+              let isMax = (val > 0 && val === maxScores[crit.id]);
+              let highlightClass = isMax ? 'text-emerald-600 font-black bg-emerald-50 rounded-lg px-2 py-1 border border-emerald-200 shadow-sm' : 'font-bold';
+              avgHTML += `<td class="p-4 text-center align-middle"><span id="avg-${c.name.replace(/\s+/g, '')}-${crit.id}" class="score-number text-sm ${highlightClass}" data-current="${val}">${val.toFixed(2)}</span></td>`; 
+            });
+            
             avgHTML += `<td class="p-5 font-black theme-text text-xl text-right align-middle"><span id="total-${c.name.replace(/\s+/g, '')}" class="score-number" data-current="${c.total}">${c.total.toFixed(2)}</span></td></tr>`;
           }); 
           avgTable.innerHTML = avgHTML;
         } else {
+          // Play FLIP animation
           if (avgFlipper) avgFlipper.play();
           
-          // Re-order DOM quietly
+          // Re-order DOM quietly & Update Medals
           aggregated.forEach((c, index) => {
             const row = avgTable.querySelector(`tr[data-id="${c.name.replace(/\s+/g, '')}"]`);
             if(row) {
-              row.querySelector('td:first-child div').innerText = index + 1; 
+              let rankCell = row.querySelector('td:first-child');
+              let rankBadge = `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 theme-text-muted font-bold text-xs mx-auto">${index + 1}</div>`;
+              if (index === 0) rankBadge = `<div class="flex items-center justify-center w-12 h-10 rounded-full bg-yellow-100 text-yellow-600 font-black text-sm mx-auto shadow-md border border-yellow-300">🥇 1st</div>`;
+              if (index === 1) rankBadge = `<div class="flex items-center justify-center w-12 h-9 rounded-full bg-slate-100 text-slate-500 font-black text-sm mx-auto shadow-md border border-slate-300">🥈 2nd</div>`;
+              if (index === 2) rankBadge = `<div class="flex items-center justify-center w-12 h-9 rounded-full bg-orange-100 text-orange-700 font-black text-sm mx-auto shadow-md border border-orange-300">🥉 3rd</div>`;
+              rankCell.innerHTML = rankBadge;
               avgTable.appendChild(row); 
             }
           });
 
-          // Run Counters
+          // Run Counters and update Highlights dynamically
           aggregated.forEach(c => {
             const candSlug = c.name.replace(/\s+/g, '');
             window.criteria.forEach(crit => {
                 const el = document.getElementById(`avg-${candSlug}-${crit.id}`);
-                if(el) window.animateCount(el, c[crit.id]);
+                if(el) {
+                  window.animateCount(el, c[crit.id] || 0);
+                  // Apply Highlight class
+                  let val = c[crit.id] || 0;
+                  let isMax = (val > 0 && val === maxScores[crit.id]);
+                  el.className = isMax 
+                    ? 'score-number text-sm text-emerald-600 font-black bg-emerald-50 rounded-lg px-2 py-1 border border-emerald-200 shadow-sm transition-all' 
+                    : 'score-number text-sm font-bold transition-all';
+                }
             });
             const totalEl = document.getElementById(`total-${candSlug}`);
             if(totalEl) window.animateCount(totalEl, c.total);
