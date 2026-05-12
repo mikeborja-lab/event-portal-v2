@@ -50,12 +50,34 @@
     @keyframes lock-burst { 0% { transform: scale(1); } 40% { transform: scale(1.03); box-shadow: 0 0 0 6px var(--t-shadow); } 100% { transform: scale(1); box-shadow: none; } }
     .score-locked-flash { animation: lock-burst 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
 
-    .premium-svg-particle { position: absolute; animation-timing-function: linear; animation-iteration-count: infinite; will-change: transform; fill: var(--t-primary); filter: drop-shadow(0 10px 15px var(--t-shadow)); }
-    @keyframes premium-fall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; } 10% { opacity: 0.15; } 90% { opacity: 0.15; } 100% { transform: translateY(110vh) rotate(360deg); opacity: 0; } }
-
+    /* --- NEW HEADER GRADIENT & SPARKLES --- */
+    .header-gradient-text {
+      background: linear-gradient(to right, var(--t-primary), #fbbf24, #ec4899, var(--t-primary));
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: bg-pan-fast 6s linear infinite;
+    }
+    @keyframes bg-pan-fast {
+      0% { background-position: 0% center; }
+      100% { background-position: -300% center; }
+    }
     .header-3d-container { perspective: 1000px; transform-style: preserve-3d; }
-    .header-3d-content { transform-style: preserve-3d; transition: transform 0.1s ease-out; }
+    .header-3d-content { transform-style: preserve-3d; transition: transform 0.1s ease-out; position: relative; }
     .header-3d-pop { transform: translateZ(50px); }
+
+    .sparkle-star {
+      position: absolute; width: 14px; height: 14px;
+      background: radial-gradient(circle, #fbbf24 10%, transparent 10%), linear-gradient(45deg, transparent 45%, #fbbf24 45%, #fbbf24 55%, transparent 55%), linear-gradient(-45deg, transparent 45%, #fbbf24 45%, #fbbf24 55%, transparent 55%);
+      background-size: 100% 100%; opacity: 0; pointer-events: none;
+      animation: sparkle-anim 2.5s infinite linear;
+    }
+    @keyframes sparkle-anim {
+      0% { transform: scale(0) rotate(0deg); opacity: 0; }
+      50% { transform: scale(1.5) rotate(90deg); opacity: 1; filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.8)); }
+      100% { transform: scale(0) rotate(180deg); opacity: 0; }
+    }
 
     .carousel-container { perspective: 1200px; transform-style: preserve-3d; display: flex; justify-content: center; align-items: center; height: 34rem; position: relative; width: 100%; overflow: hidden; touch-action: pan-y; }
     .carousel-item { position: absolute; width: 75%; max-width: 340px; height: 30rem; border-radius: 2rem; overflow: hidden; transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s, z-index 0.6s; cursor: pointer; box-shadow: 0 15px 35px var(--t-shadow); }
@@ -68,7 +90,6 @@
 <body class="min-h-screen pb-24">
 
 <div class="mesh-bg"></div>
-  <div id="premium-particles" class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden"></div>
 
   <div id="loader" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
       <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center">
@@ -79,8 +100,12 @@
 
   <div id="app-container" class="p-4 md:p-8">
     <div class="header-3d-container mb-8 text-center mt-4">
-      <div class="header-3d-content inline-block">
-        <h1 class="text-4xl md:text-5xl font-black header-3d-pop drop-shadow-lg leading-normal py-2" id="display-title">System Connecting...</h1>
+      <div class="header-3d-content inline-block relative">
+        <div class="sparkle-star top-0 -left-6" style="animation-delay: 0s;"></div>
+        <div class="sparkle-star bottom-4 -right-4" style="animation-delay: 1.2s;"></div>
+        <div class="sparkle-star top-2 right-1/4" style="animation-delay: 0.6s;"></div>
+        
+        <h1 class="text-4xl md:text-5xl font-black header-3d-pop drop-shadow-lg leading-normal py-2 header-gradient-text" id="display-title">System Connecting...</h1>
         <p id="display-subtitle" class="text-lg opacity-80 header-3d-pop mt-2 font-medium">Core Operations</p>
         <p id="display-location" class="text-sm theme-text font-bold header-3d-pop mt-1">Location Undefined</p>
       </div>
@@ -96,7 +121,11 @@
         </div>
         <p id="vote-closed-msg" class="hidden text-red-500 font-bold uppercase-tracking text-sm mb-4">Voting is Closed</p>
       </div>
-      <div id="voting-gallery" class="max-w-md mx-auto"></div>
+      <div id="voting-gallery" class="max-w-md mx-auto mb-10"></div>
+      
+      <footer class="mt-12 text-center border-t border-black/5 pt-6 pb-2">
+        <p class="text-[9px] font-black uppercase-tracking tracking-[0.2em] theme-text-muted opacity-60">Powered by Event Portal System &copy; 2026</p>
+      </footer>
     </div>
     
     <div id="view-login" class="hidden max-w-sm mx-auto card-panel p-8">
@@ -256,7 +285,6 @@
     window.alert = function(msg) { window.showModal("System Notice", msg, "alert"); };
     window.sha256 = async function(msg) { const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg)); return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join(''); };
     window.showOfflineToast = function() { const t = document.getElementById('offline-toast'); if(!t) return; t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)'; setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(20px)'; }, 3500); };
-    window.animateParticle = function(el) { let baseX = parseFloat(el.style.left); let amp = Math.random() * 2.5 + 0.8; let freq = Math.random() * 0.015 + 0.007; let t = Math.random() * 100; (function tick() { t += 0.45; el.style.left = (baseX + Math.sin(t * freq) * amp) + 'vw'; requestAnimationFrame(tick); })(); };
     window.animateRowSwap = function(containerId) { const container = document.getElementById(containerId); if (!container) return null; const positions = new Map(); container.querySelectorAll('.theme-table-row').forEach(row => positions.set(row.dataset.id, row.getBoundingClientRect().top)); return { play: () => { container.querySelectorAll('.theme-table-row').forEach(row => { const firstTop = positions.get(row.dataset.id); const lastTop = row.getBoundingClientRect().top; if (firstTop && firstTop !== lastTop) { const deltaY = firstTop - lastTop; row.style.transition = 'none'; row.style.transform = `translateY(${deltaY}px)`; requestAnimationFrame(() => { row.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease'; row.style.transform = ''; }); } }); } }; };
     window.animateCount = function(el, target, decimals = 2, duration = 700) { const start = parseFloat(el.dataset.current || 0); const diff = target - start; if (Math.abs(diff) < 0.01) { el.innerText = target.toFixed(decimals); el.dataset.current = target; return; } let startTime = null; (function step(ts) { if (!startTime) startTime = ts; const progress = Math.min((ts - startTime) / duration, 1); el.innerText = (start + diff * (1 - Math.pow(1 - progress, 3))).toFixed(decimals); if (progress < 1) requestAnimationFrame(step); else { el.innerText = target.toFixed(decimals); el.dataset.current = target; } })(performance.now()); };
 
@@ -564,10 +592,7 @@
       }; 
       const t = palettes[themeName] || palettes['red']; const r = document.documentElement; 
       for (const [key, value] of Object.entries(t)) { r.style.setProperty(`--t-${key.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}`, value); } 
-      window.generatePremiumParticles(themeName); 
     };
-    
-    window.generatePremiumParticles = function(themeName) { const container = document.getElementById('premium-particles'); if(!container) return; container.innerHTML = ''; const config = { shape: 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z', count: 15, dir: 'down' }; for(let i = 0; i < config.count; i++) { const p = document.createElement('div'); p.className = 'premium-svg-particle'; p.innerHTML = `<svg viewBox="0 0 24 24" width="100%" height="100%"><path d="${config.shape}"></path></svg>`; const size = Math.random() * 20 + 15; const left = Math.random() * 100; const duration = Math.random() * 15 + 15; const delay = Math.random() * -20; p.style.width = `${size}px`; p.style.height = `${size}px`; p.style.left = `${left}vw`; p.style.animationName = config.dir === 'up' ? 'premium-rise' : 'premium-fall'; p.style.animationDuration = `${duration}s`; p.style.animationDelay = `${delay}s`; container.appendChild(p); window.animateParticle(p); } };
   </script>
 </body>
 </html>
