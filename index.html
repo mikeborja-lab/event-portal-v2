@@ -171,35 +171,35 @@
 
   <div id="view-admin" class="hidden max-w-5xl mx-auto space-y-6 pb-20">
      <div class="card-panel p-6">
-       <h2 class="text-2xl font-black mb-6 border-b pb-2">Event Architecture</h2>
-       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-         <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Event Title</label><input type="text" id="admin-setting-title" class="w-full p-2 border rounded-lg mt-1"></div>
-         <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Sub Title</label><input type="text" id="admin-setting-subtitle" class="w-full p-2 border rounded-lg mt-1"></div>
-         <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Location</label><input type="text" id="admin-setting-location" class="w-full p-2 border rounded-lg mt-1"></div>
-         <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Theme Color</label>
-            <select id="admin-setting-theme" class="w-full p-2 border rounded-lg mt-1">
-              <option value="red">Velvet (Red)</option>
-              <option value="blue">Sapphire (Blue)</option>
-              <option value="dark">Midnight (Dark)</option>
-              <option value="amber">Gold (Amber)</option>
-              <option value="emerald">Forest (Emerald)</option>
-              <option value="indigo">Royal (Indigo)</option>
-              <option value="velvet">Emerald Velvet (Dark Green)</option>
-            </select>
+         <h2 class="text-2xl font-black mb-6 border-b pb-2">Event Architecture</h2>
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+           <div><label class="text-xs font-bold uppercase-tracking theme-text-muted">Event Title</label><input type="text" id="admin-setting-title" class="w-full p-2 border rounded-lg mt-1 text-black"></div>
+           <div><label class="text-xs font-bold uppercase-tracking theme-text-muted">Sub Title</label><input type="text" id="admin-setting-subtitle" class="w-full p-2 border rounded-lg mt-1 text-black"></div>
+           <div><label class="text-xs font-bold uppercase-tracking theme-text-muted">Location</label><input type="text" id="admin-setting-location" class="w-full p-2 border rounded-lg mt-1 text-black"></div>
+           <div><label class="text-xs font-bold uppercase-tracking theme-text-muted">Theme Color</label>
+              <select id="admin-setting-theme" class="w-full p-2 border rounded-lg mt-1 text-black">
+                <option value="red">Velvet (Red)</option>
+                <option value="blue">Sapphire (Blue)</option>
+                <option value="dark">Midnight (Dark)</option>
+                <option value="amber">Gold (Amber)</option>
+                <option value="emerald">Forest (Emerald)</option>
+                <option value="indigo">Royal (Indigo)</option>
+                <option value="velvet">Emerald Velvet (Dark Green)</option>
+              </select>
+           </div>
          </div>
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-black/5 rounded-xl border border-black/10">
+            <div class="flex items-center justify-between">
+              <label class="font-bold uppercase-tracking">Enable Public Voting</label>
+              <input type="checkbox" id="admin-setting-voting" class="w-6 h-6 rounded cursor-pointer">
+            </div>
+            <div>
+              <label class="text-xs font-bold uppercase-tracking theme-text-muted">Voting Deadline (Optional)</label>
+              <input type="datetime-local" id="admin-setting-deadline" class="w-full p-2 border rounded-lg mt-1 text-black">
+            </div>
+         </div>
+         <button onclick="window.saveSettings()" class="theme-btn px-6 py-3 rounded-lg font-bold w-full uppercase-tracking tracking-wider text-sm">Deploy Configuration</button>
        </div>
-       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-black/5 rounded-xl border border-black/10">
-          <div class="flex items-center justify-between">
-            <label class="font-bold uppercase-tracking">Enable Public Voting</label>
-            <input type="checkbox" id="admin-setting-voting" class="w-6 h-6 rounded cursor-pointer">
-          </div>
-          <div>
-            <label class="text-xs font-bold uppercase-tracking text-gray-500">Voting Deadline (Optional)</label>
-            <input type="datetime-local" id="admin-setting-deadline" class="w-full p-2 border rounded-lg mt-1">
-          </div>
-       </div>
-       <button onclick="window.saveSettings()" class="theme-btn px-6 py-3 rounded-lg font-bold w-full uppercase-tracking tracking-wider text-sm">Deploy Configuration</button>
-     </div>
      
      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
        <div class="card-panel p-5 relative">
