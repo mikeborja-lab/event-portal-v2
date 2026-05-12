@@ -32,7 +32,7 @@
 
     .theme-table-header { background-color: rgba(128, 128, 128, 0.06); border-bottom: 1px solid rgba(128, 128, 128, 0.15); }
     .theme-table-row { border-bottom: 1px solid rgba(128, 128, 128, 0.08); transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease; }
-    #table-averages, #table-peoples-choice { display: table; width: 100%; border-collapse: separate; border-spacing: 0 0.5rem; }
+    #table-averages, #table-peoples-choice, #table-detailed { display: table; width: 100%; border-collapse: separate; border-spacing: 0 0.5rem; }
 
     input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
     input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 32px; width: 32px; border-radius: 50%; background: var(--t-surface); cursor: pointer; margin-top: -12px; box-shadow: 0 4px 15px var(--t-shadow); border: 4px solid var(--t-primary); transition: transform 0.1s; }
@@ -119,16 +119,20 @@
 
     <div id="view-scores" class="hidden max-w-5xl mx-auto">
       <div id="peoples-choice-card" class="card-panel p-6 mb-8 hidden">
-        <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2">People's Choice</h3>
+        <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2">People's Choice (Public Votes)</h3>
         <div class="overflow-x-auto"><table class="w-full" id="table-peoples-choice"></table></div>
       </div>
       <div class="card-panel p-6 mb-8">
         <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2">Aggregated Matrix</h3>
         <div class="overflow-x-auto"><table class="w-full" id="table-averages"></table></div>
       </div>
+      <div class="card-panel p-6 mb-8">
+        <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2">Detailed Judge Matrix</h3>
+        <div class="overflow-x-auto"><table class="w-full" id="table-detailed"></table></div>
+      </div>
     </div>
 
-    <div id="view-admin" class="hidden max-w-4xl mx-auto space-y-6 pb-20">
+    <div id="view-admin" class="hidden max-w-5xl mx-auto space-y-6 pb-20">
        <div class="card-panel p-6">
          <h2 class="text-2xl font-black mb-6 border-b pb-2">Event Architecture</h2>
          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -137,7 +141,13 @@
            <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Location</label><input type="text" id="admin-setting-location" class="w-full p-2 border rounded-lg mt-1"></div>
            <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Theme Color</label>
               <select id="admin-setting-theme" class="w-full p-2 border rounded-lg mt-1">
-                <option value="red">Velvet (Red)</option><option value="blue">Sapphire (Blue)</option>
+                <option value="red">Velvet (Red)</option>
+                <option value="blue">Sapphire (Blue)</option>
+                <option value="dark">Midnight (Dark)</option>
+                <option value="amber">Gold (Amber)</option>
+                <option value="emerald">Forest (Emerald)</option>
+                <option value="indigo">Royal (Indigo)</option>
+                <option value="velvet">Emerald Velvet (Dark Green)</option>
               </select>
            </div>
          </div>
@@ -151,33 +161,53 @@
               <input type="datetime-local" id="admin-setting-deadline" class="w-full p-2 border rounded-lg mt-1">
             </div>
          </div>
-         <button onclick="window.saveSettings()" class="theme-btn px-6 py-3 rounded-lg font-bold w-full">Deploy Configuration</button>
+         <button onclick="window.saveSettings()" class="theme-btn px-6 py-3 rounded-lg font-bold w-full uppercase-tracking tracking-wider text-sm">Deploy Configuration</button>
        </div>
+       
        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <div class="card-panel p-5">
-            <h3 class="font-black uppercase-tracking border-b pb-2 mb-4">Candidates</h3>
+         <div class="card-panel p-5 relative">
+            <h3 class="font-black uppercase-tracking border-b pb-2 mb-4 text-sm flex justify-between items-center">
+              <span>Candidates</span>
+              <button id="btn-cancel-cand" onclick="window.resetCandForm()" class="hidden text-[10px] uppercase-tracking tracking-wider text-red-500 font-bold hover:underline">Cancel Edit</button>
+            </h3>
             <div id="admin-candidates-list" class="space-y-2 mb-4 max-h-48 overflow-y-auto text-sm"></div>
-            <input type="text" id="new-cand-id" placeholder="ID (e.g. 1)" class="w-full p-2 border rounded mt-2 text-sm">
-            <input type="text" id="new-cand-name" placeholder="Full Name" class="w-full p-2 border rounded mt-2 text-sm">
-            <button onclick="window.addCandidate()" class="w-full bg-slate-800 text-white rounded p-2 mt-2 text-xs font-bold hover:bg-slate-700">Add Candidate</button>
+            <div class="space-y-2">
+              <input type="number" id="new-cand-id" placeholder="Candidate #" class="w-full p-2 border rounded text-sm bg-black/5">
+              <input type="text" id="new-cand-name" placeholder="Full Name" class="w-full p-2 border rounded text-sm bg-black/5">
+              <input type="text" id="new-cand-loc" placeholder="Location Data" class="w-full p-2 border rounded text-sm bg-black/5">
+              <input type="text" id="new-cand-img" placeholder="Image URL" class="w-full p-2 border rounded text-sm bg-black/5">
+              <button id="btn-add-cand" onclick="window.addCandidate()" class="w-full bg-slate-800 text-white rounded p-2 text-xs font-bold hover:bg-slate-700 uppercase-tracking tracking-wider mt-2 transition-colors">Add Candidate</button>
+            </div>
          </div>
-         <div class="card-panel p-5">
-            <h3 class="font-black uppercase-tracking border-b pb-2 mb-4">Criteria</h3>
+
+         <div class="card-panel p-5 relative">
+            <h3 class="font-black uppercase-tracking border-b pb-2 mb-4 text-sm flex justify-between items-center">
+              <span>Criteria</span>
+              <button id="btn-cancel-crit" onclick="window.resetCritForm()" class="hidden text-[10px] uppercase-tracking tracking-wider text-red-500 font-bold hover:underline">Cancel Edit</button>
+            </h3>
             <div id="admin-criteria-list" class="space-y-2 mb-4 max-h-48 overflow-y-auto text-sm"></div>
-            <input type="text" id="new-crit-id" placeholder="ID (e.g. gown)" class="w-full p-2 border rounded mt-2 text-sm">
-            <input type="text" id="new-crit-label" placeholder="Full Label" class="w-full p-2 border rounded mt-2 text-sm">
-            <input type="number" id="new-crit-max" placeholder="Max Score (e.g. 10)" class="w-full p-2 border rounded mt-2 text-sm">
-            <button onclick="window.addCriteria()" class="w-full bg-slate-800 text-white rounded p-2 mt-2 text-xs font-bold hover:bg-slate-700">Add Criteria</button>
+            <div class="space-y-2">
+              <input type="text" id="new-crit-id" placeholder="System ID (e.g. gown)" class="w-full p-2 border rounded text-sm bg-black/5">
+              <input type="text" id="new-crit-label" placeholder="Full Label" class="w-full p-2 border rounded text-sm bg-black/5">
+              <input type="number" id="new-crit-max" placeholder="Max Score (e.g. 10)" class="w-full p-2 border rounded text-sm bg-black/5">
+              <button id="btn-add-crit" onclick="window.addCriteria()" class="w-full bg-slate-800 text-white rounded p-2 text-xs font-bold hover:bg-slate-700 uppercase-tracking tracking-wider mt-2 transition-colors">Add Criteria</button>
+            </div>
          </div>
-         <div class="card-panel p-5">
-            <h3 class="font-black uppercase-tracking border-b pb-2 mb-4">System Users</h3>
+
+         <div class="card-panel p-5 relative">
+            <h3 class="font-black uppercase-tracking border-b pb-2 mb-4 text-sm flex justify-between items-center">
+              <span>System Users</span>
+              <button id="btn-cancel-user" onclick="window.resetUserForm()" class="hidden text-[10px] uppercase-tracking tracking-wider text-red-500 font-bold hover:underline">Cancel Edit</button>
+            </h3>
             <div id="admin-users-list" class="space-y-2 mb-4 max-h-48 overflow-y-auto text-sm"></div>
-            <input type="text" id="new-user-username" placeholder="Username" class="w-full p-2 border rounded mt-2 text-sm">
-            <input type="text" id="new-user-pass" placeholder="Password" class="w-full p-2 border rounded mt-2 text-sm">
-            <select id="new-user-role" class="w-full p-2 border rounded mt-2 text-sm">
-              <option value="Judge">Judge</option><option value="Tabulator">Tabulator</option><option value="Admin">Admin</option>
-            </select>
-            <button onclick="window.addUser()" class="w-full bg-slate-800 text-white rounded p-2 mt-2 text-xs font-bold hover:bg-slate-700">Add User</button>
+            <div class="space-y-2">
+              <input type="text" id="new-user-username" placeholder="Username" class="w-full p-2 border rounded text-sm bg-black/5">
+              <input type="text" id="new-user-pass" placeholder="Password (blank to keep)" class="w-full p-2 border rounded text-sm bg-black/5">
+              <select id="new-user-role" class="w-full p-2 border rounded text-sm bg-black/5">
+                <option value="Judge">Judge</option><option value="Tabulator">Tabulator</option><option value="Admin">Admin</option>
+              </select>
+              <button id="btn-add-user" onclick="window.addUser()" class="w-full bg-slate-800 text-white rounded p-2 text-xs font-bold hover:bg-slate-700 uppercase-tracking tracking-wider mt-2 transition-colors">Add User</button>
+            </div>
          </div>
        </div>
     </div>
@@ -220,6 +250,7 @@
     window.scoresData = {}; window.lockedScores = {}; window.currentSegment = ''; 
     window.activeUser = { name: "", role: "" }; window.currentCarouselIndex = 0; window.carouselInterval = null;
     window.activeListeners = []; window.latestScores = []; window.latestVotes = {}; window.votingTimerInterval = null;
+    window.editState = { candidate: null, criteria: null, user: null };
     let offlineQueue = JSON.parse(localStorage.getItem('pageant_offline_queue')) || [];
 
     window.alert = function(msg) { window.showModal("System Notice", msg, "alert"); };
@@ -408,6 +439,29 @@
       let aggregated = window.candidates.map(c => { let cleanCandidateName = c.name.toString().trim().toLowerCase(); let sc = normalizedScores.filter(s => s.candidate.toLowerCase() === cleanCandidateName); let count = sc.length; let candData = { name: c.name, count: count, total: 0 }; window.criteria.forEach(crit => { let safeCritId = crit.id.toString().toLowerCase().replace(/\s+/g, ''); let avg = count ? sc.reduce((sum, s) => sum + (parseFloat(s[safeCritId]) || parseFloat(s[crit.id]) || 0), 0) / count : 0; candData[crit.id] = avg; candData.total += avg; }); return candData; });
       aggregated.sort((a, b) => b.total - a.total); 
 
+      // 1. People's Choice Logic
+      const pcCard = document.getElementById('peoples-choice-card');
+      const isVotingEnabled = String(window.settings['public_voting']).toLowerCase() === 'true';
+      if (pcCard) {
+        if (isVotingEnabled) {
+          pcCard.classList.remove('hidden');
+          const pcTable = document.getElementById('table-peoples-choice');
+          if (pcTable) {
+            let pcCandidates = window.candidates.map(c => ({ name: c.name, votes: window.latestVotes[c.name] || 0 }));
+            pcCandidates.sort((a, b) => b.votes - a.votes);
+            let pcHTML = `<tr class="theme-table-header text-[10px] uppercase-tracking tracking-widest"><th class="p-5 font-black text-center w-24 theme-text-muted">Rank</th><th class="p-5 font-black theme-text-muted text-left">Identity</th><th class="p-5 font-black theme-text text-right">Votes</th></tr>`;
+            pcCandidates.forEach((c, index) => {
+              let rankBadge = `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 theme-text-muted font-bold text-xs mx-auto">${index + 1}</div>`;
+              pcHTML += `<tr class="theme-table-row"><td class="p-4 align-middle">${rankBadge}</td><td class="p-5 font-black uppercase-tracking text-sm align-middle">${c.name}</td><td class="p-5 font-black theme-text text-xl text-right align-middle">${c.votes}</td></tr>`;
+            });
+            pcTable.innerHTML = pcHTML;
+          }
+        } else {
+          pcCard.classList.add('hidden');
+        }
+      }
+
+      // 2. Aggregated Matrix Logic
       let maxScores = {}; window.criteria.forEach(crit => { maxScores[crit.id] = Math.max(...aggregated.map(c => c[crit.id] || 0)); });
       const avgTable = document.getElementById('table-averages'); 
       if (avgTable) {
@@ -429,20 +483,90 @@
           aggregated.forEach(c => { const candSlug = c.name.replace(/\s+/g, ''); window.criteria.forEach(crit => { const el = document.getElementById(`avg-${candSlug}-${crit.id}`); if(el) { window.animateCount(el, c[crit.id] || 0); let val = c[crit.id] || 0; let isMax = (val > 0 && val === maxScores[crit.id]); el.className = isMax ? 'score-number text-sm text-emerald-600 font-black bg-emerald-50 rounded-lg px-2 py-1 border border-emerald-200 shadow-sm transition-all' : 'score-number text-sm font-bold transition-all'; } }); const totalEl = document.getElementById(`total-${candSlug}`); if(totalEl) window.animateCount(totalEl, c.total); });
         }
       }
+
+      // 3. Detailed Judge Matrix Logic
+      const detailTable = document.getElementById('table-detailed');
+      if (detailTable) {
+        let detailHTML = `<tr class="theme-table-header text-[10px] uppercase-tracking tracking-widest"><th class="p-5 font-black theme-text-muted text-left">Assessor</th><th class="p-5 font-black theme-text-muted text-left">Identity</th>`;
+        window.criteria.forEach(crit => { detailHTML += `<th class="p-5 font-black theme-text-muted text-center">${crit.short}</th>`; });
+        detailHTML += `</tr>`;
+        
+        normalizedScores.forEach(s => {
+          detailHTML += `<tr class="theme-table-row"><td class="p-4 align-middle text-sm font-bold theme-text">${s.judge}</td><td class="p-4 align-middle text-sm font-black uppercase-tracking">${s.candidate}</td>`;
+          window.criteria.forEach(crit => {
+            let val = s[crit.id.toLowerCase().replace(/\s+/g, '')] || 0;
+            let highlight = val === 0 ? 'text-red-500 bg-red-50 border border-red-200 shadow-sm rounded-lg px-2 py-1' : '';
+            detailHTML += `<td class="p-4 align-middle text-center"><span class="score-number font-bold text-sm ${highlight}">${val.toFixed(1)}</span></td>`;
+          });
+          detailHTML += `</tr>`;
+        });
+        detailTable.innerHTML = detailHTML;
+      }
     };
 
     window.renderAdminDashboard = function() {
       if (document.getElementById('admin-setting-title')) { document.getElementById('admin-setting-title').value = window.settings['app_title'] || ''; document.getElementById('admin-setting-subtitle').value = window.settings['app_subtitle'] || ''; document.getElementById('admin-setting-location').value = window.settings['location_text'] || ''; document.getElementById('admin-setting-theme').value = window.settings['theme_color'] || 'red'; document.getElementById('admin-setting-voting').checked = String(window.settings['public_voting']).toLowerCase() === 'true'; document.getElementById('admin-setting-deadline').value = window.settings['voting_deadline'] || ''; }
-      if (document.getElementById('admin-candidates-list')) { document.getElementById('admin-candidates-list').innerHTML = window.candidates.map(c => `<div class="flex justify-between items-center p-2 bg-slate-50 rounded border"><span><b>${c.id}</b>: ${c.name}</span><button onclick="window.deleteDocEntry('Candidates', '${c.id}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></div>`).join(''); document.getElementById('admin-criteria-list').innerHTML = window.criteria.map(c => `<div class="flex justify-between items-center p-2 bg-slate-50 rounded border"><span>${c.label} (${c.max}pt)</span><button onclick="window.deleteDocEntry('Criteria', '${c.id}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></div>`).join(''); document.getElementById('admin-users-list').innerHTML = window.users.map(u => `<div class="flex justify-between items-center p-2 bg-slate-50 rounded border"><span class="truncate pr-2">${u.username} (${u.role})</span><button onclick="window.deleteDocEntry('Users', '${u.id}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></div>`).join(''); }
+      if (document.getElementById('admin-candidates-list')) { 
+        document.getElementById('admin-candidates-list').innerHTML = window.candidates.map(c => `
+          <div class="flex justify-between items-center p-3 bg-black/5 rounded-xl border border-black/5">
+            <span><b>#${c.id}</b>: ${c.name}</span>
+            <div class="flex gap-3">
+              <button onclick="window.editCandidate('${c.id}')" class="text-blue-500 hover:text-blue-700 transition-colors"><i class="fas fa-edit"></i></button>
+              <button onclick="window.deleteDocEntry('Candidates', '${c.id}')" class="text-red-500 hover:text-red-700 transition-colors"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>`).join(''); 
+        document.getElementById('admin-criteria-list').innerHTML = window.criteria.map(c => `
+          <div class="flex justify-between items-center p-3 bg-black/5 rounded-xl border border-black/5">
+            <span>${c.label} (${c.max}pt)</span>
+            <div class="flex gap-3">
+              <button onclick="window.editCriteria('${c.id}')" class="text-blue-500 hover:text-blue-700 transition-colors"><i class="fas fa-edit"></i></button>
+              <button onclick="window.deleteDocEntry('Criteria', '${c.id}')" class="text-red-500 hover:text-red-700 transition-colors"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>`).join(''); 
+        document.getElementById('admin-users-list').innerHTML = window.users.map(u => `
+          <div class="flex justify-between items-center p-3 bg-black/5 rounded-xl border border-black/5">
+            <span class="truncate pr-2">${u.username} (${u.role})</span>
+            <div class="flex gap-3">
+              <button onclick="window.editUser('${u.id}')" class="text-blue-500 hover:text-blue-700 transition-colors"><i class="fas fa-edit"></i></button>
+              <button onclick="window.deleteDocEntry('Users', '${u.id}')" class="text-red-500 hover:text-red-700 transition-colors"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>`).join(''); 
+      }
     };
 
     window.saveSettings = async function() { try { const btn = document.querySelector('#view-admin .theme-btn'); btn.innerText = "Deploying..."; btn.disabled = true; const updates = { 'app_title': document.getElementById('admin-setting-title').value, 'app_subtitle': document.getElementById('admin-setting-subtitle').value, 'location_text': document.getElementById('admin-setting-location').value, 'theme_color': document.getElementById('admin-setting-theme').value, 'public_voting': document.getElementById('admin-setting-voting').checked, 'voting_deadline': document.getElementById('admin-setting-deadline').value }; for (const [key, value] of Object.entries(updates)) { await setDoc(doc(db, "Settings", key), { value: value }); } window.alert("Configuration successfully deployed to all devices."); btn.innerText = "Deploy Configuration"; btn.disabled = false; } catch (err) { window.alert("Error deploying: " + err.message); } };
-    window.addCandidate = async function() { const id = document.getElementById('new-cand-id').value; const name = document.getElementById('new-cand-name').value; if(!id || !name) return window.alert("ID and Name are required."); await setDoc(doc(db, "Candidates", id), { id: parseInt(id), name: name, img: "" }); window.alert("Candidate added. Refresh to view changes."); };
-    window.addCriteria = async function() { const id = document.getElementById('new-crit-id').value; const label = document.getElementById('new-crit-label').value; const max = document.getElementById('new-crit-max').value; if(!id || !label || !max) return window.alert("All fields are required."); await setDoc(doc(db, "Criteria", id), { id: id, label: label, short: id.substring(0,4), max: max }); window.alert("Criteria added. Refresh to view changes."); };
-    window.addUser = async function() { const user = document.getElementById('new-user-username').value; const pass = document.getElementById('new-user-pass').value; const role = document.getElementById('new-user-role').value; if(!user || !pass) return window.alert("Username and Password are required."); const hashedPass = await window.sha256(pass); await setDoc(doc(db, "Users", user), { username: user, name: user, password: hashedPass, role: role }); window.alert("User added. Refresh to view changes."); };
+
+    // --- CANDIDATE EDIT LOGIC ---
+    window.editCandidate = function(id) { const c = window.candidates.find(cand => String(cand.id) === String(id)); if (!c) return; window.editState.candidate = c.id; document.getElementById('new-cand-id').value = c.id; document.getElementById('new-cand-id').readOnly = true; document.getElementById('new-cand-name').value = c.name || ''; document.getElementById('new-cand-loc').value = c.loc || ''; document.getElementById('new-cand-img').value = c.img || ''; document.getElementById('btn-add-cand').innerText = "Update Candidate"; document.getElementById('btn-cancel-cand').classList.remove('hidden'); };
+    window.resetCandForm = function() { window.editState.candidate = null; document.getElementById('new-cand-id').value = ''; document.getElementById('new-cand-id').readOnly = false; document.getElementById('new-cand-name').value = ''; document.getElementById('new-cand-loc').value = ''; document.getElementById('new-cand-img').value = ''; document.getElementById('btn-add-cand').innerText = "Add Candidate"; document.getElementById('btn-cancel-cand').classList.add('hidden'); };
+    window.addCandidate = async function() { const id = document.getElementById('new-cand-id').value; const name = document.getElementById('new-cand-name').value; const loc = document.getElementById('new-cand-loc').value; const img = document.getElementById('new-cand-img').value; if(!id || !name) return window.alert("ID and Name are required."); await setDoc(doc(db, "Candidates", id), { id: parseInt(id), name: name, loc: loc, img: img }, { merge: true }); window.alert(window.editState.candidate ? "Candidate updated. Refresh to view changes." : "Candidate added. Refresh to view changes."); window.resetCandForm(); };
+
+    // --- CRITERIA EDIT LOGIC ---
+    window.editCriteria = function(id) { const c = window.criteria.find(crit => crit.id === id); if (!c) return; window.editState.criteria = c.id; document.getElementById('new-crit-id').value = c.id; document.getElementById('new-crit-id').readOnly = true; document.getElementById('new-crit-label').value = c.label || ''; document.getElementById('new-crit-max').value = c.max || ''; document.getElementById('btn-add-crit').innerText = "Update Criteria"; document.getElementById('btn-cancel-crit').classList.remove('hidden'); };
+    window.resetCritForm = function() { window.editState.criteria = null; document.getElementById('new-crit-id').value = ''; document.getElementById('new-crit-id').readOnly = false; document.getElementById('new-crit-label').value = ''; document.getElementById('new-crit-max').value = ''; document.getElementById('btn-add-crit').innerText = "Add Criteria"; document.getElementById('btn-cancel-crit').classList.add('hidden'); };
+    window.addCriteria = async function() { const id = document.getElementById('new-crit-id').value; const label = document.getElementById('new-crit-label').value; const max = document.getElementById('new-crit-max').value; if(!id || !label || !max) return window.alert("All fields are required."); await setDoc(doc(db, "Criteria", id), { id: id, label: label, short: id.substring(0,4), max: parseFloat(max) }, { merge: true }); window.alert(window.editState.criteria ? "Criteria updated. Refresh to view changes." : "Criteria added. Refresh to view changes."); window.resetCritForm(); };
+
+    // --- USER EDIT LOGIC ---
+    window.editUser = function(id) { const u = window.users.find(usr => usr.id === id); if (!u) return; window.editState.user = u.id; document.getElementById('new-user-username').value = u.username || ''; document.getElementById('new-user-username').readOnly = true; document.getElementById('new-user-pass').value = ''; document.getElementById('new-user-role').value = u.role || 'Judge'; document.getElementById('btn-add-user').innerText = "Update User"; document.getElementById('btn-cancel-user').classList.remove('hidden'); };
+    window.resetUserForm = function() { window.editState.user = null; document.getElementById('new-user-username').value = ''; document.getElementById('new-user-username').readOnly = false; document.getElementById('new-user-pass').value = ''; document.getElementById('new-user-role').value = 'Judge'; document.getElementById('btn-add-user').innerText = "Add User"; document.getElementById('btn-cancel-user').classList.add('hidden'); };
+    window.addUser = async function() { const user = document.getElementById('new-user-username').value; const pass = document.getElementById('new-user-pass').value; const role = document.getElementById('new-user-role').value; if(!user) return window.alert("Username is required."); let payload = { username: user, name: user, role: role }; if (pass) { payload.password = await window.sha256(pass); } else if (!window.editState.user) { return window.alert("Password is required for new users."); } await setDoc(doc(db, "Users", user), payload, { merge: true }); window.alert(window.editState.user ? "User updated. Refresh to view changes." : "User added. Refresh to view changes."); window.resetUserForm(); };
     window.deleteDocEntry = async function(collectionName, docId) { if(confirm(`Are you sure you want to delete ${docId} from ${collectionName}?`)) { await deleteDoc(doc(db, collectionName, docId)); window.alert(`Deleted. Refresh page to update view.`); } };
 
-    window.applyTheme = function(themeName) { const palettes = { red: { baseBg: '#fcfcfc', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#111827', textMuted: '#6b7280', primary: '#e11d48', grad: 'linear-gradient(135deg, #f43f5e, #be123c)', shadow: 'rgba(225, 29, 72, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(244, 63, 94, 0.15)', mesh2: 'rgba(225, 29, 72, 0.12)', mesh3: 'rgba(253, 164, 175, 0.18)' }, blue: { baseBg: '#f8fafc', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#0f172a', textMuted: '#64748b', primary: '#2563eb', grad: 'linear-gradient(135deg, #60a5fa, #1d4ed8)', shadow: 'rgba(37, 99, 235, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(96, 165, 250, 0.15)', mesh2: 'rgba(59, 130, 246, 0.12)', mesh3: 'rgba(191, 219, 254, 0.18)' } }; const t = palettes[themeName] || palettes['red']; const r = document.documentElement; for (const [key, value] of Object.entries(t)) { r.style.setProperty(`--t-${key.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}`, value); } window.generatePremiumParticles(themeName); };
+    window.applyTheme = function(themeName) { 
+      const palettes = { 
+        red: { baseBg: '#fcfcfc', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#111827', textMuted: '#6b7280', primary: '#e11d48', grad: 'linear-gradient(135deg, #f43f5e, #be123c)', shadow: 'rgba(225, 29, 72, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(244, 63, 94, 0.15)', mesh2: 'rgba(225, 29, 72, 0.12)', mesh3: 'rgba(253, 164, 175, 0.18)' }, 
+        blue: { baseBg: '#f8fafc', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#0f172a', textMuted: '#64748b', primary: '#2563eb', grad: 'linear-gradient(135deg, #60a5fa, #1d4ed8)', shadow: 'rgba(37, 99, 235, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(96, 165, 250, 0.15)', mesh2: 'rgba(59, 130, 246, 0.12)', mesh3: 'rgba(191, 219, 254, 0.18)' },
+        dark: { baseBg: '#0f172a', surface: 'rgba(30, 41, 59, 0.92)', textMain: '#f8fafc', textMuted: '#94a3b8', primary: '#38bdf8', grad: 'linear-gradient(135deg, #7dd3fc, #0284c7)', shadow: 'rgba(56, 189, 248, 0.15)', border: 'rgba(255, 255, 255, 0.1)', mesh1: 'rgba(56, 189, 248, 0.15)', mesh2: 'rgba(14, 165, 233, 0.12)', mesh3: 'rgba(125, 211, 252, 0.18)' },
+        amber: { baseBg: '#fffbeb', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#451a03', textMuted: '#78350f', primary: '#d97706', grad: 'linear-gradient(135deg, #fbbf24, #b45309)', shadow: 'rgba(217, 119, 6, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(251, 191, 36, 0.15)', mesh2: 'rgba(217, 119, 6, 0.12)', mesh3: 'rgba(252, 211, 77, 0.18)' },
+        emerald: { baseBg: '#f0fdf4', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#064e3b', textMuted: '#047857', primary: '#10b981', grad: 'linear-gradient(135deg, #34d399, #059669)', shadow: 'rgba(16, 185, 129, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(52, 211, 153, 0.15)', mesh2: 'rgba(16, 185, 129, 0.12)', mesh3: 'rgba(110, 231, 183, 0.18)' },
+        indigo: { baseBg: '#eef2ff', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#312e81', textMuted: '#4338ca', primary: '#4f46e5', grad: 'linear-gradient(135deg, #818cf8, #3730a3)', shadow: 'rgba(79, 70, 229, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(129, 140, 248, 0.15)', mesh2: 'rgba(79, 70, 229, 0.12)', mesh3: 'rgba(165, 180, 252, 0.18)' },
+        velvet: { baseBg: '#022c22', surface: 'rgba(6, 78, 59, 0.92)', textMain: '#ecfdf5', textMuted: '#6ee7b7', primary: '#10b981', grad: 'linear-gradient(135deg, #34d399, #047857)', shadow: 'rgba(16, 185, 129, 0.15)', border: 'rgba(255, 255, 255, 0.1)', mesh1: 'rgba(52, 211, 153, 0.15)', mesh2: 'rgba(16, 185, 129, 0.12)', mesh3: 'rgba(110, 231, 183, 0.18)' }
+      }; 
+      const t = palettes[themeName] || palettes['red']; const r = document.documentElement; 
+      for (const [key, value] of Object.entries(t)) { r.style.setProperty(`--t-${key.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}`, value); } 
+      window.generatePremiumParticles(themeName); 
+    };
+    
     window.generatePremiumParticles = function(themeName) { const container = document.getElementById('premium-particles'); if(!container) return; container.innerHTML = ''; const config = { shape: 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z', count: 15, dir: 'down' }; for(let i = 0; i < config.count; i++) { const p = document.createElement('div'); p.className = 'premium-svg-particle'; p.innerHTML = `<svg viewBox="0 0 24 24" width="100%" height="100%"><path d="${config.shape}"></path></svg>`; const size = Math.random() * 20 + 15; const left = Math.random() * 100; const duration = Math.random() * 15 + 15; const delay = Math.random() * -20; p.style.width = `${size}px`; p.style.height = `${size}px`; p.style.left = `${left}vw`; p.style.animationName = config.dir === 'up' ? 'premium-rise' : 'premium-fall'; p.style.animationDuration = `${duration}s`; p.style.animationDelay = `${delay}s`; container.appendChild(p); window.animateParticle(p); } };
   </script>
 </body>
