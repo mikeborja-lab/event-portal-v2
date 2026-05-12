@@ -147,6 +147,35 @@
     
     .stagger-card { opacity: 0; transform: translateY(30px); transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
     .stagger-card.animate-entry { opacity: 1; transform: translateY(0); }
+
+    /* 4. Filled range slider track */
+    input[type=range]::-webkit-slider-runnable-track {
+      background: linear-gradient(to right, var(--t-primary) 0%, var(--t-primary) var(--fill, 50%), var(--t-base-bg) var(--fill, 50%), var(--t-base-bg) 100%);
+    }
+
+    /* 5. Score number pop animation */
+    @keyframes score-pop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.3); color: var(--t-primary); }
+      100% { transform: scale(1); }
+    }
+    .score-pop { animation: score-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); display: inline-block; }
+
+    /* 7. View transition animation */
+    @keyframes view-in {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .view-animate { animation: view-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+    /* 9. Fix the stagger-card observer */
+    .stagger-card {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                  transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .stagger-card.visible { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body class="pb-28 font-sans min-h-screen relative">
@@ -446,6 +475,10 @@
     <button onclick="switchView('admin')" id="nav-admin" class="nav-btn hidden theme-text-muted opacity-60"><svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span class="text-[9px] font-black uppercase tracking-widest">Admin</span></button>
     <button onclick="switchView('login')" id="nav-login" class="nav-btn theme-text-muted opacity-60"><svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg><span class="text-[9px] font-black uppercase tracking-widest">Login</span></button>
   </nav>
+
+  <div id="offline-toast" style="position:fixed;bottom:6rem;left:50%;transform:translateX(-50%) translateY(20px);background:#1f2937;color:#f9fafb;padding:.6rem 1.4rem;border-radius:999px;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:0;transition:all .4s ease;pointer-events:none;z-index:9999;white-space:nowrap">
+    ⚡ Offline — score queued locally
+  </div>
   
   <script type="module">
     // ==========================================
@@ -551,6 +584,25 @@
           window.switchView('home');
         }
 
+        // 2. Parallax Hero Header
+        const heroContent = document.querySelector('.header-3d-content');
+        if (heroContent) {
+            document.addEventListener('mousemove', e => {
+              if (document.getElementById('view-home') && document.getElementById('view-home').classList.contains('hidden')) return;
+              const x = (window.innerWidth / 2 - e.pageX) / 30;
+              const y = (window.innerHeight / 2 - e.pageY) / 30;
+              heroContent.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+            });
+            if (window.DeviceOrientationEvent) {
+              window.addEventListener('deviceorientation', e => {
+                if (document.getElementById('view-home') && document.getElementById('view-home').classList.contains('hidden')) return;
+                const x = Math.min(Math.max((e.gamma || 0) / 3, -12), 12);
+                const y = Math.min(Math.max((e.beta  || 0) / 5 - 10, -12), 12);
+                heroContent.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+              }, true);
+            }
+        }
+
       } catch(err) { 
         const loader = document.getElementById('loader');
         if (loader) loader.classList.add('hidden'); 
@@ -649,7 +701,7 @@
         offlineQueue.push(payload);
         localStorage.setItem('pageant_offline_queue', JSON.stringify(offlineQueue));
         finalizeSubmitUI();
-        window.showModal("Offline Mode", "Score saved locally. It will sync when connection returns.", "alert");
+        window.showOfflineToast();
         return;
       }
 
@@ -663,6 +715,7 @@
       }
 
       function finalizeSubmitUI() {
+          if (navigator.vibrate) navigator.vibrate([15, 20, 60]);
           window.lockedScores[candidateId] = window.lockedScores[candidateId] || {}; 
           window.lockedScores[candidateId][window.currentSegment] = true; 
           cardPanel.classList.add('score-locked-flash'); 
@@ -836,17 +889,72 @@
     window.sha256 = async function(message) { const msgBuffer = new TextEncoder().encode(message); const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer); return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join(''); };
     window.generateUUID = function() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); }); };
 
-    window.animateParticle = function(el) {  
-      let x = parseFloat(el.style.left);  
-      let amplitude = (Math.random() * 3) + 1; 
-      let frequency = (Math.random() * 0.02) + 0.01;  
-      let t = Math.random() * 100;  
-      function tick() {    
-        t += 0.5;    
-        el.style.left = (x + Math.sin(t * frequency) * amplitude) + 'vw';    
-        requestAnimationFrame(tick);  
-      }  
-      tick();
+    window.animateParticle = function(el) {
+      let baseX = parseFloat(el.style.left);
+      let amplitude = Math.random() * 2.5 + 0.8;
+      let frequency = Math.random() * 0.015 + 0.007;
+      let t = Math.random() * 100;
+      (function tick() {
+        t += 0.45;
+        el.style.left = (baseX + Math.sin(t * frequency) * amplitude) + 'vw';
+        requestAnimationFrame(tick);
+      })();
+    };
+
+    window.showOfflineToast = function() {
+      const t = document.getElementById('offline-toast'); if (!t) return;
+      t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)';
+      setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(20px)'; }, 3500);
+    };
+
+    window.animateCount = function(el, target, decimals = 2, duration = 700) {
+      const start = parseFloat(el.dataset.current || 0); const diff = target - start;
+      if (Math.abs(diff) < 0.01) { el.innerText = target.toFixed(decimals); return; }
+      let startTime = null;
+      (function step(ts) {
+        if (!startTime) startTime = ts;
+        const progress = Math.min((ts - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3); 
+        el.innerText = (start + diff * eased).toFixed(decimals);
+        if (progress < 1) requestAnimationFrame(step);
+        else { el.innerText = target.toFixed(decimals); el.dataset.current = target; }
+      })(performance.now());
+    };
+
+    window.animateRowSwap = function(containerId) {
+      const container = document.getElementById(containerId); if (!container) return;
+      const rows = container.querySelectorAll('.theme-table-row');
+      const positions = new Map();
+      rows.forEach(row => { positions.set(row.dataset.id, row.getBoundingClientRect().top); });
+      return {
+        play: () => {
+          container.querySelectorAll('.theme-table-row').forEach(row => {
+            const firstTop = positions.get(row.dataset.id); const lastTop = row.getBoundingClientRect().top;
+            if (firstTop && firstTop !== lastTop) {
+              const deltaY = firstTop - lastTop;
+              row.style.transition = 'none'; row.style.transform = `translateY(${deltaY}px)`;
+              requestAnimationFrame(() => {
+                row.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease';
+                row.style.transform = '';
+              });
+            }
+          });
+        }
+      };
+    };
+
+    window.initCarouselSwipe = function() {
+      const track = document.getElementById('carousel-track'); if (!track) return;
+      let startX = 0, startY = 0;
+      track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; clearInterval(window.carouselInterval); }, { passive: true });
+      track.addEventListener('touchend', e => {
+        const dx = startX - e.changedTouches[0].clientX; const dy = startY - e.changedTouches[0].clientY;
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 45) {
+          window.currentCarouselIndex = dx > 0 ? (window.currentCarouselIndex + 1) % window.candidates.length : (window.currentCarouselIndex - 1 + window.candidates.length) % window.candidates.length;
+          window.updateCarousel();
+        }
+        window.startCarouselAutoPlay();
+      }, { passive: true });
     };
     
     window.showModal = function(title, message, type = 'alert', callback = null) {
@@ -884,7 +992,12 @@
       if (targetView === 'scores') window.fetchScoresData();
       if (targetView === 'admin') window.renderAdminDashboard();
       ['home', 'login', 'judging', 'scores', 'admin', 'voting'].forEach(v => { const el = document.getElementById(`view-${v}`); if(el) el.classList.add('hidden'); });
-      const targetEl = document.getElementById(`view-${targetView}`); if(targetEl) targetEl.classList.remove('hidden');
+      const targetEl = document.getElementById(`view-${targetView}`);
+      if (targetEl) {
+       targetEl.classList.remove('hidden');
+       targetEl.classList.add('view-animate');
+       setTimeout(() => targetEl.classList.remove('view-animate'), 450);
+     };
       ['home', 'judging', 'scores', 'admin', 'login'].forEach(nav => { const el = document.getElementById(`nav-${nav}`); if(el) { el.classList.remove('theme-text', 'opacity-100', 'theme-bg-soft', '-translate-y-2', 'shadow-md'); el.classList.add('theme-text-muted', 'opacity-60'); } });
       const navTarget = targetView === 'voting' ? 'home' : targetView; const activeNav = document.getElementById(`nav-${navTarget}`);
       if(activeNav) { activeNav.classList.remove('theme-text-muted', 'opacity-60'); activeNav.classList.add('theme-text', 'opacity-100', 'theme-bg-soft', '-translate-y-2', 'shadow-md'); }
@@ -892,42 +1005,106 @@
     }
 
     window.renderHomeGallery = function() {
-      const isVotingEnabled = window.settings['public_voting'] === true || String(window.settings['public_voting']).toLowerCase() === 'true';
-      const cTrack = document.getElementById('carousel-track');
+      const cTrack = document.getElementById('carousel-track'); 
+      const fallbackImg = "https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=800&q=80";
+      const isVotingEnabled = String(window.settings['public_voting']).toLowerCase() === 'true';
+
       if (cTrack) {
-        cTrack.innerHTML = window.candidates.map((c, index) => `
-          <div class="carousel-item" onclick="goToCarousel(${index})">
-            <img src="${c.img}" class="absolute inset-0 w-full h-full object-cover object-top opacity-95">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
-            <div class="absolute bottom-0 inset-x-0 p-5 text-center">
-              <p class="text-[10px] font-black uppercase tracking-[0.3em] mb-1 text-white/70">No. ${(c.id).toString().padStart(2, '0')}</p>
-              <h3 class="text-2xl font-black tracking-tight leading-none text-white drop-shadow-md">${c.name}</h3>
-            </div>
-          </div>
-        `).join('');
-        window.updateCarousel(); window.startCarouselAutoPlay();
+        cTrack.innerHTML = window.candidates.map((c, index) => {
+          const imgSrc = (c.img && c.img.length > 5) ? c.img : fallbackImg;
+          return `<div class="carousel-item" onclick="window.goToCarousel(${index})"><img src="${imgSrc}" loading="lazy" onerror="this.src='${fallbackImg}'" class="absolute inset-0 w-full h-full object-cover object-top opacity-95"><div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div><div class="absolute bottom-0 inset-x-0 p-5 text-center"><p class="text-[10px] font-black uppercase-tracking tracking-[0.3em] mb-1 text-white/70">No. ${(c.id).toString().padStart(2, '0')}</p><h3 class="text-2xl font-black tracking-tight leading-none text-white drop-shadow-md">${c.name}</h3></div></div>`;
+        }).join('');
+        window.updateCarousel(); window.startCarouselAutoPlay(); window.initCarouselSwipe();
       }
 
+      // Restore Public Voting UI
       if (isVotingEnabled) {
         if(document.getElementById('vote-prompt-section')) document.getElementById('vote-prompt-section').classList.remove('hidden');
         if(document.getElementById('voting-gallery')) {
-          document.getElementById('voting-gallery').innerHTML = window.candidates.map((c, index) => `
+          document.getElementById('voting-gallery').innerHTML = window.candidates.map((c, index) => {
+            const imgSrc = (c.img && c.img.length > 5) ? c.img : fallbackImg;
+            return `
             <div class="card-panel flex items-center p-4 gap-4 mb-4 shadow-md bg-[var(--t-surface)] animate-slide-right" style="animation-delay: ${index * 0.1}s;">
-              <img src="${c.img}" class="w-16 h-16 rounded-[1rem] object-cover shadow-sm border border-black/5">
+              <img src="${imgSrc}" loading="lazy" onerror="this.src='${fallbackImg}'" class="w-16 h-16 rounded-[1rem] object-cover shadow-sm border border-black/5">
               <div class="flex-1">
                   <h4 class="font-black text-lg tracking-tight leading-none" style="color: var(--t-text-main);">${c.name}</h4>
-                  <p class="text-[9px] theme-text-muted font-bold uppercase tracking-widest mt-1">#${(c.id).toString().padStart(2, '0')} - ${c.location}</p>
+                  <p class="text-[9px] theme-text-muted font-bold uppercase-tracking tracking-widest mt-1">#${(c.id).toString().padStart(2, '0')}</p>
               </div>
-              <button onclick="submitPublicVote('${c.id}', '${c.name.replace(/'/g, "\\'")}')" class="theme-btn px-5 py-3 rounded-xl font-black text-xs uppercase shadow-md active:scale-95 transition-all tracking-wider">Vote</button>
+              <button onclick="window.submitPublicVote('${c.id}', '${c.name.replace(/'/g, "\\'")}')" class="theme-btn px-5 py-3 rounded-xl font-black text-xs uppercase-tracking shadow-md active:scale-95 transition-all tracking-wider">Vote</button>
             </div>
-          `).join('');
+          `}).join('');
         }
-        window.setupVotingDeadline();
+        if(typeof window.setupVotingDeadline === 'function') window.setupVotingDeadline();
       } else {
         if(document.getElementById('vote-prompt-section')) document.getElementById('vote-prompt-section').classList.add('hidden');
+        if(document.getElementById('voting-gallery')) document.getElementById('voting-gallery').innerHTML = '';
         if(window.votingTimerInterval) clearInterval(window.votingTimerInterval);
       }
-    }
+    };
+
+    window.submitPublicVote = async function(candidateId, candidateName) {
+      const voteKey = `voted_${window.settings['app_title']}`;
+      if (localStorage.getItem(voteKey)) {
+        window.alert("You have already cast your vote for this event.");
+        return;
+      }
+      
+      window.showModal("Confirm Vote", `Cast your official public vote for <b>${candidateName}</b>? This cannot be undone.`, "confirm", async () => {
+        try {
+          const btn = event.target;
+          const origText = btn.innerText;
+          btn.innerText = "Voting...";
+          btn.disabled = true;
+          
+          await setDoc(doc(collection(db, "PublicVotes")), {
+            candidateId: candidateId,
+            candidateName: candidateName,
+            timestamp: Date.now(),
+            userAgent: navigator.userAgent
+          });
+          
+          localStorage.setItem(voteKey, "true");
+          window.alert(`Success! Your vote for ${candidateName} has been recorded.`);
+          btn.innerText = "Voted";
+        } catch (err) {
+          window.alert("Error submitting vote: " + err.message);
+          btn.innerText = origText;
+          btn.disabled = false;
+        }
+      });
+    };
+
+    window.setupVotingDeadline = function() {
+      if(window.votingTimerInterval) clearInterval(window.votingTimerInterval);
+      const deadlineStr = window.settings['voting_deadline'];
+      const timerEl = document.getElementById('countdown-timer');
+      const closedMsg = document.getElementById('vote-closed-msg');
+      const gallery = document.getElementById('voting-gallery');
+      const countdownDiv = document.getElementById('vote-countdown');
+
+      if(!deadlineStr || !timerEl) return;
+
+      const deadline = new Date(deadlineStr).getTime();
+      
+      window.votingTimerInterval = setInterval(() => {
+        const now = new Date().getTime();
+        const distance = deadline - now;
+
+        if (distance < 0) {
+          clearInterval(window.votingTimerInterval);
+          if(countdownDiv) countdownDiv.classList.add('hidden');
+          if(closedMsg) closedMsg.classList.remove('hidden');
+          if(gallery) gallery.classList.add('opacity-50', 'pointer-events-none', 'grayscale');
+          return;
+        }
+
+        const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((distance % (1000 * 60)) / 1000);
+
+        timerEl.innerText = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      }, 1000);
+    };
 
     window.setupVotingDeadline = function() {
       if (window.votingTimerInterval) clearInterval(window.votingTimerInterval);
@@ -1014,24 +1191,13 @@
     window.editUser = function(username) { const u = window.users.find(user => user.username.toString() === username.toString()); if(!u) return; document.getElementById('user-name').value = u.name; document.getElementById('user-username').value = u.username; document.getElementById('user-username').readOnly = true; document.getElementById('user-password').value = ""; document.getElementById('user-password').placeholder = "(Blank = No Change)"; document.getElementById('user-role').value = u.role; document.getElementById('label-user-form').innerText = "Modify Account Provision"; document.getElementById('btn-add-user').innerText = "Update User"; document.getElementById('btn-cancel-user').classList.remove('hidden'); window.editState.user = u.username; }
 
     window.processAndRenderScores = function(rawScores, rawVotes) {
-      const isVotingEnabled = window.settings['public_voting'] === true || String(window.settings['public_voting']).toLowerCase() === 'true';
-      const pcCard = document.getElementById('peoples-choice-card');
-      if (isVotingEnabled && pcCard) {
-        pcCard.classList.remove('hidden'); 
-        let votesArray = window.candidates.map(c => ({ name: c.name, votes: (rawVotes && rawVotes[c.name]) ? rawVotes[c.name] : 0 })).sort((a, b) => b.votes - a.votes);
-        let pcHTML = `<tr class="theme-table-header text-[10px] uppercase tracking-widest"><th class="p-5 font-black text-center w-24 theme-text-muted">Rank</th><th class="p-5 font-black theme-text-muted">Identity</th><th class="p-5 font-black text-right w-32 theme-text-muted">Total Votes</th></tr>`;
-        votesArray.forEach((c, index) => {
-          const rankBadge = index === 0 ? `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-amber-400 text-amber-900 font-black shadow-[0_0_15px_rgba(251,191,36,0.5)] text-xs mx-auto">1</div>` : index === 1 ? `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-300 text-slate-800 font-black shadow-md text-xs mx-auto">2</div>` : index === 2 ? `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-orange-700 text-orange-50 font-black shadow-md text-xs mx-auto">3</div>` : `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 theme-text-muted font-bold text-xs mx-auto">${index + 1}</div>`;
-          pcHTML += `<tr class="theme-table-row"><td class="p-4 align-middle">${rankBadge}</td><td class="p-5 font-black text-inherit tracking-wide uppercase text-sm align-middle">${c.name}</td><td class="p-5 font-black theme-text text-xl text-right align-middle">${c.votes.toLocaleString()}</td></tr>`;
-        });
-        document.getElementById('table-peoples-choice').innerHTML = pcHTML;
-      } else if (pcCard) pcCard.classList.add('hidden');
-
+      const avgFlipper = window.animateRowSwap('table-averages');
+      
       const normalizedScores = (rawScores || []).map(s => { 
         let normalized = {}; 
         for (let key in s) { normalized[key.toLowerCase().replace(/\s+/g, '')] = s[key]; }
-        normalized.judge = (s.judge || s.Judge || s.JUDGE || "").toString().trim(); 
-        normalized.candidate = (s.candidate || s.Candidate || s.CANDIDATE || "").toString().trim(); 
+        normalized.judge = (s.judge || "").toString().trim(); 
+        normalized.candidate = (s.candidate || "").toString().trim(); 
         return normalized; 
       });
       
@@ -1043,78 +1209,101 @@
         window.criteria.forEach(crit => { 
           let safeCritId = crit.id.toString().toLowerCase().replace(/\s+/g, '');
           let avg = count ? sc.reduce((sum, s) => sum + (parseFloat(s[safeCritId]) || parseFloat(s[crit.id]) || 0), 0) / count : 0; 
-          candData[crit.id] = avg; candData.total += avg; 
+          candData[crit.id] = avg; 
+          candData.total += avg; 
         }); 
         return candData; 
       });
-      
       aggregated.sort((a, b) => b.total - a.total); 
-      const maxScores = {}; 
-      window.criteria.forEach(crit => { maxScores[crit.id] = Math.max(...aggregated.map(c => c[crit.id] || 0)); });
 
       const avgTable = document.getElementById('table-averages'); 
       if (avgTable) {
-        let avgHTML = `<tr class="theme-table-header text-[10px] uppercase tracking-widest"><th class="p-5 font-black text-center w-24 theme-text-muted">Rank</th><th class="p-5 font-black theme-text-muted">Identity</th>`;
-        window.criteria.forEach(crit => { avgHTML += `<th class="p-5 font-black theme-text-muted text-center">${crit.short} <span class="font-mono text-[9px] opacity-70">(${crit.max})</span></th>`; }); 
-        avgHTML += `<th class="p-5 font-black theme-text text-right">Aggregated</th></tr>`;
-        aggregated.forEach((c, index) => {
-          const rankBadge = index === 0 ? `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-amber-400 text-amber-900 font-black shadow-[0_0_15px_rgba(251,191,36,0.5)] text-xs mx-auto">1</div>` : index === 1 ? `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-300 text-slate-800 font-black shadow-md text-xs mx-auto">2</div>` : index === 2 ? `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-orange-700 text-orange-50 font-black shadow-md text-xs mx-auto">3</div>` : `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 theme-text-muted font-bold text-xs mx-auto">${index + 1}</div>`;
-          avgHTML += `<tr class="theme-table-row"><td class="p-4 align-middle">${rankBadge}</td><td class="p-5 font-black text-inherit tracking-wide uppercase text-sm align-middle">${c.name}</td>`;
-          window.criteria.forEach(crit => { 
-            let isMax = c[crit.id] === maxScores[crit.id] && c[crit.id] > 0; 
-            let cellContent = isMax ? `<span class="inline-block px-3 py-1.5 rounded-lg theme-table-header theme-text font-black border border-[var(--t-primary)] shadow-sm text-sm">${c[crit.id].toFixed(2)}</span>` : `<span class="text-inherit opacity-80 font-bold text-sm">${c[crit.id].toFixed(2)}</span>`; 
-            avgHTML += `<td class="p-4 text-center align-middle">${cellContent}</td>`; 
-          });
-          avgHTML += `<td class="p-5 font-black theme-text text-xl text-right align-middle">${c.total.toFixed(2)}</td></tr>`;
-        }); 
-        avgTable.innerHTML = avgHTML;
-      }
-
-      const detailTable = document.getElementById('table-detailed'); 
-      if (detailTable) {
-        let detailHTML = `<tr class="theme-table-header text-[10px] uppercase tracking-widest"><th class="p-5 font-black theme-text-muted">Assessor</th><th class="p-5 font-black theme-text-muted">Identity</th>`;
-        window.criteria.forEach(crit => { detailHTML += `<th class="p-5 font-black theme-text-muted text-center">${crit.short}</th>`; }); 
-        detailHTML += `<th class="p-5 font-black theme-text text-right">Summation</th></tr>`;
-        normalizedScores.forEach((s) => {
-          detailHTML += `<tr class="theme-table-row"><td class="p-5 font-black text-inherit uppercase text-xs align-middle opacity-70">${s.judge}</td><td class="p-5 text-inherit font-bold tracking-wide text-xs align-middle">${s.candidate}</td>`;
-          let rowSum = 0; 
-          window.criteria.forEach(crit => { 
-            let safeCritId = crit.id.toString().toLowerCase().replace(/\s+/g, '');
-            let score = parseFloat(s[safeCritId]) || parseFloat(s[crit.id]) || 0; 
-            rowSum += score; 
-            let styleClass = score === 0 ? "!text-red-500 font-black drop-shadow-md !opacity-100" : "text-inherit font-medium opacity-80";
-            detailHTML += `<td class="p-4 ${styleClass} text-center align-middle">${score}</td>`; 
+        if (avgTable.innerHTML.trim() === "") {
+          let avgHTML = `<tr class="theme-table-header text-[10px] uppercase-tracking tracking-widest"><th class="p-5 font-black text-center w-24 theme-text-muted">Rank</th><th class="p-5 font-black theme-text-muted text-left">Identity</th>`;
+          window.criteria.forEach(crit => { avgHTML += `<th class="p-5 font-black theme-text-muted text-center">${crit.short}</th>`; }); 
+          avgHTML += `<th class="p-5 font-black theme-text text-right">Aggregated</th></tr>`;
+          
+          aggregated.forEach((c, index) => {
+            avgHTML += `<tr class="theme-table-row" data-id="${c.name.replace(/\s+/g, '')}"><td class="p-4 align-middle text-center"><div class="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 theme-text-muted font-bold text-xs mx-auto">${index + 1}</div></td><td class="p-5 font-black uppercase-tracking text-sm align-middle">${c.name}</td>`;
+            window.criteria.forEach(crit => { avgHTML += `<td class="p-4 text-center align-middle"><span id="avg-${c.name.replace(/\s+/g, '')}-${crit.id}" class="score-number font-bold text-sm" data-current="${c[crit.id]}">${c[crit.id].toFixed(2)}</span></td>`; });
+            avgHTML += `<td class="p-5 font-black theme-text text-xl text-right align-middle"><span id="total-${c.name.replace(/\s+/g, '')}" class="score-number" data-current="${c.total}">${c.total.toFixed(2)}</span></td></tr>`;
           }); 
-          detailHTML += `<td class="p-5 font-black theme-text text-right text-sm align-middle">${rowSum}</td></tr>`;
-        }); 
-        detailTable.innerHTML = detailHTML;
+          avgTable.innerHTML = avgHTML;
+        } else {
+          if (avgFlipper) avgFlipper.play();
+          
+          // Re-order DOM quietly
+          aggregated.forEach((c, index) => {
+            const row = avgTable.querySelector(`tr[data-id="${c.name.replace(/\s+/g, '')}"]`);
+            if(row) {
+              row.querySelector('td:first-child div').innerText = index + 1; 
+              avgTable.appendChild(row); 
+            }
+          });
+
+          // Run Counters
+          aggregated.forEach(c => {
+            const candSlug = c.name.replace(/\s+/g, '');
+            window.criteria.forEach(crit => {
+                const el = document.getElementById(`avg-${candSlug}-${crit.id}`);
+                if(el) window.animateCount(el, c[crit.id]);
+            });
+            const totalEl = document.getElementById(`total-${candSlug}`);
+            if(totalEl) window.animateCount(totalEl, c.total);
+          });
+        }
       }
-    }
+    };
 
     window.renderTabs = function() { const t = document.getElementById('segment-tabs'); if(t) t.innerHTML = window.criteria.map(crit => `<button onclick="switchSegment('${crit.id}')" class="flex-shrink-0 px-6 py-3 m-1 font-black text-[10px] uppercase tracking-widest rounded-2xl transition-all border ${window.currentSegment === crit.id ? 'theme-bg-soft theme-text border-black/10 shadow-sm' : 'bg-transparent theme-text-muted border-transparent hover:theme-bg-soft hover:border-black/5'}">${crit.short}</button>`).join(''); }
     window.switchSegment = function(id) { window.currentSegment = id; window.renderTabs(); window.renderCandidates(); }
 
     window.renderCandidates = function() {
-      const activeCriteria = window.criteria.find(c => c.id === window.currentSegment); if(!activeCriteria) return;
-      const cCont = document.getElementById('candidates-container'); if(!cCont) return;
+      const activeCrit = window.criteria.find(c => c.id === window.currentSegment); 
+      const cCont = document.getElementById('candidates-container');
+      if(!activeCrit || !cCont) return;
+      const fallbackImg = "https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=800&q=80";
+      
       cCont.innerHTML = window.candidates.map(c => {
         const isLocked = window.lockedScores[c.id] && window.lockedScores[c.id][window.currentSegment]; 
-        const displayScore = isLocked ? window.scoresData[c.id][window.currentSegment] : (window.scoresData[c.id][window.currentSegment] || activeCriteria.max/2); 
+        const dScore = isLocked ? window.scoresData[c.id][window.currentSegment] : (window.scoresData[c.id][window.currentSegment] || activeCrit.max/2); 
         const btnClass = isLocked ? 'bg-black/10 text-slate-500 cursor-not-allowed border border-black/5' : 'theme-btn active:scale-95';
-        return `<div class="card-panel mb-10 overflow-hidden border-none shadow-2xl rounded-[2rem] bg-[var(--t-surface)]"><div class="relative w-full h-[28rem]"><img src="${c.img}" class="absolute inset-0 w-full h-full object-cover object-top"><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-90"></div><div class="absolute bottom-4 inset-x-4 z-10"><div class="glass-panel p-5 rounded-[1.5rem] text-center"><p class="text-[10px] font-black uppercase tracking-[0.3em] mb-1 text-white/70">Candidate #${(c.id).toString().padStart(2, '0')}</p><h2 class="text-3xl font-black tracking-tight leading-none text-white drop-shadow-md">${c.name}</h2></div></div></div><div class="p-6 relative z-20 theme-surface rounded-b-[2rem]"><div class="flex justify-between items-center mb-8 theme-bg-soft p-5 rounded-2xl border border-black/5 shadow-inner"><div class="flex flex-col"><span class="text-[9px] theme-text font-black uppercase tracking-widest mb-1.5">Evaluation Parameter</span><label class="font-black text-sm tracking-wide uppercase leading-tight">${activeCriteria.label}</label></div><div class="theme-surface px-5 py-3 rounded-xl border border-black/10 min-w-[80px] text-center shadow-sm"><span class="font-black theme-text text-2xl tracking-tighter" id="score-val-${c.id}">${displayScore.toFixed(1)}</span></div></div><div class="px-2 mb-8 relative"><input type="range" id="slider-${c.id}" min="1" max="${activeCriteria.max}" step="0.5" value="${displayScore}" oninput="document.getElementById('score-val-${c.id}').innerText=parseFloat(this.value).toFixed(1); window.scoresData['${c.id}']['${window.currentSegment}']=parseFloat(this.value);" class="w-full relative z-10" ${isLocked ? 'disabled' : ''}></div><button onclick="submitScore('${c.id}')" id="btn-${c.id}" class="w-full py-4 rounded-xl font-black transition-all tracking-widest uppercase text-xs shadow-md ${btnClass} ${isLocked ? 'disabled' : ''}">${isLocked ? 'Score Locked' : 'Submit Evaluation'}</button></div></div>`;
+        const imgSrc = (c.img && c.img.length > 5) ? c.img : fallbackImg;
+        
+        // Slider Fill Logic
+        const fillPct = ((dScore - 1) / (activeCrit.max - 1)) * 100;
+
+        return `<div class="card-panel mb-10 overflow-hidden border-none shadow-2xl rounded-[2rem] bg-[var(--t-surface)]">
+          <div class="relative w-full h-[28rem]">
+            <img src="${imgSrc}" loading="lazy" onerror="this.src='${fallbackImg}'" class="absolute inset-0 w-full h-full object-cover object-top">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-90"></div>
+            <div class="absolute bottom-4 inset-x-4 z-10"><div class="glass-panel p-5 rounded-[1.5rem] text-center"><p class="text-[10px] font-black uppercase-tracking tracking-[0.3em] mb-1 text-white/70">Candidate #${(c.id).toString().padStart(2, '0')}</p><h2 class="text-3xl font-black tracking-tight leading-none text-white drop-shadow-md">${c.name}</h2></div></div>
+          </div>
+          <div class="p-6 relative z-20 theme-surface rounded-b-[2rem]">
+            <div class="flex justify-between items-center mb-8 theme-bg-soft p-5 rounded-2xl border border-black/5 shadow-inner">
+              <div class="flex flex-col"><span class="text-[9px] theme-text font-black uppercase-tracking tracking-widest mb-1.5">Evaluation Parameter</span><label class="font-black text-sm tracking-wide uppercase-tracking leading-tight">${activeCrit.label}</label></div>
+              <div class="theme-surface px-5 py-3 rounded-xl border border-black/10 min-w-[80px] text-center shadow-sm"><span class="font-black theme-text text-2xl tracking-tighter score-number" id="score-val-${c.id}">${dScore.toFixed(1)}</span></div>
+            </div>
+            <div class="px-2 mb-8 relative">
+              <input type="range" id="slider-${c.id}" min="1" max="${activeCrit.max}" step="0.5" value="${dScore}" style="--fill: ${fillPct}%" 
+              oninput="const v = parseFloat(this.value); const el = document.getElementById('score-val-${c.id}'); el.innerText = v.toFixed(1); el.classList.remove('score-pop'); void el.offsetWidth; el.classList.add('score-pop'); window.scoresData['${c.id}']['${window.currentSegment}'] = v; this.style.setProperty('--fill', (((v - 1) / (${activeCrit.max} - 1)) * 100) + '%');" class="w-full relative z-10" ${isLocked ? 'disabled' : ''}>
+            </div>
+            <button onclick="window.submitScore('${c.id}')" id="btn-${c.id}" class="w-full py-4 rounded-xl font-black transition-all uppercase-tracking text-xs shadow-md ${btnClass}" ${isLocked ? 'disabled' : ''}>${isLocked ? 'Score Locked' : 'Submit Evaluation'}</button>
+          </div>
+        </div>`;
       }).join('');
       
+      // Stagger Observer
       const observer = new IntersectionObserver((entries) => {  
-        entries.forEach((entry, i) => {    
-          if (entry.isIntersecting) {      
-            setTimeout(() => entry.target.classList.add('animate-entry'), i * 120);      
-            observer.unobserve(entry.target);    
-          }  
+        entries.forEach((entry, i) => { 
+          if (entry.isIntersecting) { 
+            setTimeout(() => entry.target.classList.add('visible'), i * 100); 
+            observer.unobserve(entry.target); 
+          } 
         });
       }, { threshold: 0.1 });
-      
       document.querySelectorAll('.card-panel').forEach(el => { el.classList.add('stagger-card'); observer.observe(el); });
-    }
+    };
 
     window.applyTheme = function(themeName) {
       const palettes = {
