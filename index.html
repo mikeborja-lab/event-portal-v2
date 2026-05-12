@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Event Portal v2</title>
   
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@400;500;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
   
@@ -16,9 +16,9 @@
       --t-shadow: rgba(225, 29, 72, 0.15); --t-border: rgba(255, 255, 255, 0.6);
       --t-mesh-1: rgba(244, 63, 94, 0.15); --t-mesh-2: rgba(225, 29, 72, 0.12); --t-mesh-3: rgba(253, 164, 175, 0.18);
     }
-    body { background-color: var(--t-base-bg); color: var(--t-text-main); font-family: 'DM Sans', sans-serif; transition: background-color 0.4s ease, color 0.4s ease; overflow-x: hidden; }
-    h1, h2, h3, h4, h5, h6, .nav-btn label, .theme-table-header th, .uppercase-tracking { font-family: 'Syne', sans-serif; }
-    .score-number, .rolling-number { font-family: 'DM Mono', monospace; }
+    body { background-color: var(--t-base-bg); color: var(--t-text-main); font-family: 'Inter', sans-serif; transition: background-color 0.4s ease, color 0.4s ease; overflow-x: hidden; }
+    h1, h2, h3, h4, h5, h6, .nav-btn label, .theme-table-header th, .uppercase-tracking { font-family: 'Montserrat', sans-serif; }
+    .score-number, .rolling-number { font-family: 'Roboto Mono', monospace; }
 
     .mesh-bg { position: fixed; inset: -20%; z-index: -1; background-color: var(--t-base-bg); background-image: radial-gradient(circle at 15% 30%, var(--t-mesh-1), transparent 50%), radial-gradient(circle at 85% 20%, var(--t-mesh-2), transparent 50%), radial-gradient(circle at 50% 80%, var(--t-mesh-3), transparent 60%); background-size: 100% 100%; filter: blur(80px); animation: aurora-breathe 20s ease-in-out infinite alternate; pointer-events: none; }
     @keyframes aurora-breathe { 0% { transform: translate(0, 0) scale(1) rotate(0deg); } 50% { transform: translate(3%, 4%) scale(1.05) rotate(2deg); } 100% { transform: translate(-3%, -2%) scale(0.95) rotate(-2deg); } }
@@ -80,7 +80,7 @@
   <div id="app-container" class="p-4 md:p-8">
     <div class="header-3d-container mb-8 text-center mt-4">
       <div class="header-3d-content">
-        <h1 class="text-4xl md:text-5xl font-black header-3d-pop drop-shadow-lg" id="display-title">System Connecting...</h1>
+        <h1 class="text-4xl md:text-5xl font-black header-3d-pop drop-shadow-lg leading-normal py-2 inline-block" id="display-title">System Connecting...</h1>
         <p id="display-subtitle" class="text-lg opacity-80 header-3d-pop mt-2">Core Operations</p>
         <p id="display-location" class="text-sm theme-text font-bold header-3d-pop mt-1">Location Undefined</p>
       </div>
@@ -102,7 +102,12 @@
     <div id="view-login" class="hidden max-w-sm mx-auto card-panel p-8">
       <h2 class="text-2xl font-black mb-6 text-center">Secure Access</h2>
       <input type="text" id="login-username" placeholder="Username" class="w-full p-3 rounded-xl mb-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-400" onkeydown="if(event.key === 'Enter') document.getElementById('login-password').focus();">
-      <input type="password" id="login-password" placeholder="Passkey" class="w-full p-3 rounded-xl mb-6 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-400" onkeydown="if(event.key === 'Enter') window.processLogin();">
+      <div class="relative w-full mb-6">
+        <input type="password" id="login-password" placeholder="Passkey" class="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-400 pr-10" onkeydown="if(event.key === 'Enter') window.processLogin();">
+        <button type="button" onclick="const p=document.getElementById('login-password'); const i=document.getElementById('eye-icon'); if(p.type==='password'){p.type='text'; i.className='fas fa-eye-slash';}else{p.type='password'; i.className='fas fa-eye';}" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600">
+          <i id="eye-icon" class="fas fa-eye text-lg"></i>
+        </button>
+      </div>
       <p id="login-error" class="text-red-500 text-sm font-bold mb-4 hidden text-center"></p>
       <button id="login-btn" onclick="window.processLogin()" class="theme-btn w-full py-3 rounded-xl font-black uppercase-tracking text-sm">Authenticate</button>
     </div>
@@ -123,20 +128,63 @@
       </div>
     </div>
 
-    <div id="view-admin" class="hidden max-w-3xl mx-auto card-panel p-6">
-       <h2 class="text-2xl font-black mb-6 border-b pb-2">Event Architecture</h2>
-       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-         <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Event Title</label><input type="text" id="admin-setting-title" class="w-full p-2 border rounded-lg mt-1"></div>
-         <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Sub Title</label><input type="text" id="admin-setting-subtitle" class="w-full p-2 border rounded-lg mt-1"></div>
-         <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Location</label><input type="text" id="admin-setting-location" class="w-full p-2 border rounded-lg mt-1"></div>
-         <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Theme Color</label>
-            <select id="admin-setting-theme" class="w-full p-2 border rounded-lg mt-1">
-              <option value="red">Velvet (Red)</option><option value="blue">Sapphire (Blue)</option>
+    <div id="view-admin" class="hidden max-w-4xl mx-auto space-y-6 pb-20">
+       
+       <div class="card-panel p-6">
+         <h2 class="text-2xl font-black mb-6 border-b pb-2">Event Architecture</h2>
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+           <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Event Title</label><input type="text" id="admin-setting-title" class="w-full p-2 border rounded-lg mt-1"></div>
+           <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Sub Title</label><input type="text" id="admin-setting-subtitle" class="w-full p-2 border rounded-lg mt-1"></div>
+           <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Location</label><input type="text" id="admin-setting-location" class="w-full p-2 border rounded-lg mt-1"></div>
+           <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Theme Color</label>
+              <select id="admin-setting-theme" class="w-full p-2 border rounded-lg mt-1">
+                <option value="red">Velvet (Red)</option><option value="blue">Sapphire (Blue)</option>
+              </select>
+           </div>
+         </div>
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-black/5 rounded-xl border border-black/10">
+            <div class="flex items-center justify-between">
+              <label class="font-bold uppercase-tracking">Enable Public Voting</label>
+              <input type="checkbox" id="admin-setting-voting" class="w-6 h-6 rounded cursor-pointer">
+            </div>
+            <div>
+              <label class="text-xs font-bold uppercase-tracking text-gray-500">Voting Deadline (Optional)</label>
+              <input type="datetime-local" id="admin-setting-deadline" class="w-full p-2 border rounded-lg mt-1">
+            </div>
+         </div>
+         <button onclick="window.saveSettings()" class="theme-btn px-6 py-3 rounded-lg font-bold w-full">Deploy Configuration</button>
+       </div>
+
+       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+         <div class="card-panel p-5">
+            <h3 class="font-black uppercase-tracking border-b pb-2 mb-4">Candidates</h3>
+            <div id="admin-candidates-list" class="space-y-2 mb-4 max-h-48 overflow-y-auto text-sm"></div>
+            <input type="text" id="new-cand-id" placeholder="ID (e.g. 1)" class="w-full p-2 border rounded mt-2 text-sm">
+            <input type="text" id="new-cand-name" placeholder="Full Name" class="w-full p-2 border rounded mt-2 text-sm">
+            <button onclick="window.addCandidate()" class="w-full bg-slate-800 text-white rounded p-2 mt-2 text-xs font-bold">Add Candidate</button>
+         </div>
+
+         <div class="card-panel p-5">
+            <h3 class="font-black uppercase-tracking border-b pb-2 mb-4">Criteria</h3>
+            <div id="admin-criteria-list" class="space-y-2 mb-4 max-h-48 overflow-y-auto text-sm"></div>
+            <input type="text" id="new-crit-id" placeholder="ID (e.g. gown)" class="w-full p-2 border rounded mt-2 text-sm">
+            <input type="text" id="new-crit-label" placeholder="Full Label" class="w-full p-2 border rounded mt-2 text-sm">
+            <input type="number" id="new-crit-max" placeholder="Max Score (e.g. 10)" class="w-full p-2 border rounded mt-2 text-sm">
+            <button onclick="window.addCriteria()" class="w-full bg-slate-800 text-white rounded p-2 mt-2 text-xs font-bold">Add Criteria</button>
+         </div>
+
+         <div class="card-panel p-5">
+            <h3 class="font-black uppercase-tracking border-b pb-2 mb-4">System Users</h3>
+            <div id="admin-users-list" class="space-y-2 mb-4 max-h-48 overflow-y-auto text-sm"></div>
+            <input type="text" id="new-user-username" placeholder="Username" class="w-full p-2 border rounded mt-2 text-sm">
+            <input type="text" id="new-user-pass" placeholder="Password" class="w-full p-2 border rounded mt-2 text-sm">
+            <select id="new-user-role" class="w-full p-2 border rounded mt-2 text-sm">
+              <option value="Judge">Judge</option><option value="Tabulator">Tabulator</option><option value="Admin">Admin</option>
             </select>
+            <button onclick="window.addUser()" class="w-full bg-slate-800 text-white rounded p-2 mt-2 text-xs font-bold">Add User</button>
          </div>
        </div>
-       <button onclick="window.saveSettings()" class="theme-btn px-6 py-2 rounded-lg font-bold w-full md:w-auto">Deploy Configuration</button>
-       <p class="text-xs text-gray-400 mt-4 italic">* Candidate and Criteria management arrays removed for brevity in this boilerplate.</p>
+
     </div>
   </div>
 
@@ -160,7 +208,6 @@
     </div>
   </nav>
 
-  <div id="offline-toast">⚡ Offline — score queued locally</div>
   <div id="custom-modal" class="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
     <div id="custom-modal-content" class="theme-surface p-8 rounded-3xl shadow-2xl max-w-sm w-full mx-4 transform scale-95 transition-transform duration-300">
       <div class="text-center mb-6"><h3 id="modal-title" class="text-2xl font-black text-gray-800"></h3></div>
@@ -553,6 +600,69 @@
         p.style.width = `${size}px`; p.style.height = `${size}px`; p.style.left = `${left}vw`; p.style.animationName = config.dir === 'up' ? 'premium-rise' : 'premium-fall'; p.style.animationDuration = `${duration}s`; p.style.animationDelay = `${delay}s`;
         container.appendChild(p); window.animateParticle(p);
       }
+    }
+
+    import { deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    window.renderAdminDashboard = function() {
+      // Load Settings
+      if (document.getElementById('admin-setting-title')) {
+        document.getElementById('admin-setting-title').value = window.settings['app_title'] || ''; 
+        document.getElementById('admin-setting-subtitle').value = window.settings['app_subtitle'] || ''; 
+        document.getElementById('admin-setting-location').value = window.settings['location_text'] || ''; 
+        document.getElementById('admin-setting-theme').value = window.settings['theme_color'] || 'red';
+        document.getElementById('admin-setting-voting').checked = String(window.settings['public_voting']).toLowerCase() === 'true';
+        document.getElementById('admin-setting-deadline').value = window.settings['voting_deadline'] || '';
+      }
+      // Load Lists
+      if (document.getElementById('admin-candidates-list')) {
+        document.getElementById('admin-candidates-list').innerHTML = window.candidates.map(c => `<div class="flex justify-between items-center p-2 bg-slate-50 rounded border"><span><b>${c.id}</b>: ${c.name}</span><button onclick="window.deleteDocEntry('Candidates', '${c.id}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></div>`).join('');
+        document.getElementById('admin-criteria-list').innerHTML = window.criteria.map(c => `<div class="flex justify-between items-center p-2 bg-slate-50 rounded border"><span>${c.label} (${c.max}pt)</span><button onclick="window.deleteDocEntry('Criteria', '${c.id}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></div>`).join('');
+        document.getElementById('admin-users-list').innerHTML = window.users.map(u => `<div class="flex justify-between items-center p-2 bg-slate-50 rounded border"><span class="truncate pr-2">${u.username} (${u.role})</span><button onclick="window.deleteDocEntry('Users', '${u.id}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></div>`).join('');
+      }
+    }
+
+    window.saveSettings = async function() {
+      try {
+        const btn = document.querySelector('#view-admin .theme-btn'); btn.innerText = "Deploying..."; btn.disabled = true;
+        const updates = {
+          'app_title': document.getElementById('admin-setting-title').value, 
+          'app_subtitle': document.getElementById('admin-setting-subtitle').value,
+          'location_text': document.getElementById('admin-setting-location').value, 
+          'theme_color': document.getElementById('admin-setting-theme').value,
+          'public_voting': document.getElementById('admin-setting-voting').checked,
+          'voting_deadline': document.getElementById('admin-setting-deadline').value
+        };
+        for (const [key, value] of Object.entries(updates)) { await setDoc(doc(db, "Settings", key), { value: value }); }
+        window.alert("Configuration successfully deployed to all devices."); btn.innerText = "Deploy Configuration"; btn.disabled = false;
+      } catch (err) { window.alert("Error deploying: " + err.message); }
+    }
+
+    // CRUD Operations for Admin
+    window.addCandidate = async function() {
+        const id = document.getElementById('new-cand-id').value; const name = document.getElementById('new-cand-name').value;
+        if(!id || !name) return window.alert("ID and Name are required.");
+        await setDoc(doc(db, "Candidates", id), { id: parseInt(id), name: name, img: "" });
+        window.alert("Candidate added. Refresh to view changes.");
+    }
+    window.addCriteria = async function() {
+        const id = document.getElementById('new-crit-id').value; const label = document.getElementById('new-crit-label').value; const max = document.getElementById('new-crit-max').value;
+        if(!id || !label || !max) return window.alert("All fields are required.");
+        await setDoc(doc(db, "Criteria", id), { id: id, label: label, short: id.substring(0,4), max: max });
+        window.alert("Criteria added. Refresh to view changes.");
+    }
+    window.addUser = async function() {
+        const user = document.getElementById('new-user-username').value; const pass = document.getElementById('new-user-pass').value; const role = document.getElementById('new-user-role').value;
+        if(!user || !pass) return window.alert("Username and Password are required.");
+        const hashedPass = await window.sha256(pass);
+        await setDoc(doc(db, "Users", user), { username: user, name: user, password: hashedPass, role: role });
+        window.alert("User added. Refresh to view changes.");
+    }
+    window.deleteDocEntry = async function(collectionName, docId) {
+        if(confirm(`Are you sure you want to delete ${docId} from ${collectionName}?`)) {
+            await deleteDoc(doc(db, collectionName, docId));
+            window.alert(`Deleted. Refresh page to update view.`);
+        }
     }
   </script>
 </body>
