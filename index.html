@@ -176,6 +176,35 @@
       position: relative;
       z-index: 1;
     }
+
+    /* ── CAROUSEL ─────────────────────────────────────────────── */
+    .carousel-container {
+      perspective: 1200px; transform-style: preserve-3d;
+      display: flex; justify-content: center; align-items: center;
+      height: 34rem; position: relative; width: 100%; overflow: hidden;
+      touch-action: pan-y;
+    }
+    .carousel-item {
+      position: absolute; width: 75%; max-width: 340px; height: 30rem;
+      border-radius: 2rem; overflow: hidden;
+      transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s;
+      cursor: pointer; box-shadow: 0 15px 35px var(--t-shadow);
+    }
+    .item-active { transform: translateX(0) scale(1) translateZ(60px); z-index:30; opacity:1; pointer-events:auto; cursor:default; }
+    .item-prev   { transform: translateX(-65%) scale(.8) translateZ(-100px) rotateY(25deg); z-index:20; opacity:.5; }
+    .item-next   { transform: translateX(65%)  scale(.8) translateZ(-100px) rotateY(-25deg); z-index:20; opacity:.5; }
+    .item-hidden { opacity:0; pointer-events:none; transform:scale(.6) translateZ(-300px); z-index:10; }
+    
+    /* ── PARALLAX CANDIDATE CARD ──────────────────────────────── */
+    .parallax-container { perspective: 1000px; }
+    .parallax-inner {
+      transform-style: preserve-3d;
+      transition: transform 0.15s ease-out;
+      will-change: transform;
+      width: 100%; height: 100%;
+    }
+    .parallax-img   { transform: translateZ(-30px) scale(1.15); }
+    .parallax-front { transform: translateZ(45px); }
   </style>
 </head>
 <body class="min-h-screen pb-24">
@@ -190,7 +219,7 @@
 </div>
 
 <div id="app-container" class="p-4 md:p-8">
-  <header class="hero-header mb-8">
+  <header class="hero-header mb-8 -mx-4 md:-mx-8">
     <!-- Sparkles -->
     <div class="diamond-sparkle" style="top:10%; left:8%;  animation-delay:0s"></div>
     <div class="diamond-sparkle" style="top:15%; right:10%; animation-delay:1.1s"></div>
@@ -780,14 +809,14 @@
   window.deleteDocEntry = async function(collectionName, docId) { if(confirm(`Are you sure you want to delete ${docId} from ${collectionName}?`)) { await deleteDoc(doc(db, collectionName, docId)); window.alert(`Deleted. Refresh page to update view.`); } };
 
   window.applyTheme = function(themeName) { 
-    const palettes = { 
-      red: { baseBg: '#fcfcfc', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#111827', textMuted: '#6b7280', primary: '#e11d48', grad: 'linear-gradient(135deg, #f43f5e, #be123c)', shadow: 'rgba(225, 29, 72, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(244, 63, 94, 0.15)', mesh2: 'rgba(225, 29, 72, 0.12)', mesh3: 'rgba(253, 164, 175, 0.18)' }, 
-      blue: { baseBg: '#f8fafc', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#0f172a', textMuted: '#64748b', primary: '#2563eb', grad: 'linear-gradient(135deg, #60a5fa, #1d4ed8)', shadow: 'rgba(37, 99, 235, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(96, 165, 250, 0.15)', mesh2: 'rgba(59, 130, 246, 0.12)', mesh3: 'rgba(191, 219, 254, 0.18)' },
-      dark: { baseBg: '#0f172a', surface: 'rgba(30, 41, 59, 0.92)', textMain: '#f8fafc', textMuted: '#94a3b8', primary: '#38bdf8', grad: 'linear-gradient(135deg, #7dd3fc, #0284c7)', shadow: 'rgba(56, 189, 248, 0.15)', border: 'rgba(255, 255, 255, 0.1)', mesh1: 'rgba(56, 189, 248, 0.15)', mesh2: 'rgba(14, 165, 233, 0.12)', mesh3: 'rgba(125, 211, 252, 0.18)' },
-      amber: { baseBg: '#fffbeb', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#451a03', textMuted: '#78350f', primary: '#d97706', grad: 'linear-gradient(135deg, #fbbf24, #b45309)', shadow: 'rgba(217, 119, 6, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(251, 191, 36, 0.15)', mesh2: 'rgba(217, 119, 6, 0.12)', mesh3: 'rgba(252, 211, 77, 0.18)' },
-      emerald: { baseBg: '#f0fdf4', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#064e3b', textMuted: '#047857', primary: '#10b981', grad: 'linear-gradient(135deg, #34d399, #059669)', shadow: 'rgba(16, 185, 129, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(52, 211, 153, 0.15)', mesh2: 'rgba(16, 185, 129, 0.12)', mesh3: 'rgba(110, 231, 183, 0.18)' },
-      indigo: { baseBg: '#eef2ff', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#312e81', textMuted: '#4338ca', primary: '#4f46e5', grad: 'linear-gradient(135deg, #818cf8, #3730a3)', shadow: 'rgba(79, 70, 229, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(129, 140, 248, 0.15)', mesh2: 'rgba(79, 70, 229, 0.12)', mesh3: 'rgba(165, 180, 252, 0.18)' },
-      velvet: { baseBg: '#022c22', surface: 'rgba(6, 78, 59, 0.92)', textMain: '#ecfdf5', textMuted: '#6ee7b7', primary: '#10b981', grad: 'linear-gradient(135deg, #34d399, #047857)', shadow: 'rgba(16, 185, 129, 0.15)', border: 'rgba(255, 255, 255, 0.1)', mesh1: 'rgba(52, 211, 153, 0.15)', mesh2: 'rgba(16, 185, 129, 0.12)', mesh3: 'rgba(110, 231, 183, 0.18)' }
+    const palettes = {
+      red:     { baseBg:'#fcfcfc', surface:'rgba(255,255,255,0.92)', textMain:'#111827', textMuted:'#6b7280', primary:'#e11d48', grad:'linear-gradient(135deg,#f43f5e,#be123c)', shadow:'rgba(225,29,72,0.15)', border:'rgba(255,255,255,0.6)', "mesh-1":'rgba(244,63,94,0.15)',  "mesh-2":'rgba(225,29,72,0.12)',  "mesh-3":'rgba(253,164,175,0.18)' },
+      blue:    { baseBg:'#f8fafc', surface:'rgba(255,255,255,0.92)', textMain:'#0f172a', textMuted:'#64748b', primary:'#2563eb', grad:'linear-gradient(135deg,#60a5fa,#1d4ed8)', shadow:'rgba(37,99,235,0.15)',  border:'rgba(255,255,255,0.6)', "mesh-1":'rgba(96,165,250,0.15)',  "mesh-2":'rgba(59,130,246,0.12)',  "mesh-3":'rgba(191,219,254,0.18)' },
+      dark:    { baseBg:'#0f172a', surface:'rgba(30,41,59,0.92)',    textMain:'#f8fafc', textMuted:'#94a3b8', primary:'#38bdf8', grad:'linear-gradient(135deg,#7dd3fc,#0284c7)', shadow:'rgba(56,189,248,0.15)', border:'rgba(255,255,255,0.1)', "mesh-1":'rgba(56,189,248,0.15)',  "mesh-2":'rgba(14,165,233,0.12)',  "mesh-3":'rgba(125,211,252,0.18)' },
+      amber:   { baseBg:'#fffbeb', surface:'rgba(255,255,255,0.92)', textMain:'#451a03', textMuted:'#78350f', primary:'#d97706', grad:'linear-gradient(135deg,#fbbf24,#b45309)', shadow:'rgba(217,119,6,0.15)',  border:'rgba(255,255,255,0.6)', "mesh-1":'rgba(251,191,36,0.15)',  "mesh-2":'rgba(217,119,6,0.12)',  "mesh-3":'rgba(252,211,77,0.18)' },
+      emerald: { baseBg:'#f0fdf4', surface:'rgba(255,255,255,0.92)', textMain:'#064e3b', textMuted:'#047857', primary:'#10b981', grad:'linear-gradient(135deg,#34d399,#059669)', shadow:'rgba(16,185,129,0.15)', border:'rgba(255,255,255,0.6)', "mesh-1":'rgba(52,211,153,0.15)',  "mesh-2":'rgba(16,185,129,0.12)',  "mesh-3":'rgba(110,231,183,0.18)' },
+      indigo:  { baseBg:'#eef2ff', surface:'rgba(255,255,255,0.92)', textMain:'#312e81', textMuted:'#4338ca', primary:'#4f46e5', grad:'linear-gradient(135deg,#818cf8,#3730a3)', shadow:'rgba(79,70,229,0.15)',  border:'rgba(255,255,255,0.6)', "mesh-1":'rgba(129,140,248,0.15)', "mesh-2":'rgba(79,70,229,0.12)',   "mesh-3":'rgba(165,180,252,0.18)' },
+      velvet:  { baseBg:'#022c22', surface:'rgba(6,78,59,0.92)',     textMain:'#ecfdf5', textMuted:'#6ee7b7', primary:'#10b981', grad:'linear-gradient(135deg,#34d399,#047857)', shadow:'rgba(16,185,129,0.15)', border:'rgba(255,255,255,0.1)', "mesh-1":'rgba(52,211,153,0.15)',  "mesh-2":'rgba(16,185,129,0.12)',  "mesh-3":'rgba(110,231,183,0.18)' }
     }; 
     const t = palettes[themeName] || palettes['red']; const r = document.documentElement; 
     for (const [key, value] of Object.entries(t)) { r.style.setProperty(`--t-${key.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}`, value); } 
