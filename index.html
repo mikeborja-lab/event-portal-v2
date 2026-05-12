@@ -50,48 +50,132 @@
     @keyframes lock-burst { 0% { transform: scale(1); } 40% { transform: scale(1.03); box-shadow: 0 0 0 6px var(--t-shadow); } 100% { transform: scale(1); box-shadow: none; } }
     .score-locked-flash { animation: lock-burst 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
 
-    /* --- NEW CRYSTAL HEADER & DIAMOND SPARKLES --- */
-    .header-crystal-text {
-      background: linear-gradient(110deg, #c2e0ff 0%, #ffffff 20%, #e6f2ff 35%, #ffffff 50%, #90caf9 65%, #ffffff 80%, #b3d9ff 100%);
-      background-size: 200% auto;
-      color: transparent;
-      -webkit-background-clip: text;
-      background-clip: text;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)) drop-shadow(0 0 2px rgba(255,255,255,0.8));
-      animation: shine-crystal 5s linear infinite;
+    /* ── THEMED HERO HEADER ───────────────────────────────────── */
+    .hero-header {
       position: relative;
+      overflow: hidden;
+      padding: 3.5rem 1.5rem 3rem;
+      text-align: center;
+      border-radius: 0 0 2.5rem 2.5rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.18);
+      /* Gradient comes from the active theme */
+      background: var(--t-grad);
+      background-size: 300% 300%;
+      animation: grad-pan 8s ease infinite;
     }
-    @keyframes shine-crystal { 0% { background-position: 0% center; } 100% { background-position: -200% center; } }
-
+    @keyframes grad-pan {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    /* Stardust texture overlay */
+    .hero-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+      opacity: 0.25;
+      mix-blend-mode: overlay;
+      pointer-events: none;
+    }
+    
+    /* Ambient glow blob */
+    .hero-header::after {
+      content: '';
+      position: absolute;
+      bottom: -6rem;
+      left: -6rem;
+      width: 18rem;
+      height: 18rem;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      filter: blur(50px);
+      pointer-events: none;
+    }
+    
+    /* Title — always white since it sits on the gradient */
+    .hero-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.25), 0 0 2px rgba(255,255,255,0.6);
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      margin-bottom: 0.5rem;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .hero-subtitle {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.8);
+      text-transform: uppercase;
+      letter-spacing: 0.35em;
+      margin-bottom: 0.75rem;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .hero-location {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(0,0,0,0.25);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 999px;
+      padding: 0.45rem 1.1rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.95);
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* ── DIAMOND SPARKLES — use theme primary ─────────────────── */
     .diamond-sparkle {
-      position: absolute; width: 26px; height: 26px;
-      background: radial-gradient(circle, #ffffff 5%, transparent 15%), 
-                  linear-gradient(45deg, transparent 46%, #ffffff 48%, #ffffff 52%, transparent 54%), 
-                  linear-gradient(-45deg, transparent 46%, #ffffff 48%, #ffffff 52%, transparent 54%),
-                  linear-gradient(0deg, transparent 48%, #ffffff 49%, #ffffff 51%, transparent 52%),
-                  linear-gradient(90deg, transparent 48%, #ffffff 49%, #ffffff 51%, transparent 52%);
-      opacity: 0; pointer-events: none;
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 2;
       animation: diamond-glint 3s infinite ease-in-out;
-      filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9));
     }
-    @keyframes diamond-glint { 
-      0% { transform: scale(0) rotate(0deg); opacity: 0; } 
-      50% { transform: scale(1.3) rotate(45deg); opacity: 1; filter: drop-shadow(0 0 10px #ffffff); } 
-      100% { transform: scale(0) rotate(90deg); opacity: 0; } 
+    /* Cross shape via two pseudo-bars */
+    .diamond-sparkle::before,
+    .diamond-sparkle::after {
+      content: '';
+      position: absolute;
+      background: #ffffff;
+      border-radius: 2px;
+      box-shadow: 0 0 8px 2px rgba(255,255,255,0.8);
     }
-
-    /* --- PARALLAX CLASSES --- */
-    .parallax-container { perspective: 1000px; }
-    .parallax-inner { transform-style: preserve-3d; transition: transform 0.15s ease-out; will-change: transform; }
-    .parallax-img { transform: translateZ(-30px) scale(1.15); }
-    .parallax-front { transform: translateZ(45px); }
-
-    .carousel-container { perspective: 1200px; transform-style: preserve-3d; display: flex; justify-content: center; align-items: center; height: 34rem; position: relative; width: 100%; overflow: hidden; touch-action: pan-y; }
-    .carousel-item { position: absolute; width: 75%; max-width: 340px; height: 30rem; border-radius: 2rem; overflow: hidden; transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s, z-index 0.6s; cursor: pointer; box-shadow: 0 15px 35px var(--t-shadow); }
-    .item-active { transform: translateX(0) scale(1) translateZ(60px); z-index: 30; opacity: 1; pointer-events: auto; cursor: default; }
-    .item-prev { transform: translateX(-65%) scale(0.8) translateZ(-100px) rotateY(25deg); z-index: 20; opacity: 0.5; }
-    .item-next { transform: translateX(65%) scale(0.8) translateZ(-100px) rotateY(-25deg); z-index: 20; opacity: 0.5; }
-    .item-hidden { opacity: 0; pointer-events: none; transform: scale(0.6) translateZ(-300px); z-index: 10; }
+    .diamond-sparkle::before { width: 2px; height: 100%; top: 0; left: 50%; transform: translateX(-50%); }
+    .diamond-sparkle::after  { width: 100%; height: 2px; left: 0; top: 50%; transform: translateY(-50%); }
+    
+    @keyframes diamond-glint {
+      0%   { transform: scale(0) rotate(0deg);  opacity: 0; }
+      45%  { transform: scale(1.2) rotate(45deg); opacity: 0.95; }
+      100% { transform: scale(0) rotate(90deg); opacity: 0; }
+    }
+    
+    /* ── EVENT ICON ───────────────────────────────────────────── */
+    .hero-icon {
+      font-size: 3.5rem;
+      line-height: 1;
+      margin-bottom: 0.85rem;
+      display: block;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
+      position: relative;
+      z-index: 1;
+    }
   </style>
 </head>
 <body class="min-h-screen pb-24">
@@ -106,17 +190,35 @@
 </div>
 
 <div id="app-container" class="p-4 md:p-8">
-  <div class="mb-8 text-center mt-4 w-full">
-    <div class="inline-block relative">
-      <div class="diamond-sparkle top-0 -left-6" style="animation-delay: 0s;"></div>
-      <div class="diamond-sparkle bottom-4 -right-4" style="animation-delay: 1.2s;"></div>
-      <div class="diamond-sparkle top-2 right-1/4" style="animation-delay: 0.6s;"></div>
-      
-      <h1 class="text-4xl md:text-5xl font-black py-2 header-crystal-text" id="display-title">System Connecting...</h1>
-      <p id="display-subtitle" class="text-lg opacity-80 mt-2 font-medium">Core Operations</p>
-      <p id="display-location" class="text-sm theme-text font-bold mt-1">Location Undefined</p>
+  <header class="hero-header mb-8">
+    <!-- Sparkles -->
+    <div class="diamond-sparkle" style="top:10%; left:8%;  animation-delay:0s"></div>
+    <div class="diamond-sparkle" style="top:15%; right:10%; animation-delay:1.1s"></div>
+    <div class="diamond-sparkle" style="bottom:20%; left:20%; animation-delay:0.55s"></div>
+    <div class="diamond-sparkle" style="bottom:15%; right:18%; animation-delay:1.7s"></div>
+  
+    <!-- Icon (hidden until settings load) -->
+    <span id="display-icon" class="hero-icon hidden">🏆</span>
+  
+    <!-- Title -->
+    <h1 id="display-title" class="hero-title">System Connecting...</h1>
+  
+    <!-- Subtitle -->
+    <p id="display-subtitle" class="hero-subtitle">Core Operations</p>
+  
+    <!-- Location pill -->
+    <div class="flex justify-center">
+      <div class="hero-location">
+        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span id="display-location">Location Undefined</span>
+      </div>
     </div>
-  </div>
+  </header>
   
   <p id="status-text" class="text-center text-slate-400 mb-8 font-bold">Initializing database...</p>
 
@@ -474,6 +576,11 @@
           if(document.getElementById('display-title')) document.getElementById('display-title').innerText = window.settings['app_title'] || "Event System";
           if(document.getElementById('display-subtitle')) document.getElementById('display-subtitle').innerText = window.settings['app_subtitle'] || "Core Operations";
           if(document.getElementById('display-location')) document.getElementById('display-location').innerText = window.settings['location_text'] || "Location Undefined";
+          const iconEl = document.getElementById('display-icon');
+          if (iconEl) {
+            iconEl.innerText = window.settings['event_icon'] || '';
+            iconEl.classList.remove('hidden');
+          }
           window.applyTheme(window.settings['theme_color'] || 'red');
           document.title = (window.settings['app_title'] || "Event Portal") + " - Secure Access";
           if(document.getElementById('carousel-track') && window.candidates.length > 0) window.renderHomeGallery();
