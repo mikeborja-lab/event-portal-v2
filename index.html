@@ -4,222 +4,457 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Event Portal v2</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@400;500;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
   
   <style>
-    :root {
-      --t-base-bg: #fcfcfc; --t-surface: rgba(255, 255, 255, 0.92); --t-text-main: #111827; --t-text-muted: #6b7280;
-      --t-primary: #e11d48; --t-grad: linear-gradient(135deg, #f43f5e, #be123c);
-      --t-shadow: rgba(225, 29, 72, 0.15); --t-border: rgba(255, 255, 255, 0.6);
-      --t-mesh-1: rgba(244, 63, 94, 0.15); --t-mesh-2: rgba(225, 29, 72, 0.12); --t-mesh-3: rgba(253, 164, 175, 0.18);
+    /* --- MODERN SILICON VALLEY MESH AURORA --- */
+    .mesh-bg {
+      position: fixed;
+      inset: -20%;
+      z-index: -1;
+      background-color: var(--t-base-bg);
+      background-image: 
+        radial-gradient(circle at 15% 30%, var(--t-mesh-1), transparent 50%),
+        radial-gradient(circle at 85% 20%, var(--t-mesh-2), transparent 50%),
+        radial-gradient(circle at 50% 80%, var(--t-mesh-3), transparent 60%);
+      background-size: 100% 100%;
+      filter: blur(80px);
+      animation: aurora-breathe 20s ease-in-out infinite alternate;
+      will-change: transform;
+      pointer-events: none;
     }
-    body { background-color: var(--t-base-bg); color: var(--t-text-main); font-family: 'Inter', sans-serif; transition: background-color 0.4s ease, color 0.4s ease; overflow-x: hidden; }
-    h1, h2, h3, h4, h5, h6, .nav-btn label, .theme-table-header th, .uppercase-tracking { font-family: 'Montserrat', sans-serif; }
-    .score-number, .rolling-number { font-family: 'Roboto Mono', monospace; }
+    
+    @keyframes aurora-breathe {
+      0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+      50% { transform: translate(3%, 4%) scale(1.05) rotate(2deg); }
+      100% { transform: translate(-3%, -2%) scale(0.95) rotate(-2deg); }
+    }
 
-    .mesh-bg { position: fixed; inset: -20%; z-index: -1; background-color: var(--t-base-bg); background-image: radial-gradient(circle at 15% 30%, var(--t-mesh-1), transparent 50%), radial-gradient(circle at 85% 20%, var(--t-mesh-2), transparent 50%), radial-gradient(circle at 50% 80%, var(--t-mesh-3), transparent 60%); background-size: 100% 100%; filter: blur(80px); animation: aurora-breathe 20s ease-in-out infinite alternate; pointer-events: none; }
-    @keyframes aurora-breathe { 0% { transform: translate(0, 0) scale(1) rotate(0deg); } 50% { transform: translate(3%, 4%) scale(1.05) rotate(2deg); } 100% { transform: translate(-3%, -2%) scale(0.95) rotate(-2deg); } }
+    .card-panel { 
+      background-color: var(--t-surface); 
+      backdrop-filter: blur(24px); 
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--t-border); 
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.05); 
+      border-radius: 1.5rem; 
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
 
-    .card-panel, .theme-surface { background-color: var(--t-surface); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
-    .card-panel { border: 1px solid var(--t-border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.05); border-radius: 1.5rem; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-    .theme-text { color: var(--t-primary); } .theme-text-muted { color: var(--t-text-muted); } .theme-bg-soft { background-color: var(--t-base-bg); }
-    .theme-btn { background: var(--t-grad); color: #ffffff; box-shadow: 0 4px 15px var(--t-shadow); border: none; }
-    .theme-btn:hover { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 8px 25px var(--t-shadow); }
-    .glass-panel { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.3); }
+    @keyframes premium-fall {
+      0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.15; }
+      90% { opacity: 0.15; }
+      100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+    }
+    @keyframes premium-rise {
+      0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.15; }
+      90% { opacity: 0.15; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+    .premium-svg-particle {
+      position: absolute;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      will-change: transform;
+      fill: var(--t-primary);
+      filter: drop-shadow(0 10px 15px var(--t-shadow));
+    }
 
     .theme-table-header { background-color: rgba(128, 128, 128, 0.06); border-bottom: 1px solid rgba(128, 128, 128, 0.15); }
-    .theme-table-row { border-bottom: 1px solid rgba(128, 128, 128, 0.08); transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease; }
-    #table-averages, #table-peoples-choice { display: table; width: 100%; border-collapse: separate; border-spacing: 0 0.5rem; }
+    .theme-table-row { border-bottom: 1px solid rgba(128, 128, 128, 0.08); transition: background-color 0.2s ease; }
+    .theme-table-row:hover { background-color: rgba(128, 128, 128, 0.04); }
+    .theme-table-row:last-child { border-bottom: none; }
 
+    :root {
+      --t-base-bg: #fcfcfc;
+      --t-surface: rgba(255, 255, 255, 0.92);
+      --t-text-main: #111827;
+      --t-text-muted: #6b7280;
+      --t-primary: #e11d48;
+      --t-grad: linear-gradient(135deg, #f43f5e, #be123c);
+      --t-shadow: rgba(225, 29, 72, 0.15);
+      --t-border: rgba(255, 255, 255, 0.6);
+      --t-mesh-1: rgba(244, 63, 94, 0.15);
+      --t-mesh-2: rgba(225, 29, 72, 0.12);
+      --t-mesh-3: rgba(253, 164, 175, 0.18);
+    }
+    body { background-color: var(--t-base-bg); color: var(--t-text-main); transition: background-color 0.4s ease, color 0.4s ease; overflow-x: hidden; }
+    
+    .theme-text { color: var(--t-primary); }
+    .theme-text-muted { color: var(--t-text-muted); }
+    .theme-bg-soft { background-color: var(--t-base-bg); }
+    .theme-surface { 
+      background-color: var(--t-surface); 
+      backdrop-filter: blur(24px); 
+      -webkit-backdrop-filter: blur(24px);
+    }
+    
+    .card-panel { background-color: var(--t-surface); border: 1px solid var(--t-border); box-shadow: 0 10px 30px var(--t-shadow); border-radius: 1.5rem; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    
+    @keyframes gradient-pan { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    .animate-gradient { background-image: var(--t-grad); background-size: 300% 300%; animation: gradient-pan 8s ease infinite; box-shadow: 0 10px 30px var(--t-shadow); }
+    
+    @keyframes float-3d { 0% { transform: rotateX(4deg) rotateY(-4deg) translateY(0px); } 50% { transform: rotateX(-2deg) rotateY(2deg) translateY(-8px); } 100% { transform: rotateX(4deg) rotateY(-4deg) translateY(0px); } }
+    .header-3d-container { perspective: 1000px; transform-style: preserve-3d; }
+    .header-3d-content { animation: float-3d 6s ease-in-out infinite; transform-style: preserve-3d; }
+    .header-3d-pop { transform: translateZ(50px); }
+    
+    @keyframes fade-in-up { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-entry { animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    
+    @keyframes slide-in-right { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
+    .animate-slide-right { animation: slide-in-right 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+
+    .theme-header { 
+      background-color: var(--t-surface); 
+      backdrop-filter: blur(24px); 
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--t-border); 
+      box-shadow: 0 4px 20px var(--t-shadow); 
+    }
+    .theme-btn { background: var(--t-grad); color: #ffffff; box-shadow: 0 4px 15px var(--t-shadow); border: none; }
+    .theme-btn:hover { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 8px 25px var(--t-shadow); }
+    .theme-input { background-color: var(--t-base-bg); border: 1px solid var(--t-border); color: var(--t-text-main); transition: all 0.3s ease; }
+    .theme-input:focus { border-color: var(--t-primary); outline: none; box-shadow: 0 0 0 4px var(--t-shadow); }
+    
     input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
     input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 32px; width: 32px; border-radius: 50%; background: var(--t-surface); cursor: pointer; margin-top: -12px; box-shadow: 0 4px 15px var(--t-shadow); border: 4px solid var(--t-primary); transition: transform 0.1s; }
     input[type=range]::-webkit-slider-thumb:active { transform: scale(1.1); }
-    input[type=range]::-webkit-slider-runnable-track { height: 8px; cursor: pointer; border-radius: 4px; border: 1px solid var(--t-border); background: linear-gradient(to right, var(--t-primary) 0%, var(--t-primary) var(--fill, 50%), var(--t-base-bg) var(--fill, 50%), var(--t-base-bg) 100%); box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); }
+    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: var(--t-base-bg); border-radius: 4px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); border: 1px solid var(--t-border); }
     
-    @keyframes score-pop { 0% { transform: scale(1); } 50% { transform: scale(1.3); color: var(--t-primary); } 100% { transform: scale(1); } }
-    .score-pop { animation: score-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); display: inline-block; }
-    @keyframes view-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-    .view-animate { animation: view-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
-    .stagger-card { opacity: 0; transform: translateY(28px); transition: opacity 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-    .stagger-card.visible { opacity: 1; transform: translateY(0); }
-    @keyframes slide-in-right { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
-    .animate-slide-right { animation: slide-in-right 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
-    @keyframes lock-burst { 0% { transform: scale(1); } 40% { transform: scale(1.03); box-shadow: 0 0 0 6px var(--t-shadow); } 100% { transform: scale(1); box-shadow: none; } }
-    .score-locked-flash { animation: lock-burst 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+    .hide-scroll-bar::-webkit-scrollbar { display: none; }
+    .hide-scroll-bar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .nav-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 4.2rem; height: 3.8rem; border-radius: 1.2rem; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .nav-btn.hidden { display: none !important; }
 
-    .premium-svg-particle { position: absolute; animation-timing-function: linear; animation-iteration-count: infinite; will-change: transform; fill: var(--t-primary); filter: drop-shadow(0 10px 15px var(--t-shadow)); }
-    @keyframes premium-fall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; } 10% { opacity: 0.15; } 90% { opacity: 0.15; } 100% { transform: translateY(110vh) rotate(360deg); opacity: 0; } }
-
-    .header-3d-container { perspective: 1000px; transform-style: preserve-3d; }
-    .header-3d-content { transform-style: preserve-3d; transition: transform 0.1s ease-out; }
-    .header-3d-pop { transform: translateZ(50px); }
-
-    .carousel-container { perspective: 1200px; transform-style: preserve-3d; display: flex; justify-content: center; align-items: center; height: 34rem; position: relative; width: 100%; overflow: hidden; touch-action: pan-y; }
+    .carousel-container { perspective: 1200px; transform-style: preserve-3d; display: flex; justify-content: center; align-items: center; height: 34rem; position: relative; width: 100%; overflow: hidden; }
     .carousel-item { position: absolute; width: 75%; max-width: 340px; height: 30rem; border-radius: 2rem; overflow: hidden; transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s, z-index 0.6s; cursor: pointer; box-shadow: 0 15px 35px var(--t-shadow); }
     .item-active { transform: translateX(0) scale(1) translateZ(60px); z-index: 30; opacity: 1; pointer-events: auto; cursor: default; }
     .item-prev { transform: translateX(-65%) scale(0.8) translateZ(-100px) rotateY(25deg); z-index: 20; opacity: 0.5; }
     .item-next { transform: translateX(65%) scale(0.8) translateZ(-100px) rotateY(-25deg); z-index: 20; opacity: 0.5; }
     .item-hidden { opacity: 0; pointer-events: none; transform: scale(0.6) translateZ(-300px); z-index: 10; }
+
+    .glass-panel { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); }
+
+    @keyframes lock-burst {  
+      0% { transform: scale(1); }  
+      40% { transform: scale(1.03); box-shadow: 0 0 0 6px var(--t-shadow); }  
+      100% { transform: scale(1); box-shadow: none; }
+    }
+    .score-locked-flash { animation: lock-burst 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+    
+    .stagger-card { opacity: 0; transform: translateY(30px); transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+    .stagger-card.animate-entry { opacity: 1; transform: translateY(0); }
   </style>
 </head>
-<body class="min-h-screen pb-24">
-
+<body class="pb-28 font-sans min-h-screen relative">
+  
   <div class="mesh-bg"></div>
-  <div id="premium-particles" class="fixed inset-0 pointer-events-none z-[-1] overflow-hidden"></div>
+  
+  <div id="premium-particles" class="fixed inset-0 z-0 pointer-events-none overflow-hidden select-none"></div>
 
-  <div id="loader" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
-      <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center">
-          <svg class="animate-spin h-10 w-10 text-emerald-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          <span id="loader-text" class="text-sm font-black text-slate-800 tracking-widest uppercase-tracking">Connecting...</span>
+  <div id="custom-modal" class="fixed inset-0 z-[200] hidden flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity opacity-0">
+    <div id="custom-modal-content" class="card-panel w-11/12 max-w-sm overflow-hidden transform scale-95 transition-all duration-300">
+      <div class="px-6 py-5 border-b border-black/5 flex items-center gap-3">
+        <span id="modal-icon" class="text-2xl">🔔</span>
+        <h3 id="modal-title" class="text-lg font-black tracking-wide">Notification</h3>
       </div>
+      <div class="p-6"><p id="modal-message" class="theme-text-muted font-medium leading-relaxed"></p></div>
+      <div id="modal-actions" class="px-6 py-4 theme-bg-soft flex justify-end gap-3 border-t border-black/5"></div>
+    </div>
+  </div>
+  
+  <div id="loader" class="fixed inset-0 z-[100] theme-bg-soft flex flex-col justify-center items-center">
+    <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 theme-text mb-4" style="border-color: var(--t-primary); border-left-color: transparent; border-right-color: transparent;"></div>
+    <p class="theme-text-muted font-black tracking-widest uppercase text-sm animate-pulse" id="loader-text">Loading System...</p>
   </div>
 
-  <div id="app-container" class="p-4 md:p-8">
-    <div class="header-3d-container mb-8 text-center mt-4">
-      <div class="header-3d-content">
-        <h1 class="text-4xl md:text-5xl font-black header-3d-pop drop-shadow-lg leading-normal py-2 inline-block" id="display-title">System Connecting...</h1>
-        <p id="display-subtitle" class="text-lg opacity-80 header-3d-pop mt-2">Core Operations</p>
-        <p id="display-location" class="text-sm theme-text font-bold header-3d-pop mt-1">Location Undefined</p>
-      </div>
-    </div>
-    <p id="status-text" class="text-center text-slate-400 mb-8 font-bold">Initializing database...</p>
-
-    <div id="view-home" class="hidden">
-      <div id="carousel-track" class="carousel-container mb-8"></div>
-      <div id="vote-prompt-section" class="hidden text-center mb-4">
-        <div id="vote-countdown" class="mb-4">
-          <span class="text-xs uppercase-tracking theme-text-muted font-bold">Voting Closes In</span>
-          <h3 id="countdown-timer" class="text-2xl font-black score-number theme-text mt-1">--:--:--</h3>
+  <div id="view-home" class="hidden">    
+    <header class="header-3d-container relative overflow-visible py-16 text-center mb-6 bg-black rounded-b-[3rem] border-b border-black/10 shadow-[0_20px_40px_rgba(0,0,0,0.2)]">
+      <div class="absolute inset-0 animate-gradient opacity-90 rounded-b-[3rem]"></div>
+      <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 mix-blend-overlay rounded-b-[3rem]"></div>
+      <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-white/20 blur-[60px] rounded-full pointer-events-none"></div>
+      
+      <div class="header-3d-content relative z-10 flex flex-col items-center px-6">
+        <div id="display-icon" class="header-3d-pop text-7xl mb-5 drop-shadow-[0_15px_25px_rgba(0,0,0,0.4)]">👑</div>
+        <h1 id="display-title" class="header-3d-pop text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 tracking-tight leading-none mb-3 drop-shadow-xl">Loading...</h1>
+        <h2 id="display-subtitle" class="header-3d-pop text-xs sm:text-sm font-black text-white/80 uppercase tracking-[0.4em] mb-7 drop-shadow-md">...</h2>
+        <div class="header-3d-pop inline-flex items-center gap-2.5 bg-black/30 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/20 shadow-[0_15px_30px_rgba(0,0,0,0.3)]">
+          <svg class="w-4 h-4 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <p id="display-location" class="text-white font-bold text-xs tracking-widest uppercase">...</p>
         </div>
-        <p id="vote-closed-msg" class="hidden text-red-500 font-bold uppercase-tracking text-sm mb-4">Voting is Closed</p>
       </div>
-      <div id="voting-gallery" class="max-w-md mx-auto"></div>
-    </div>
+    </header>
     
-    <div id="view-login" class="hidden max-w-sm mx-auto card-panel p-8">
-      <h2 class="text-2xl font-black mb-6 text-center">Secure Access</h2>
-      <input type="text" id="login-username" placeholder="Username" class="w-full p-3 rounded-xl mb-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-400" onkeydown="if(event.key === 'Enter') document.getElementById('login-password').focus();">
-      <div class="relative w-full mb-6">
-        <input type="password" id="login-password" placeholder="Passkey" class="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-400 pr-10" onkeydown="if(event.key === 'Enter') window.processLogin();">
-        <button type="button" onclick="const p=document.getElementById('login-password'); const i=document.getElementById('eye-icon'); if(p.type==='password'){p.type='text'; i.className='fas fa-eye-slash';}else{p.type='password'; i.className='fas fa-eye';}" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600">
-          <i id="eye-icon" class="fas fa-eye text-lg"></i>
+    <main class="max-w-md mx-auto mt-2 px-2 flex flex-col">
+      <div class="text-center flex items-center justify-center gap-3 px-4">
+        <div class="h-px bg-black/10 flex-1"></div>
+        <h3 class="text-xs font-black theme-text uppercase tracking-[0.3em]">Official Roster</h3>
+        <div class="h-px bg-black/10 flex-1"></div>
+      </div>
+      
+      <div id="carousel-track" class="carousel-container animate-entry"></div>
+      
+      <div id="vote-prompt-section" class="px-6 mt-4 mb-8 text-center animate-entry hidden" style="animation-delay: 0.2s;">
+        <h4 class="text-lg font-black tracking-wide mb-2">Support Your Favorite</h4>
+        <p class="text-xs theme-text-muted font-bold tracking-wide mb-5 opacity-80">Help your top candidate win the People's Choice award!</p>
+        
+        <button id="btn-cast-vote" onclick="checkVoteAndRedirect()" class="w-full theme-btn py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-[0_10px_25px_var(--t-shadow)] flex justify-center items-center gap-2 transition-transform active:scale-95 disabled:opacity-70 disabled:active:scale-100">
+          Cast Your Vote Now
         </button>
+
+        <div id="vote-countdown" class="mt-5 text-center hidden">
+          <p class="text-[9px] font-black theme-text-muted uppercase tracking-[0.2em] mb-1.5 opacity-80">Voting Closes In</p>
+          <div id="countdown-timer" class="font-mono font-black text-lg theme-text bg-black/5 py-2 rounded-xl border border-black/5 tracking-wider inline-block px-6">--:--:--</div>
+        </div>
+
+        <div id="vote-closed-msg" class="mt-2 text-center hidden">
+          <div class="bg-red-50 text-red-600 font-black text-xs uppercase tracking-widest py-4 rounded-2xl border border-red-100 shadow-sm flex flex-col items-center gap-1">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            Voting has officially closed
+          </div>
+        </div>
       </div>
-      <p id="login-error" class="text-red-500 text-sm font-bold mb-4 hidden text-center"></p>
-      <button id="login-btn" onclick="window.processLogin()" class="theme-btn w-full py-3 rounded-xl font-black uppercase-tracking text-sm">Authenticate</button>
-    </div>
-
-    <div id="view-judging" class="hidden max-w-md mx-auto">
-      <div id="segment-tabs" class="flex overflow-x-auto mb-6 p-2 bg-black/5 rounded-2xl gap-2"></div>
-      <div id="candidates-container"></div>
-    </div>
-
-    <div id="view-scores" class="hidden max-w-5xl mx-auto">
-      <div id="peoples-choice-card" class="card-panel p-6 mb-8 hidden">
-        <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2">People's Choice</h3>
-        <div class="overflow-x-auto"><table class="w-full" id="table-peoples-choice"></table></div>
+      
+      <div class="mt-10 mb-4 text-center opacity-60 hover:opacity-100 transition-opacity duration-300">
+        <p class="text-[9px] font-black theme-text-muted uppercase tracking-[0.2em] mb-1">Architecture & Design</p>
+        <p class="text-sm font-black tracking-widest mb-2">MICHAEL BORJA</p>
+        <p class="text-[10px] font-black theme-text-muted tracking-[0.2em] mb-3 italic">Rent this automated tabulation system on your next event!</p>
+        <div class="flex justify-center items-center gap-4">
+          <a href="tel:09568490159" class="theme-text-muted hover:text-black transition-colors flex items-center gap-1.5 text-xs font-black"><span>📞</span> 0956 849 0159</a>
+          <span class="opacity-30 text-xs">|</span>
+          <a href="https://www.facebook.com/mikeVborja" target="_blank" class="theme-text-muted hover:text-[#1877F2] transition-colors flex items-center gap-1.5 text-xs font-black">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            Facebook
+          </a>
+        </div>
       </div>
-      <div class="card-panel p-6 mb-8">
-        <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2">Aggregated Matrix</h3>
-        <div class="overflow-x-auto"><table class="w-full" id="table-averages"></table></div>
+    </main>
+  </div>
+
+  <div id="view-voting" class="hidden min-h-screen">
+    <div class="sticky top-0 z-50">
+      <header class="theme-header p-5 flex justify-between items-center relative z-50">
+        <div class="text-left flex items-center gap-4">
+          <div class="theme-bg-soft p-2.5 rounded-xl border border-black/5 shadow-inner">
+            <svg class="w-5 h-5 theme-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+          </div>
+          <div>
+            <h1 class="text-lg font-black tracking-widest uppercase">Public Voting</h1>
+            <p class="theme-text-muted text-[10px] font-bold tracking-widest uppercase mt-0.5">People's Choice Award</p>
+          </div>
+        </div>
+        <button onclick="switchView('home')" class="text-xs font-bold theme-text-muted hover:opacity-70 px-4 py-2.5 rounded-xl border border-black/5 bg-black/5 transition-colors uppercase tracking-wider">Back</button>
+      </header>
+    </div>
+    <main class="max-w-md mx-auto mt-6 px-4 pb-10 overflow-hidden" id="voting-gallery"></main>
+  </div>
+
+  <div id="view-login" class="hidden">
+    <div class="fixed inset-0 z-[80] theme-bg-soft flex flex-col justify-center items-center p-6">
+      <div class="card-panel p-8 w-full max-w-sm text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl theme-bg-soft border border-black/5 mb-6 shadow-inner">
+          <svg class="w-7 h-7 theme-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+        </div>
+        <h2 class="text-2xl font-black tracking-widest uppercase mb-8">Secure Portal</h2>
+        <div class="space-y-5 text-left">
+          <div><label class="block text-[10px] font-black theme-text-muted uppercase tracking-wider mb-2">Username</label><input type="text" id="login-username" class="w-full px-4 py-3.5 rounded-xl theme-input font-bold"></div>
+          <div><label class="block text-[10px] font-black theme-text-muted uppercase tracking-wider mb-2">Password</label><input type="password" id="login-password" class="w-full px-4 py-3.5 rounded-xl theme-input font-bold"></div>
+          <div id="login-error" class="text-red-500 bg-red-50 border border-red-200 text-sm font-bold text-center hidden py-2 rounded-lg"></div>
+          <button onclick="processLogin()" id="login-btn" class="w-full theme-btn font-black py-4 rounded-xl mt-6 uppercase tracking-widest text-sm">Authenticate</button>
+        </div>
       </div>
     </div>
+  </div>
 
-    <div id="view-admin" class="hidden max-w-4xl mx-auto space-y-6 pb-20">
-       
-       <div class="card-panel p-6">
-         <h2 class="text-2xl font-black mb-6 border-b pb-2">Event Architecture</h2>
-         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-           <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Event Title</label><input type="text" id="admin-setting-title" class="w-full p-2 border rounded-lg mt-1"></div>
-           <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Sub Title</label><input type="text" id="admin-setting-subtitle" class="w-full p-2 border rounded-lg mt-1"></div>
-           <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Location</label><input type="text" id="admin-setting-location" class="w-full p-2 border rounded-lg mt-1"></div>
-           <div><label class="text-xs font-bold uppercase-tracking text-gray-500">Theme Color</label>
-              <select id="admin-setting-theme" class="w-full p-2 border rounded-lg mt-1">
-                <option value="red">Velvet (Red)</option><option value="blue">Sapphire (Blue)</option>
-              </select>
-           </div>
-         </div>
-         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-black/5 rounded-xl border border-black/10">
-            <div class="flex items-center justify-between">
-              <label class="font-bold uppercase-tracking">Enable Public Voting</label>
-              <input type="checkbox" id="admin-setting-voting" class="w-6 h-6 rounded cursor-pointer">
-            </div>
-            <div>
-              <label class="text-xs font-bold uppercase-tracking text-gray-500">Voting Deadline (Optional)</label>
-              <input type="datetime-local" id="admin-setting-deadline" class="w-full p-2 border rounded-lg mt-1">
-            </div>
-         </div>
-         <button onclick="window.saveSettings()" class="theme-btn px-6 py-3 rounded-lg font-bold w-full">Deploy Configuration</button>
-       </div>
+  <div id="view-judging" class="hidden min-h-screen pb-10">
+    <div class="sticky top-0 z-50">
+      <header class="theme-header p-5 flex justify-between items-center relative z-50">
+        <div class="text-left flex items-center gap-4">
+          <div class="theme-bg-soft p-2.5 rounded-xl border border-black/5 shadow-inner">
+            <svg class="w-5 h-5 theme-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
+          </div>
+          <div>
+            <h1 class="text-lg font-black tracking-widest uppercase">Scoring Matrix</h1>
+            <p class="theme-text-muted text-[10px] font-bold tracking-widest uppercase mt-0.5">Assessor // <span id="display-judge-name"></span></p>
+          </div>
+        </div>
+        <button onclick="handleLogout()" class="text-xs font-bold theme-text-muted hover:opacity-70 px-3 py-2 rounded-lg transition-colors border border-black/5 bg-black/5">Logout</button>
+      </header>
+      
+      <nav class="theme-surface border-b border-black/5 shadow-md relative z-40">
+        <div class="max-w-md mx-auto flex overflow-x-auto hide-scroll-bar py-3 px-3 gap-2" id="segment-tabs"></div>
+      </nav>
+    </div>
+    <main class="max-w-md mx-auto mt-6 px-4" id="candidates-container"></main>
+  </div>
 
-       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <div class="card-panel p-5">
-            <h3 class="font-black uppercase-tracking border-b pb-2 mb-4">Candidates</h3>
-            <div id="admin-candidates-list" class="space-y-2 mb-4 max-h-48 overflow-y-auto text-sm"></div>
-            <input type="text" id="new-cand-id" placeholder="ID (e.g. 1)" class="w-full p-2 border rounded mt-2 text-sm">
-            <input type="text" id="new-cand-name" placeholder="Full Name" class="w-full p-2 border rounded mt-2 text-sm">
-            <button onclick="window.addCandidate()" class="w-full bg-slate-800 text-white rounded p-2 mt-2 text-xs font-bold">Add Candidate</button>
-         </div>
+  <div id="view-scores" class="hidden min-h-screen">
+    <header class="theme-header p-5 flex justify-between items-center sticky top-0 z-50">
+      <div class="text-left flex items-center gap-4">
+        <div class="theme-bg-soft p-2.5 rounded-xl border border-black/5 shadow-inner">
+          <svg class="w-5 h-5 theme-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-black tracking-widest uppercase">Tabulation Core</h1>
+          <p class="theme-text-muted text-[10px] font-bold tracking-widest uppercase mt-0.5">Live Feed // <span id="display-tabulator-name"></span></p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="fetchScoresData()" class="text-[10px] font-bold theme-text bg-black/5 border border-black/5 px-4 py-2.5 rounded-xl hover:bg-black/10 transition-all flex items-center gap-1.5 tracking-wider uppercase"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Sync</button>
+        <button onclick="handleLogout()" class="text-[10px] font-bold theme-text-muted hover:opacity-70 px-4 py-2.5 rounded-xl border border-black/5 bg-black/5 transition-colors uppercase tracking-wider">Logout</button>
+      </div>
+    </header>
+    <main class="max-w-6xl mx-auto mt-8 px-4 space-y-10 pb-20">
+      
+      <div id="peoples-choice-card" class="card-panel overflow-hidden hidden mb-8">
+        <div class="theme-bg-soft border-b border-black/5 p-6 flex justify-between items-center">
+          <h3 class="text-xl font-black tracking-wide">People's Choice</h3>
+          <span class="bg-blue-100 text-blue-700 text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-md border border-blue-200 shadow-sm">Public Votes</span>
+        </div>
+        <div class="overflow-x-auto p-0">
+          <table class="w-full text-left border-collapse min-w-[500px]" id="table-peoples-choice"></table>
+        </div>
+      </div>
 
-         <div class="card-panel p-5">
-            <h3 class="font-black uppercase-tracking border-b pb-2 mb-4">Criteria</h3>
-            <div id="admin-criteria-list" class="space-y-2 mb-4 max-h-48 overflow-y-auto text-sm"></div>
-            <input type="text" id="new-crit-id" placeholder="ID (e.g. gown)" class="w-full p-2 border rounded mt-2 text-sm">
-            <input type="text" id="new-crit-label" placeholder="Full Label" class="w-full p-2 border rounded mt-2 text-sm">
-            <input type="number" id="new-crit-max" placeholder="Max Score (e.g. 10)" class="w-full p-2 border rounded mt-2 text-sm">
-            <button onclick="window.addCriteria()" class="w-full bg-slate-800 text-white rounded p-2 mt-2 text-xs font-bold">Add Criteria</button>
-         </div>
+      <div class="card-panel overflow-hidden">
+        <div class="theme-bg-soft border-b border-black/5 p-6 flex justify-between items-center">
+          <h3 class="text-xl font-black tracking-wide">Rankings Overview</h3>
+          <span class="bg-emerald-100 text-emerald-700 text-[10px] uppercase tracking-widest font-black px-3 py-1.5 rounded-md border border-emerald-200 animate-pulse shadow-sm">Live</span>
+        </div>
+        <div class="overflow-x-auto p-0"><table class="w-full text-left border-collapse min-w-[800px]" id="table-averages"></table></div>
+      </div>
+      <div class="card-panel overflow-hidden mt-8">
+        <div class="theme-bg-soft border-b border-black/5 p-6"><h3 class="text-xl font-black tracking-wide">Judge Matrix</h3></div>
+        <div class="overflow-x-auto p-0"><table class="w-full text-left border-collapse min-w-[800px]" id="table-detailed"></table></div>
+      </div>
+    </main>
+  </div>
 
-         <div class="card-panel p-5">
-            <h3 class="font-black uppercase-tracking border-b pb-2 mb-4">System Users</h3>
-            <div id="admin-users-list" class="space-y-2 mb-4 max-h-48 overflow-y-auto text-sm"></div>
-            <input type="text" id="new-user-username" placeholder="Username" class="w-full p-2 border rounded mt-2 text-sm">
-            <input type="text" id="new-user-pass" placeholder="Password" class="w-full p-2 border rounded mt-2 text-sm">
-            <select id="new-user-role" class="w-full p-2 border rounded mt-2 text-sm">
-              <option value="Judge">Judge</option><option value="Tabulator">Tabulator</option><option value="Admin">Admin</option>
+  <div id="view-admin" class="hidden">
+    <header class="theme-header p-5 flex justify-between items-center sticky top-0 z-50">
+      <div class="text-left flex items-center gap-4">
+        <div class="theme-bg-soft p-2.5 rounded-xl border border-black/5 shadow-inner">
+          <svg class="w-5 h-5 theme-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-black tracking-widest uppercase">System Config</h1>
+          <p class="theme-text-muted text-[10px] font-bold tracking-widest uppercase mt-0.5">Admin Level</p>
+        </div>
+      </div>
+      <button onclick="handleLogout()" class="text-[10px] font-bold theme-text-muted hover:opacity-70 px-4 py-2.5 rounded-xl border border-black/5 bg-black/5 transition-colors uppercase tracking-wider">Logout</button>
+    </header>
+    
+    <main class="max-w-md mx-auto mt-6 px-4 space-y-8 pb-10">
+      <div class="card-panel p-6">
+        <h3 class="text-sm font-black tracking-widest uppercase mb-5 border-b border-black/10 pb-4">Event Architecture</h3>
+        <div class="space-y-4">
+          <div><label class="font-black theme-text-muted text-[10px] uppercase tracking-wider block mb-2">Event Title</label><input type="text" id="admin-setting-title" class="w-full px-4 py-3 theme-input rounded-xl font-bold"></div>
+          <div><label class="font-black theme-text-muted text-[10px] uppercase tracking-wider block mb-2">Event Subtitle</label><input type="text" id="admin-setting-subtitle" class="w-full px-4 py-3 theme-input rounded-xl font-bold"></div>
+          <div><label class="font-black theme-text-muted text-[10px] uppercase tracking-wider block mb-2">Location Data</label><input type="text" id="admin-setting-location" class="w-full px-4 py-3 theme-input rounded-xl font-bold"></div>
+          <div><label class="font-black theme-text-muted text-[10px] uppercase tracking-wider block mb-2">System Icon (Emoji)</label><input type="text" id="admin-setting-icon" class="w-full px-4 py-3 theme-input rounded-xl text-xl text-center"></div>
+          <div>
+            <label class="font-black theme-text-muted text-[10px] uppercase tracking-wider block mb-2">Aesthetic Engine</label>
+            <select id="admin-setting-theme" class="w-full px-4 py-3 theme-input rounded-xl font-bold appearance-none cursor-pointer">
+              <option value="red">❤️ Crimson Blossom</option>
+              <option value="pink">🌸 Sakura Glass</option>
+              <option value="blue">🌊 Ocean Breeze</option>
+              <option value="green">🍃 Matrix Leaf</option>
+              <option value="gold">👑 Prestige Ivory</option>
+              <option value="champagne">🥂 Champagne Silver</option>
+              <option value="indigo">🌌 Midnight Slate (Dark)</option>
+              <option value="velvet">🌲 Emerald Velvet (Dark)</option>
             </select>
-            <button onclick="window.addUser()" class="w-full bg-slate-800 text-white rounded p-2 mt-2 text-xs font-bold">Add User</button>
-         </div>
-       </div>
+          </div>
+          <div class="mt-8 pt-6 border-t border-black/10 flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="font-black text-sm" style="color: var(--t-text-main);">Public Voting API</h4>
+                <p class="text-[10px] theme-text-muted font-bold mt-1 tracking-wide">Enable audience engagement module</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <span id="toggle-status" class="text-xs font-black tracking-widest uppercase text-gray-400">OFF</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="admin-setting-voting" class="sr-only peer">
+                  <div class="w-14 h-7 bg-black/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+            </div>
+            
+            <div id="admin-deadline-container" class="hidden pt-3 border-t border-black/5">
+              <label class="font-black theme-text-muted text-[10px] uppercase tracking-wider block mb-2">Voting Deadline (Optional)</label>
+              <input type="datetime-local" id="admin-setting-deadline" class="w-full px-4 py-3 theme-input rounded-xl font-bold">
+            </div>
+          </div>
+          <button onclick="saveAdminSettingsUI()" id="btn-save-settings" class="w-full theme-btn font-black uppercase tracking-widest text-xs py-4 rounded-xl mt-8">Deploy Configuration</button>
+        </div>
+      </div>
 
-    </div>
+      <div class="card-panel p-6">
+        <h3 class="text-sm font-black tracking-widest uppercase mb-5 border-b border-black/10 pb-4">Candidate Roster</h3>
+        <div id="admin-candidates-list" class="space-y-3 mb-6 max-h-56 overflow-y-auto pr-2 custom-scroll"></div>
+        <div class="space-y-3 pt-4 border-t border-black/5">
+          <h4 id="label-cand-form" class="font-black theme-text text-xs uppercase tracking-wider mb-3">Initialize New Candidate</h4>
+          <div class="flex gap-2"><input type="number" id="cand-id" placeholder="ID #" class="w-1/4 px-3 py-3 theme-input rounded-xl font-bold text-center"><input type="text" id="cand-name" placeholder="Full Name" class="w-3/4 px-4 py-3 theme-input rounded-xl font-bold"></div>
+          <input type="text" id="cand-loc" placeholder="Location Data" class="w-full px-4 py-3 theme-input rounded-xl font-bold">
+          <input type="text" id="cand-img" placeholder="Image CDN URL" class="w-full px-4 py-3 theme-input rounded-xl font-bold">
+          <div class="flex gap-2 pt-3">
+            <button onclick="submitCandidateUI()" id="btn-add-cand" class="w-full bg-black/80 text-white font-black text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-black transition-all">Add Data</button>
+            <button onclick="resetCandForm()" id="btn-cancel-cand" class="hidden w-1/3 border border-black/10 theme-text-muted font-bold text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-black/5 transition-all">Abort</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-panel p-6">
+        <h3 class="text-sm font-black tracking-widest uppercase mb-5 border-b border-black/10 pb-4">Scoring Algorithm</h3>
+        <div id="admin-criteria-list" class="space-y-3 mb-6 max-h-56 overflow-y-auto pr-2 custom-scroll"></div>
+        <div class="space-y-3 pt-4 border-t border-black/5">
+          <h4 id="label-crit-form" class="font-black theme-text text-xs uppercase tracking-wider mb-3">Define Criterion</h4>
+          <div class="flex gap-2"><input type="text" id="crit-id" placeholder="sys_id" class="w-1/2 px-4 py-3 theme-input rounded-xl font-bold font-mono text-xs"><input type="number" id="crit-max" placeholder="Max Pts" class="w-1/2 px-4 py-3 theme-input rounded-xl font-bold text-center"></div>
+          <input type="text" id="crit-label" placeholder="Display Label" class="w-full px-4 py-3 theme-input rounded-xl font-bold">
+          <input type="text" id="crit-short" placeholder="Short Label" class="w-full px-4 py-3 theme-input rounded-xl font-bold">
+          <div class="flex gap-2 pt-3">
+            <button onclick="submitCriteriaUI()" id="btn-add-crit" class="w-full bg-black/80 text-white font-black text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-black transition-all">Add Criterion</button>
+            <button onclick="resetCritForm()" id="btn-cancel-crit" class="hidden w-1/3 border border-black/10 theme-text-muted font-bold text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-black/5 transition-all">Abort</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-panel p-6">
+        <h3 class="text-sm font-black tracking-widest uppercase mb-5 border-b border-black/10 pb-4">Access Control</h3>
+        <div id="admin-users-list" class="space-y-3 mb-6 max-h-56 overflow-y-auto pr-2 custom-scroll"></div>
+        <div class="space-y-3 pt-4 border-t border-black/5">
+          <h4 id="label-user-form" class="font-black theme-text text-xs uppercase tracking-wider mb-3">Provision Account</h4>
+          <input type="text" id="user-name" placeholder="Full Identity Name" class="w-full px-4 py-3 theme-input rounded-xl font-bold">
+          <div class="flex gap-2"><input type="text" id="user-username" placeholder="Username" class="w-1/2 px-4 py-3 theme-input rounded-xl font-bold font-mono text-xs"><input type="password" id="user-password" placeholder="Passkey" class="w-1/2 px-4 py-3 theme-input rounded-xl font-bold"></div>
+          <select id="user-role" class="w-full px-4 py-3 theme-input rounded-xl font-bold appearance-none"><option value="" disabled selected>Assign Permission Level...</option><option value="Judge">Assessor (Judge)</option><option value="Tabulator">Tabulator</option><option value="Admin">Administrator</option></select>
+          <div class="flex gap-2 pt-3">
+            <button onclick="submitUserUI()" id="btn-add-user" class="w-full bg-black/80 text-white font-black text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-black transition-all">Add User</button>
+            <button onclick="resetUserForm()" id="btn-cancel-user" class="hidden w-1/3 border border-black/10 theme-text-muted font-bold text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-black/5 transition-all">Abort</button>
+          </div>
+        </div>
+      </div>
+    </main>
   </div>
 
-  <nav class="fixed bottom-0 inset-x-0 theme-surface border-t border-black/10 shadow-2xl z-[100] pb-safe hide-on-print">
-    <div class="flex justify-around items-center h-16 max-w-md mx-auto px-4" id="main-nav">
-      <button onclick="window.switchView('home')" id="nav-home" class="nav-btn flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all theme-text opacity-100 theme-bg-soft -translate-y-2 shadow-md">
-        <i class="fas fa-home text-lg mb-1"></i><span class="text-[9px] font-black uppercase-tracking tracking-wider">Home</span>
-      </button>
-      <button onclick="window.switchView('judging')" id="nav-judging" class="nav-btn flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all theme-text-muted opacity-60 hidden">
-        <i class="fas fa-gavel text-lg mb-1"></i><span class="text-[9px] font-black uppercase-tracking tracking-wider">Judge</span>
-      </button>
-      <button onclick="window.switchView('scores')" id="nav-scores" class="nav-btn flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all theme-text-muted opacity-60 hidden">
-        <i class="fas fa-chart-bar text-lg mb-1"></i><span class="text-[9px] font-black uppercase-tracking tracking-wider">Data</span>
-      </button>
-      <button onclick="window.switchView('admin')" id="nav-admin" class="nav-btn flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all theme-text-muted opacity-60 hidden">
-        <i class="fas fa-cog text-lg mb-1"></i><span class="text-[9px] font-black uppercase-tracking tracking-wider">Admin</span>
-      </button>
-      <button onclick="window.switchView('login')" id="nav-login" class="nav-btn flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all theme-text-muted opacity-60">
-        <i class="fas fa-user-shield text-lg mb-1"></i><span class="text-[9px] font-black uppercase-tracking tracking-wider">Login</span>
-      </button>
-    </div>
+  <nav class="fixed bottom-0 w-full theme-surface border-t border-black/5 flex justify-around items-center px-3 pt-3 pb-safe z-[90] shadow-[0_-10px_30px_rgba(0,0,0,0.08)]">
+    <button onclick="switchView('home')" id="nav-home" class="nav-btn theme-text-muted opacity-60"><svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg><span class="text-[9px] font-black uppercase tracking-widest">Home</span></button>
+    <button onclick="switchView('judging')" id="nav-judging" class="nav-btn hidden theme-text-muted opacity-60"><svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg><span class="text-[9px] font-black uppercase tracking-widest">Score</span></button>
+    <button onclick="switchView('scores')" id="nav-scores" class="nav-btn hidden theme-text-muted opacity-60"><svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg><span class="text-[9px] font-black uppercase tracking-widest">Data</span></button>
+    <button onclick="switchView('admin')" id="nav-admin" class="nav-btn hidden theme-text-muted opacity-60"><svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span class="text-[9px] font-black uppercase tracking-widest">Admin</span></button>
+    <button onclick="switchView('login')" id="nav-login" class="nav-btn theme-text-muted opacity-60"><svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg><span class="text-[9px] font-black uppercase tracking-widest">Login</span></button>
   </nav>
-
-  <div id="custom-modal" class="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
-    <div id="custom-modal-content" class="theme-surface p-8 rounded-3xl shadow-2xl max-w-sm w-full mx-4 transform scale-95 transition-transform duration-300">
-      <div class="text-center mb-6"><h3 id="modal-title" class="text-2xl font-black text-gray-800"></h3></div>
-      <p id="modal-message" class="text-center text-gray-600 mb-8 font-medium leading-relaxed"></p>
-      <div id="modal-actions" class="flex justify-center gap-3"></div>
-    </div>
-  </div>
-
+  
   <script type="module">
-    // 1. FIREBASE CONFIG
+    // ==========================================
+    // 1. FIREBASE INITIALIZATION & IMPORTS
+    // ==========================================
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, doc, setDoc, getDocs, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { 
+      getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, query, where, writeBatch, onSnapshot 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCVTCaxujL7Q0UmBqr-d5ev3CAZB5t3oxQ",
@@ -227,373 +462,682 @@
       projectId: "dynamic-event-system",
       storageBucket: "dynamic-event-system.firebasestorage.app",
       messagingSenderId: "588923118511",
-      appId: "1:588923118511:web:1dba0b6be0c253d8bec55a"
+      appId: "1:588923118511:web:1dba0b6be0c253d8bec55a",
+      measurementId: "G-WMGGYLRE7P"
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app); window.db = db;
+    const db = getFirestore(app);
+    window.db = db;
 
-    // 2. STATE VARIABLES
+    // ==========================================
+    // 2. GLOBAL STATE VARIABLES
+    // ==========================================
     window.settings = {}; window.criteria = []; window.candidates = []; window.users = []; 
     window.scoresData = {}; window.lockedScores = {}; window.currentSegment = ''; 
     window.activeUser = { name: "", role: "" };
-    window.currentCarouselIndex = 0; window.carouselInterval = null;
-    window.activeListeners = []; window.latestScores = []; window.latestVotes = {};
+    window.editState = { candidate: null, criteria: null, user: null };
+    window.currentCarouselIndex = 0; window.carouselInterval = null; window.votingTimerInterval = null;
+    window.activeConfirmCallback = null;
+    
     let offlineQueue = JSON.parse(localStorage.getItem('pageant_offline_queue')) || [];
 
-    // 3. UTILITIES & ANIMATIONS
-    window.alert = function(msg) { window.showModal("System Notice", msg, "alert"); };
-    window.sha256 = async function(msg) { const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg)); return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join(''); };
-    
-    window.showOfflineToast = function() {
-      const t = document.getElementById('offline-toast'); if(!t) return;
-      t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)';
-      setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(20px)'; }, 3500);
-    }
-
-    window.animateParticle = function(el) {  
-      let baseX = parseFloat(el.style.left);  
-      let amp = Math.random() * 2.5 + 0.8;  
-      let freq = Math.random() * 0.015 + 0.007;  
-      let t = Math.random() * 100;  
-      (function tick() { t += 0.45; el.style.left = (baseX + Math.sin(t * freq) * amp) + 'vw'; requestAnimationFrame(tick); })();
-    };
-
-    window.animateRowSwap = function(containerId) {
-      const container = document.getElementById(containerId); if (!container) return null;
-      const positions = new Map();
-      container.querySelectorAll('.theme-table-row').forEach(row => positions.set(row.dataset.id, row.getBoundingClientRect().top));
-      return {
-        play: () => {
-          container.querySelectorAll('.theme-table-row').forEach(row => {
-            const firstTop = positions.get(row.dataset.id); const lastTop = row.getBoundingClientRect().top;
-            if (firstTop && firstTop !== lastTop) {
-              const deltaY = firstTop - lastTop;
-              row.style.transition = 'none'; row.style.transform = `translateY(${deltaY}px)`;
-              requestAnimationFrame(() => { row.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease'; row.style.transform = ''; });
-            }
-          });
-        }
-      };
-    };
-
-    window.animateCount = function(el, target, decimals = 2, duration = 700) {  
-      const start = parseFloat(el.dataset.current || 0); const diff = target - start;  
-      if (Math.abs(diff) < 0.01) { el.innerText = target.toFixed(decimals); el.dataset.current = target; return; }  
-      let startTime = null;  
-      (function step(ts) {    
-        if (!startTime) startTime = ts;    
-        const progress = Math.min((ts - startTime) / duration, 1);    
-        el.innerText = (start + diff * (1 - Math.pow(1 - progress, 3))).toFixed(decimals);    
-        if (progress < 1) requestAnimationFrame(step); else { el.innerText = target.toFixed(decimals); el.dataset.current = target; }  
-      })(performance.now());
-    };
-
-    // MODAL
-    window.showModal = function(title, msg, type = 'alert', callback = null) {
-      const m = document.getElementById('custom-modal'); const c = document.getElementById('custom-modal-content');
-      document.getElementById('modal-title').innerText = title; document.getElementById('modal-message').innerHTML = msg; window.activeConfirmCallback = callback;
-      const actions = document.getElementById('modal-actions');
-      if (type === 'alert') actions.innerHTML = `<button onclick="executeModalAction()" class="theme-btn px-8 py-3 rounded-xl font-black">Acknowledge</button>`;
-      m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0'); c.classList.remove('scale-95'); }, 10);
-    }
-    window.closeModal = function() {
-      const m = document.getElementById('custom-modal'); const c = document.getElementById('custom-modal-content');
-      c.classList.add('scale-95'); m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300);
-    }
-    window.executeModalAction = function() { if (window.activeConfirmCallback) window.activeConfirmCallback(); window.closeModal(); }
-
-    // 4. UI RENDERERS & CAROUSEL ENGINE
-    window.switchView = function(targetView) {
-      if ((targetView === 'judging' || targetView === 'scores' || targetView === 'admin') && !window.activeUser.name) targetView = 'login';
-      if (targetView === 'scores') window.fetchScoresData();
-      if (targetView === 'admin') window.renderAdminDashboard();
-      
-      ['home', 'login', 'judging', 'scores', 'admin'].forEach(v => { const el = document.getElementById(`view-${v}`); if(el) el.classList.add('hidden'); });
-      const targetEl = document.getElementById(`view-${targetView}`); 
-      if (targetEl) { targetEl.classList.remove('hidden'); targetEl.classList.add('view-animate'); setTimeout(() => targetEl.classList.remove('view-animate'), 450); }
-
-      ['home', 'judging', 'scores', 'admin', 'login'].forEach(nav => { const el = document.getElementById(`nav-${nav}`); if(el) { el.classList.remove('theme-text', 'opacity-100', 'theme-bg-soft', '-translate-y-2', 'shadow-md'); el.classList.add('theme-text-muted', 'opacity-60'); } });
-      const activeNav = document.getElementById(`nav-${targetView}`);
-      if(activeNav) { activeNav.classList.remove('theme-text-muted', 'opacity-60'); activeNav.classList.add('theme-text', 'opacity-100', 'theme-bg-soft', '-translate-y-2', 'shadow-md'); }
-      window.scrollTo(0,0);
-    }
-
-    window.updateNavForRole = function() {
-      const r = window.activeUser.role ? window.activeUser.role.toLowerCase() : "";
-      document.getElementById('nav-judging').classList.toggle('hidden', !(r === 'judge' || r === 'super user' || r === 'admin'));
-      document.getElementById('nav-scores').classList.toggle('hidden', !(r === 'tabulator' || r === 'super user' || r === 'admin'));
-      document.getElementById('nav-admin').classList.toggle('hidden', !(r === 'super user' || r === 'admin'));
-      const loginBtn = document.getElementById('nav-login');
-      if (r) { loginBtn.innerHTML = '<i class="fas fa-sign-out-alt text-lg mb-1"></i><span class="text-[9px] font-black uppercase-tracking tracking-wider">Out</span>'; loginBtn.onclick = () => { localStorage.clear(); location.reload(); }; }
-    }
-
-    window.updateCarousel = function() {
-      const items = document.querySelectorAll('.carousel-item'); if (items.length === 0) return;
-      items.forEach((item, index) => {
-        item.className = 'carousel-item item-hidden'; 
-        if (index === window.currentCarouselIndex) item.className = 'carousel-item item-active';
-        else if (index === (window.currentCarouselIndex - 1 + items.length) % items.length) item.className = 'carousel-item item-prev';
-        else if (index === (window.currentCarouselIndex + 1) % items.length) item.className = 'carousel-item item-next';
-      });
-    };
-
-    window.goToCarousel = function(index) { window.currentCarouselIndex = index; window.updateCarousel(); window.startCarouselAutoPlay(); };
-
-    window.startCarouselAutoPlay = function() {
-      if (window.carouselInterval) clearInterval(window.carouselInterval);
-      window.carouselInterval = setInterval(() => {
-        if (window.candidates.length > 0) { window.currentCarouselIndex = (window.currentCarouselIndex + 1) % window.candidates.length; window.updateCarousel(); }
-      }, 4000);
-    };
-
-    window.initCarouselSwipe = function() {
-      const track = document.getElementById('carousel-track'); if (!track) return;
-      let startX = 0, startY = 0;
-      track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; clearInterval(window.carouselInterval); }, { passive: true });
-      track.addEventListener('touchend', e => {
-        const dx = startX - e.changedTouches[0].clientX; const dy = startY - e.changedTouches[0].clientY;
-        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 45) {
-          window.currentCarouselIndex = dx > 0 ? (window.currentCarouselIndex + 1) % window.candidates.length : (window.currentCarouselIndex - 1 + window.candidates.length) % window.candidates.length;
-          window.updateCarousel();
-        }
-        window.startCarouselAutoPlay();
-      }, { passive: true });
-    }
-
-    window.renderHomeGallery = function() {
-      const cTrack = document.getElementById('carousel-track'); const fallbackImg = "https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=800&q=80";
-      if (cTrack) {
-        cTrack.innerHTML = window.candidates.map((c, index) => {
-          const imgSrc = (c.img && c.img.length > 5) ? c.img : fallbackImg;
-          return `<div class="carousel-item" onclick="window.goToCarousel(${index})"><img src="${imgSrc}" loading="lazy" onerror="this.src='${fallbackImg}'" class="absolute inset-0 w-full h-full object-cover object-top opacity-95"><div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div><div class="absolute bottom-0 inset-x-0 p-5 text-center"><p class="text-[10px] font-black uppercase-tracking tracking-[0.3em] mb-1 text-white/70">No. ${(c.id).toString().padStart(2, '0')}</p><h3 class="text-2xl font-black tracking-tight leading-none text-white drop-shadow-md">${c.name}</h3></div></div>`;
-        }).join('');
-        window.updateCarousel(); window.startCarouselAutoPlay(); window.initCarouselSwipe();
-      }
-    }
-
-    window.switchJudgingSegment = function(critId) {
-      window.currentSegment = critId; window.renderTabs(); window.renderCandidates(); window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    window.renderTabs = function() {
-      const tabs = document.getElementById('segment-tabs'); if(!tabs) return;
-      tabs.innerHTML = window.criteria.map(c => `<button onclick="window.switchJudgingSegment('${c.id}')" class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase-tracking whitespace-nowrap transition-all ${window.currentSegment === c.id ? 'theme-btn shadow-md' : 'text-gray-500 hover:bg-black/5'}">${c.short}</button>`).join('');
-    }
-
-    window.renderCandidates = function() {
-      const activeCrit = window.criteria.find(c => c.id === window.currentSegment); const cCont = document.getElementById('candidates-container');
-      if(!activeCrit || !cCont) return;
-      const fallbackImg = "https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=800&q=80";
-      
-      cCont.innerHTML = window.candidates.map(c => {
-        const isLocked = window.lockedScores[c.id] && window.lockedScores[c.id][window.currentSegment]; 
-        const dScore = isLocked ? window.scoresData[c.id][window.currentSegment] : (window.scoresData[c.id][window.currentSegment] || activeCrit.max/2); 
-        const btnClass = isLocked ? 'bg-black/10 text-slate-500 cursor-not-allowed border border-black/5' : 'theme-btn active:scale-95';
-        const imgSrc = (c.img && c.img.length > 5) ? c.img : fallbackImg;
-        const fillPct = ((dScore - 1) / (activeCrit.max - 1)) * 100;
-
-        return `<div class="card-panel mb-10 overflow-hidden border-none shadow-2xl rounded-[2rem] bg-[var(--t-surface)]">
-          <div class="relative w-full h-[28rem]"><img src="${imgSrc}" loading="lazy" onerror="this.src='${fallbackImg}'" class="absolute inset-0 w-full h-full object-cover object-top"><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-90"></div><div class="absolute bottom-4 inset-x-4 z-10"><div class="glass-panel p-5 rounded-[1.5rem] text-center"><p class="text-[10px] font-black uppercase-tracking tracking-[0.3em] mb-1 text-white/70">Candidate #${(c.id).toString().padStart(2, '0')}</p><h2 class="text-3xl font-black tracking-tight leading-none text-white drop-shadow-md">${c.name}</h2></div></div></div>
-          <div class="p-6 relative z-20 theme-surface rounded-b-[2rem]">
-            <div class="flex justify-between items-center mb-8 theme-bg-soft p-5 rounded-2xl border border-black/5 shadow-inner">
-              <div class="flex flex-col"><span class="text-[9px] theme-text font-black uppercase-tracking tracking-widest mb-1.5">Evaluation Parameter</span><label class="font-black text-sm tracking-wide uppercase-tracking leading-tight">${activeCrit.label}</label></div>
-              <div class="theme-surface px-5 py-3 rounded-xl border border-black/10 min-w-[80px] text-center shadow-sm"><span class="font-black theme-text text-2xl tracking-tighter score-number" id="score-val-${c.id}">${dScore.toFixed(1)}</span></div>
-            </div>
-            <div class="px-2 mb-8 relative">
-              <input type="range" id="slider-${c.id}" min="1" max="${activeCrit.max}" step="0.5" value="${dScore}" style="--fill: ${fillPct}%" 
-              oninput="const v = parseFloat(this.value); const el = document.getElementById('score-val-${c.id}'); el.innerText = v.toFixed(1); el.classList.remove('score-pop'); void el.offsetWidth; el.classList.add('score-pop'); window.scoresData['${c.id}']['${window.currentSegment}'] = v; this.style.setProperty('--fill', (((v - 1) / (${activeCrit.max} - 1)) * 100) + '%');" class="w-full relative z-10" ${isLocked ? 'disabled' : ''}>
-            </div>
-            <button onclick="window.submitScore('${c.id}')" id="btn-${c.id}" class="w-full py-4 rounded-xl font-black transition-all uppercase-tracking text-xs shadow-md ${btnClass}" ${isLocked ? 'disabled' : ''}>${isLocked ? 'Score Locked' : 'Submit Evaluation'}</button>
-          </div>
-        </div>`;
-      }).join('');
-      
-      const observer = new IntersectionObserver((entries) => {  
-        entries.forEach((entry, i) => { if (entry.isIntersecting) { setTimeout(() => entry.target.classList.add('visible'), i * 100); observer.unobserve(entry.target); } });
-      }, { threshold: 0.1 });
-      document.querySelectorAll('.card-panel').forEach(el => { el.classList.add('stagger-card'); observer.observe(el); });
-    }
-
-    // 5. CORE BOOTUP 
+    // ==========================================
+    // 3. CORE BOOTUP 
+    // ==========================================
     window.onload = async function() {
       try {
-        const savedName = localStorage.getItem('msval27_name'); const savedRole = localStorage.getItem('msval27_role');
+        const savedName = localStorage.getItem('msval27_name');
+        const savedRole = localStorage.getItem('msval27_role');
         if (savedRole === "undefined" || !savedRole) localStorage.clear();
 
-        const [criteriaSnap, candSnap, usersSnap] = await Promise.all([ getDocs(collection(db, "Criteria")), getDocs(collection(db, "Candidates")), getDocs(collection(db, "Users")) ]);
+        // 1. Fetch the data FIRST (Criteria, Candidates, Users)
+        // This ensures the candidates list is full BEFORE we try to draw the screen.
+        const [criteriaSnap, candSnap, usersSnap] = await Promise.all([
+          getDocs(collection(db, "Criteria")),
+          getDocs(collection(db, "Candidates")),
+          getDocs(collection(db, "Users"))
+        ]);
+
         criteriaSnap.forEach(doc => { window.criteria.push({ id: doc.id, ...doc.data() }); });
         candSnap.forEach(doc => { window.candidates.push({ id: doc.id, ...doc.data() }); });
         usersSnap.forEach(doc => { window.users.push({ id: doc.id, ...doc.data() }); });
 
+        // 2. Establish the Real-Time Settings Listener AFTER base data is loaded
         onSnapshot(collection(db, "Settings"), (snapshot) => {
             snapshot.forEach(doc => { window.settings[doc.id] = doc.data().value; });
+
+            // Instantly inject new settings into the UI
             if(document.getElementById('display-title')) document.getElementById('display-title').innerText = window.settings['app_title'] || "Event System";
             if(document.getElementById('display-subtitle')) document.getElementById('display-subtitle').innerText = window.settings['app_subtitle'] || "Core Operations";
             if(document.getElementById('display-location')) document.getElementById('display-location').innerText = window.settings['location_text'] || "Location Undefined";
+            if(document.getElementById('display-icon')) document.getElementById('display-icon').innerText = window.settings['event_icon'] || "";
+            
             window.applyTheme(window.settings['theme_color'] || 'red');
             document.title = (window.settings['app_title'] || "Event Portal") + " - Secure Access";
-            if(document.getElementById('carousel-track') && window.candidates.length > 0) window.renderHomeGallery();
+            
+            // Re-render the gallery in case the Admin toggles "Public Voting" ON/OFF
+            if(document.getElementById('carousel-track') && window.candidates.length > 0) {
+                window.renderHomeGallery();
+            }
         });
 
         if(document.getElementById('status-text')) document.getElementById('status-text').classList.add('hidden');
+
         if(window.criteria.length > 0) window.currentSegment = window.criteria[0].id;
-        window.candidates.forEach(c => { window.scoresData[c.id] = {}; window.criteria.forEach(crit => { window.scoresData[c.id][crit.id] = parseFloat(crit.max) / 2 || 5; }); });
+        window.candidates.forEach(c => { 
+          window.scoresData[c.id] = {}; 
+          window.criteria.forEach(crit => { window.scoresData[c.id][crit.id] = parseFloat(crit.max) / 2 || 5; }); 
+        });
 
-        const loader = document.getElementById('loader'); if (loader) loader.classList.add('hidden');
+        const loader = document.getElementById('loader');
+        if (loader) loader.classList.add('hidden');
         
-        window.renderHomeGallery(); window.renderTabs(); window.renderCandidates(); window.renderAdminDashboard();
+        // 3. Render ALL UI elements now that data is loaded
+        window.renderHomeGallery(); 
+        window.renderTabs(); 
+        window.renderCandidates();
+        window.renderAdminDashboard();
 
+        // 4. Handle Auto-Login Routing
         if (savedName && savedRole && savedRole !== "undefined") {
-          window.activeUser = { name: savedName, role: savedRole }; window.updateNavForRole();
+          window.activeUser = { name: savedName, role: savedRole };
+          window.updateNavForRole();
           const r = savedRole.toLowerCase().trim();
-          if (r === 'tabulator') window.switchView('scores'); else if (r === 'super user' || r === 'admin') window.switchView('admin'); else { window.switchView('judging'); window.syncJudgeScores(); } 
-        } else { window.switchView('home'); }
-
-        const heroContent = document.querySelector('.header-3d-content');
-        if (heroContent) {
-          document.addEventListener('mousemove', e => {  
-            if (document.getElementById('view-home') && document.getElementById('view-home').classList.contains('hidden')) return;  
-            heroContent.style.transform = `rotateY(${(window.innerWidth / 2 - e.pageX) / 30}deg) rotateX(${(window.innerHeight / 2 - e.pageY) / 30}deg)`;
-          });
-          if (window.DeviceOrientationEvent) {  
-            window.addEventListener('deviceorientation', e => {    
-              if (document.getElementById('view-home') && document.getElementById('view-home').classList.contains('hidden')) return;    
-              heroContent.style.transform = `rotateY(${Math.min(Math.max((e.gamma || 0) / 3, -12), 12)}deg) rotateX(${Math.min(Math.max((e.beta  || 0) / 5 - 10, -12), 12)}deg)`;  
-            }, true);
-          }
+          if (r === 'tabulator') window.switchView('scores');
+          else if (r === 'super user' || r === 'admin') window.switchView('admin');
+          else { window.switchView('judging'); window.syncJudgeScores(); } 
+        } else {
+          window.switchView('home');
         }
-      } catch(err) { const loader = document.getElementById('loader'); if (loader) loader.classList.add('hidden'); alert("System Boot Error: " + err.message); }
+
+      } catch(err) { 
+        const loader = document.getElementById('loader');
+        if (loader) loader.classList.add('hidden'); 
+        alert("System Boot Error: " + err.message); 
+      }
     };
 
-    // 6. DATA OPERATIONS
+    // ==========================================
+    // 4. FIREBASE DATA OPERATIONS
+    // ==========================================
     window.processLogin = async function() {
-      const user = document.getElementById('login-username').value.trim(); const pass = document.getElementById('login-password').value; 
-      const btn = document.getElementById('login-btn'); const err = document.getElementById('login-error');
+      const user = document.getElementById('login-username').value.trim(); 
+      const pass = document.getElementById('login-password').value; 
+      const btn = document.getElementById('login-btn'); 
+      const err = document.getElementById('login-error');
+      
       if (!user || !pass) { err.innerText = "Credentials required."; err.classList.remove('hidden'); return; }
       btn.innerText = "Authenticating..."; btn.disabled = true; err.classList.add('hidden');
+      
       const hashedPass = await window.sha256(pass); 
 
       try {
         const q = query(collection(db, "Users"), where("username", "==", user));
-        const querySnapshot = await getDocs(q); if (querySnapshot.empty) throw new Error("Invalid username.");
-        let validUser = null; querySnapshot.forEach((doc) => { const data = doc.data(); if (data.password === hashedPass || data.password === pass) validUser = data; });
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) throw new Error("Invalid username.");
+        
+        let validUser = null;
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.password === hashedPass || data.password === pass) validUser = data;
+        });
+
         if (!validUser) throw new Error("Invalid password.");
 
         window.activeUser = { name: validUser.name, role: validUser.role }; 
-        localStorage.setItem('msval27_name', window.activeUser.name); localStorage.setItem('msval27_role', window.activeUser.role); window.updateNavForRole();
+        localStorage.setItem('msval27_name', window.activeUser.name); 
+        localStorage.setItem('msval27_role', window.activeUser.role); 
+        window.updateNavForRole();
         
         const r = window.activeUser.role.toLowerCase().trim(); 
-        if (r === 'tabulator') window.switchView('scores'); else if (r === 'admin' || r === 'super user') window.switchView('admin'); else { window.switchView('judging'); window.syncJudgeScores(); }
-      } catch (error) { err.innerText = error.message; err.classList.remove('hidden'); } finally { btn.innerText = "Authenticate"; btn.disabled = false; }
+        if (r === 'tabulator') window.switchView('scores'); 
+        else if (r === 'admin' || r === 'super user') window.switchView('admin'); 
+        else { window.switchView('judging'); window.syncJudgeScores(); }
+        
+      } catch (error) {
+        err.innerText = error.message; err.classList.remove('hidden');
+      } finally {
+        btn.innerText = "Authenticate"; btn.disabled = false;
+      }
     };
 
     window.syncJudgeScores = async function() {
       if (!window.activeUser.name || (window.activeUser.role !== 'Judge' && window.activeUser.role !== 'Admin')) return;
+      document.getElementById('loader-text').innerText = "Verifying Score Status...";
+      document.getElementById('loader').classList.remove('hidden');
+
       try {
-        const q = query(collection(db, "Scores"), where("judge", "==", window.activeUser.name)); const querySnapshot = await getDocs(q);
+        const q = query(collection(db, "Scores"), where("judge", "==", window.activeUser.name));
+        const querySnapshot = await getDocs(q);
+
         querySnapshot.forEach((doc) => {
-          const data = doc.data(); const cand = window.candidates.find(c => c.name === data.candidate);
-          if (cand) { window.lockedScores[cand.id] = window.lockedScores[cand.id] || {}; window.criteria.forEach(crit => { if (data[crit.id] !== undefined) { window.scoresData[cand.id][crit.id] = data[crit.id]; window.lockedScores[cand.id][crit.id] = true; } }); }
+          const data = doc.data();
+          const cand = window.candidates.find(c => c.name === data.candidate);
+          if (cand) {
+            window.lockedScores[cand.id] = window.lockedScores[cand.id] || {};
+            window.criteria.forEach(crit => {
+              if (data[crit.id] !== undefined) {
+                window.scoresData[cand.id][crit.id] = data[crit.id];
+                window.lockedScores[cand.id][crit.id] = true; 
+              }
+            });
+          }
         });
+        document.getElementById('loader').classList.add('hidden');
         if(document.getElementById('view-judging') && !document.getElementById('view-judging').classList.contains('hidden')) window.renderCandidates();
-      } catch (error) { console.error("Sync Error:", error); }
+      } catch (error) {
+        document.getElementById('loader').classList.add('hidden');
+        console.error("Sync Error:", error);
+      }
     };
 
     window.submitScore = async function(candidateId) {
-      const c = window.candidates.find(can => String(can.id) === String(candidateId)); if (!c) return alert("System Error: Candidate mismatch.");
+      const c = window.candidates.find(can => String(can.id) === String(candidateId)); 
+      if (!c) return alert("System Error: Candidate mismatch.");
+      
       const score = window.scoresData[candidateId][window.currentSegment] || parseFloat(document.getElementById(`slider-${candidateId}`).value); 
-      const btn = document.getElementById(`btn-${candidateId}`); const cardPanel = btn.closest('.card-panel'); 
+      const btn = document.getElementById(`btn-${candidateId}`); 
+      const cardPanel = btn.closest('.card-panel'); 
+      
       btn.innerText = "Transmitting..."; btn.disabled = true;
 
       const payload = { judge: window.activeUser.name, candidate: c.name, [window.currentSegment]: score, timestamp: Date.now() };
 
-      if (!navigator.onLine) { offlineQueue.push(payload); localStorage.setItem('pageant_offline_queue', JSON.stringify(offlineQueue)); finalizeSubmitUI(); window.showOfflineToast(); return; }
-      try { await setDoc(doc(db, "Scores", `${window.activeUser.name}_${c.name}`), payload, { merge: true }); finalizeSubmitUI();
-      } catch (error) { offlineQueue.push(payload); localStorage.setItem('pageant_offline_queue', JSON.stringify(offlineQueue)); finalizeSubmitUI(); window.showOfflineToast(); }
+      if (!navigator.onLine) {
+        offlineQueue.push(payload);
+        localStorage.setItem('pageant_offline_queue', JSON.stringify(offlineQueue));
+        finalizeSubmitUI();
+        window.showModal("Offline Mode", "Score saved locally. It will sync when connection returns.", "alert");
+        return;
+      }
+
+      try {
+        const docRef = doc(db, "Scores", `${window.activeUser.name}_${c.name}`);
+        await setDoc(docRef, payload, { merge: true });
+        finalizeSubmitUI();
+      } catch (error) {
+        offlineQueue.push(payload); localStorage.setItem('pageant_offline_queue', JSON.stringify(offlineQueue));
+        finalizeSubmitUI(); window.showModal("Connection Issue", "Score saved locally. " + error.message, "alert");
+      }
 
       function finalizeSubmitUI() {
-          if (navigator.vibrate) navigator.vibrate([15, 20, 60]);
-          window.lockedScores[candidateId] = window.lockedScores[candidateId] || {}; window.lockedScores[candidateId][window.currentSegment] = true; 
-          cardPanel.classList.add('score-locked-flash'); setTimeout(() => window.renderCandidates(), 500); 
+          window.lockedScores[candidateId] = window.lockedScores[candidateId] || {}; 
+          window.lockedScores[candidateId][window.currentSegment] = true; 
+          cardPanel.classList.add('score-locked-flash'); 
+          setTimeout(() => window.renderCandidates(), 500); 
       }
     };
 
-    // 7. TABULATOR ENGINE
-    window.fetchScoresData = async function() { 
-      document.getElementById('loader-text').innerText = "Initializing Live Matrix..."; document.getElementById('loader').classList.remove('hidden'); 
-      window.activeListeners.forEach(unsub => unsub()); window.activeListeners = [];
+    window.addEventListener('online', async () => {
+      if (offlineQueue.length === 0) return;
+      while(offlineQueue.length > 0) {
+        const item = offlineQueue[0];
+        try {
+          const docRef = doc(db, "Scores", `${item.judge}_${item.candidate}`);
+          await setDoc(docRef, item, { merge: true });
+          offlineQueue.shift(); 
+          localStorage.setItem('pageant_offline_queue', JSON.stringify(offlineQueue));
+        } catch(e) { break; } 
+      }
+    });
+
+    window.checkVoteAndRedirect = async function() {
+      let voterId = localStorage.getItem('msval27_voter_id');
+      if (!voterId) { voterId = window.generateUUID(); localStorage.setItem('msval27_voter_id', voterId); window.switchView('voting'); return; }
+      
+      const btn = document.getElementById('btn-cast-vote');
+      if(btn) { btn.innerHTML = `Verifying Device...`; btn.disabled = true; }
+
       try {
-        const unsubScores = onSnapshot(collection(db, "Scores"), (snapshot) => { window.latestScores = snapshot.docs.map(d => d.data()); window.processAndRenderScores(window.latestScores, window.latestVotes); document.getElementById('loader').classList.add('hidden'); });
-        window.activeListeners.push(unsubScores);
-        const fetchVotes = async () => { const votesSnap = await getDocs(collection(db, "PublicVotes")); window.latestVotes = {}; votesSnap.forEach(doc => { const cName = doc.data().candidateName; window.latestVotes[cName] = (window.latestVotes[cName] || 0) + 1; }); window.processAndRenderScores(window.latestScores, window.latestVotes); };
-        await fetchVotes(); const voteInterval = setInterval(fetchVotes, 60000); window.activeListeners.push(() => clearInterval(voteInterval));
-      } catch (error) { document.getElementById('loader').classList.add('hidden'); alert("Matrix Error: " + error.message); }
+        const docRef = doc(db, "PublicVotes", voterId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) window.showModal("Already Voted", "A vote has already been cast from this device.", "alert");
+        else window.switchView('voting');
+      } catch (error) { window.showModal("Connection Error", "Could not verify device. " + error.message, "danger");
+      } finally { if(btn) { btn.innerHTML = `Cast Your Vote Now`; btn.disabled = false; } }
     };
 
-    window.processAndRenderScores = function(rawScores, rawVotes) {
-      const avgFlipper = window.animateRowSwap('table-averages');
-      const normalizedScores = (rawScores || []).map(s => { let normalized = {}; for (let key in s) { normalized[key.toLowerCase().replace(/\s+/g, '')] = s[key]; } normalized.judge = (s.judge || "").toString().trim(); normalized.candidate = (s.candidate || "").toString().trim(); return normalized; });
-      let aggregated = window.candidates.map(c => { 
-        let cleanCandidateName = c.name.toString().trim().toLowerCase(); let sc = normalizedScores.filter(s => s.candidate.toLowerCase() === cleanCandidateName); 
-        let count = sc.length; let candData = { name: c.name, count: count, total: 0 }; 
-        window.criteria.forEach(crit => { let safeCritId = crit.id.toString().toLowerCase().replace(/\s+/g, ''); let avg = count ? sc.reduce((sum, s) => sum + (parseFloat(s[safeCritId]) || parseFloat(s[crit.id]) || 0), 0) / count : 0; candData[crit.id] = avg; candData.total += avg; }); return candData; 
+    window.submitPublicVote = async function(candidateId, candidateName) {
+      let voterId = localStorage.getItem('msval27_voter_id'); 
+      if (!voterId) { voterId = window.generateUUID(); localStorage.setItem('msval27_voter_id', voterId); }
+      window.showModal("Processing Vote", `Registering your vote for ${candidateName}...`, "alert");
+      
+      try {
+        const docRef = doc(db, "PublicVotes", voterId);
+        const docSnap = await getDoc(docRef);
+        if(docSnap.exists()) { window.showModal("Vote Rejected", "You have already voted.", "danger"); return; }
+        await setDoc(docRef, { candidateId: candidateId, candidateName: candidateName, timestamp: Date.now() });
+        window.showModal("Vote Confirmed", `Thank you! Your vote for <b>${candidateName}</b> has been recorded.`, "alert", function() { window.switchView('home'); });
+      } catch (error) { window.showModal("Connection Error", "Failed to connect. " + error.message, "danger"); }
+    };
+
+    // ==========================================
+    // 8. AUTOMATED TABULATOR LOGIC
+    // ==========================================
+    window.activeListeners = []; // Array to manage background listeners
+    window.latestScores = [];
+    window.latestVotes = {};
+
+    window.fetchScoresData = async function() { 
+      document.getElementById('loader-text').innerText = "Initializing Live Matrix..."; 
+      document.getElementById('loader').classList.remove('hidden'); 
+      
+      // Clean up old listeners if the user switches views and comes back
+      window.activeListeners.forEach(unsub => unsub());
+      window.activeListeners = [];
+
+      try {
+        // 1. REAL-TIME LISTENER: Judges Scores (Instant, Low Cost)
+        const unsubScores = onSnapshot(collection(db, "Scores"), (snapshot) => {
+            window.latestScores = snapshot.docs.map(d => d.data());
+            window.processAndRenderScores(window.latestScores, window.latestVotes);
+            document.getElementById('loader').classList.add('hidden');
+        });
+        window.activeListeners.push(unsubScores);
+
+        // 2. POLLING ENGINE: Public Votes (Updates every 60 seconds, High Safety)
+        const fetchVotes = async () => {
+            const votesSnap = await getDocs(collection(db, "PublicVotes"));
+            window.latestVotes = {};
+            votesSnap.forEach(doc => { 
+                const cName = doc.data().candidateName; 
+                window.latestVotes[cName] = (window.latestVotes[cName] || 0) + 1; 
+            });
+            window.processAndRenderScores(window.latestScores, window.latestVotes);
+        };
+        
+        // Fetch votes immediately, then start the 60-second loop
+        await fetchVotes();
+        const voteInterval = setInterval(fetchVotes, 60000); 
+        
+        // Save the interval so we can clear it later if needed
+        window.activeListeners.push(() => clearInterval(voteInterval));
+
+      } catch (error) { 
+        document.getElementById('loader').classList.add('hidden'); 
+        alert("Matrix Error: " + error.message); 
+      }
+    };
+
+    window.softReload = async function(view = 'admin') {
+      document.getElementById('loader-text').innerText = "Syncing Database..."; 
+      document.getElementById('loader').classList.remove('hidden');
+      try {
+        window.settings = {}; window.criteria = []; window.candidates = []; window.users = [];
+        const [settingsSnap, criteriaSnap, candSnap, usersSnap] = await Promise.all([
+          getDocs(collection(db, "Settings")), getDocs(collection(db, "Criteria")), getDocs(collection(db, "Candidates")), getDocs(collection(db, "Users"))
+        ]);
+        settingsSnap.forEach(doc => { window.settings[doc.id] = doc.data().value; });
+        criteriaSnap.forEach(doc => { window.criteria.push({ id: doc.id, ...doc.data() }); });
+        candSnap.forEach(doc => { window.candidates.push({ id: doc.id, ...doc.data() }); });
+        usersSnap.forEach(doc => { window.users.push({ id: doc.id, ...doc.data() }); });
+        document.getElementById('loader').classList.add('hidden'); 
+        window.renderHomeGallery(); window.renderTabs(); window.renderCandidates(); 
+        if (view === 'admin') window.renderAdminDashboard();
+      } catch(e) { document.getElementById('loader').classList.add('hidden'); alert("Sync Error: " + e.message); }
+    };
+
+    window.saveAdminSettingsUI = async function() {
+      const btn = document.getElementById('btn-save-settings'); btn.innerText = "Deploying..."; btn.disabled = true;
+      const payload = { 
+        app_title: document.getElementById('admin-setting-title').value, app_subtitle: document.getElementById('admin-setting-subtitle').value, 
+        location_text: document.getElementById('admin-setting-location').value, event_icon: document.getElementById('admin-setting-icon').value, 
+        theme_color: document.getElementById('admin-setting-theme').value, public_voting: document.getElementById('admin-setting-voting').checked ? 'true' : 'false', 
+        voting_deadline: document.getElementById('admin-setting-deadline').value 
+      };
+      try {
+        const batch = writeBatch(db);
+        for (let key in payload) batch.set(doc(db, "Settings", key), { value: payload[key] });
+        await batch.commit();
+        window.showModal("Success", "System updated successfully.", "alert"); 
+        window.softReload('admin');
+      } catch (error) { alert("Error saving: " + error.message); } finally { btn.innerText = "Deploy Configuration"; btn.disabled = false; }
+    };
+
+    window.submitCandidateUI = async function() { 
+      const data = { id: document.getElementById('cand-id').value, name: document.getElementById('cand-name').value, location: document.getElementById('cand-loc').value, img: document.getElementById('cand-img').value }; 
+      if(!data.id || !data.name) return alert("ID and Name are mandatory."); 
+      const btn = document.getElementById('btn-add-cand'); btn.innerText = "Processing..."; btn.disabled = true; 
+      try { await setDoc(doc(db, "Candidates", data.id), data); window.softReload('admin');
+      } catch (error) { alert("Error: " + error.message); } finally { btn.innerText = "Add Data"; btn.disabled = false; }
+    };
+    window.deleteCandidateUI = function(id) { window.showModal("Delete Record", `Delete candidate #${id}?`, "danger", async () => { document.getElementById('loader').classList.remove('hidden'); await deleteDoc(doc(db, "Candidates", id.toString())); window.softReload('admin'); }); };
+
+    window.submitCriteriaUI = async function() { 
+      const data = { id: document.getElementById('crit-id').value.toLowerCase().replace(/\s+/g, ''), max: document.getElementById('crit-max').value, label: document.getElementById('crit-label').value, short: document.getElementById('crit-short').value }; 
+      if(!data.id || !data.label) return alert("Sys_ID and Label mandatory."); 
+      const btn = document.getElementById('btn-add-crit'); btn.innerText = "Processing..."; btn.disabled = true; 
+      try { await setDoc(doc(db, "Criteria", data.id), data); window.softReload('admin');
+      } catch(e) { alert("Error: " + e.message); } finally { btn.innerText = "Add Criterion"; btn.disabled = false; }
+    };
+    window.deleteCriteriaUI = function(id) { window.showModal("Delete Criterion", `Delete criterion '${id}'?`, "danger", async () => { document.getElementById('loader').classList.remove('hidden'); await deleteDoc(doc(db, "Criteria", id.toString())); window.softReload('admin'); }); };
+
+    window.submitUserUI = async function() { 
+      const passwordInput = document.getElementById('user-password').value;
+      const data = { name: document.getElementById('user-name').value, username: document.getElementById('user-username').value, role: document.getElementById('user-role').value }; 
+      if(!data.name || !data.username) return alert("Name and Username mandatory."); 
+      const btn = document.getElementById('btn-add-user'); btn.innerText = "Processing..."; btn.disabled = true; 
+      try {
+        if (passwordInput) data.password = await window.sha256(passwordInput);
+        else { const u = window.users.find(user => user.username === data.username); if(u) data.password = u.password; }
+        await setDoc(doc(db, "Users", data.username), data); window.softReload('admin');
+      } catch(e) { alert("Error: " + e.message); } finally { btn.innerText = "Add User"; btn.disabled = false; }
+    };
+    window.deleteUserUI = function(username) { window.showModal("Revoke Access", `Revoke access for '${username}'?`, "danger", async () => { document.getElementById('loader').classList.remove('hidden'); await deleteDoc(doc(db, "Users", username.toString())); window.softReload('admin'); }); };
+
+    // ==========================================
+    // 5. PRESERVED UI & ANIMATION FUNCTIONS
+    // ==========================================
+    window.onerror = function(msg, url, line) { const loader = document.getElementById('loader'); if(loader) loader.classList.add('hidden'); alert("FRONTEND CRASH DETECTED\n\nError: " + msg + "\nLine: " + line); };
+    window.alert = function(message) { window.showModal("System Notice", message, "alert"); };
+    
+    window.sha256 = async function(message) { const msgBuffer = new TextEncoder().encode(message); const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer); return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join(''); };
+    window.generateUUID = function() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); }); };
+
+    window.animateParticle = function(el) {  
+      let x = parseFloat(el.style.left);  
+      let amplitude = (Math.random() * 3) + 1; 
+      let frequency = (Math.random() * 0.02) + 0.01;  
+      let t = Math.random() * 100;  
+      function tick() {    
+        t += 0.5;    
+        el.style.left = (x + Math.sin(t * frequency) * amplitude) + 'vw';    
+        requestAnimationFrame(tick);  
+      }  
+      tick();
+    };
+    
+    window.showModal = function(title, message, type = 'alert', callback = null) {
+      const modal = document.getElementById('custom-modal'); const content = document.getElementById('custom-modal-content'); const actionsEl = document.getElementById('modal-actions');
+      if(!modal) return;
+      document.getElementById('modal-title').innerText = title; document.getElementById('modal-message').innerHTML = message; window.activeConfirmCallback = callback;
+      if (type === 'confirm' || type === 'danger') {
+        document.getElementById('modal-icon').innerText = type === 'danger' ? '⚠️' : '❓';
+        const btnColor = type === 'danger' ? 'bg-red-600 hover:bg-red-700 text-white' : 'theme-btn text-white';
+        actionsEl.innerHTML = `<button onclick="closeModal()" class="px-5 py-2.5 text-xs font-black theme-text-muted hover:opacity-70 transition-colors tracking-widest uppercase rounded-lg">Abort</button><button onclick="executeModalAction()" class="px-6 py-2.5 text-xs font-black rounded-xl shadow-md transition-transform active:scale-95 tracking-widest uppercase ${btnColor}">Confirm</button>`;
+      } else {
+        document.getElementById('modal-icon').innerText = '🔔';
+        actionsEl.innerHTML = `<button onclick="executeModalAction()" class="px-8 py-3 text-xs font-black text-white rounded-xl shadow-md transition-transform active:scale-95 theme-btn tracking-widest uppercase">Acknowledge</button>`;
+      }
+      modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); content.classList.add('scale-100'); }, 10);
+    }
+    window.closeModal = function() { const modal = document.getElementById('custom-modal'); const content = document.getElementById('custom-modal-content'); if(!modal) return; content.classList.remove('scale-100'); content.classList.add('scale-95'); modal.classList.add('opacity-0'); setTimeout(() => modal.classList.add('hidden'), 300); if(window.activeConfirmCallback && document.getElementById('modal-actions').innerHTML.includes('Acknowledge')) window.activeConfirmCallback = null; }
+    window.executeModalAction = function() { if (window.activeConfirmCallback) window.activeConfirmCallback(); window.closeModal(); }
+    
+    window.updateNavForRole = function() {
+      const navLogin = document.getElementById('nav-login'); if (navLogin) navLogin.classList.add('hidden');
+      const role = window.activeUser.role.toLowerCase().trim();
+      if(document.getElementById('display-judge-name')) document.getElementById('display-judge-name').innerText = window.activeUser.name;
+      if(document.getElementById('display-tabulator-name')) document.getElementById('display-tabulator-name').innerText = window.activeUser.name;
+      if (role === 'super user' || role === 'admin') {
+        if(document.getElementById('nav-judging')) document.getElementById('nav-judging').classList.remove('hidden'); 
+        if(document.getElementById('nav-scores')) document.getElementById('nav-scores').classList.remove('hidden'); 
+        if(document.getElementById('nav-admin')) document.getElementById('nav-admin').classList.remove('hidden');
+      } else if (role === 'judge') { if(document.getElementById('nav-judging')) document.getElementById('nav-judging').classList.remove('hidden');
+      } else if (role === 'tabulator') { if(document.getElementById('nav-scores')) document.getElementById('nav-scores').classList.remove('hidden'); }
+    }
+
+    window.switchView = function(targetView) {
+      if ((targetView === 'judging' || targetView === 'scores' || targetView === 'admin') && !window.activeUser.name) targetView = 'login';
+      if (targetView === 'scores') window.fetchScoresData();
+      if (targetView === 'admin') window.renderAdminDashboard();
+      ['home', 'login', 'judging', 'scores', 'admin', 'voting'].forEach(v => { const el = document.getElementById(`view-${v}`); if(el) el.classList.add('hidden'); });
+      const targetEl = document.getElementById(`view-${targetView}`); if(targetEl) targetEl.classList.remove('hidden');
+      ['home', 'judging', 'scores', 'admin', 'login'].forEach(nav => { const el = document.getElementById(`nav-${nav}`); if(el) { el.classList.remove('theme-text', 'opacity-100', 'theme-bg-soft', '-translate-y-2', 'shadow-md'); el.classList.add('theme-text-muted', 'opacity-60'); } });
+      const navTarget = targetView === 'voting' ? 'home' : targetView; const activeNav = document.getElementById(`nav-${navTarget}`);
+      if(activeNav) { activeNav.classList.remove('theme-text-muted', 'opacity-60'); activeNav.classList.add('theme-text', 'opacity-100', 'theme-bg-soft', '-translate-y-2', 'shadow-md'); }
+      window.scrollTo(0,0);
+    }
+
+    window.renderHomeGallery = function() {
+      const isVotingEnabled = window.settings['public_voting'] === true || String(window.settings['public_voting']).toLowerCase() === 'true';
+      const cTrack = document.getElementById('carousel-track');
+      if (cTrack) {
+        cTrack.innerHTML = window.candidates.map((c, index) => `
+          <div class="carousel-item" onclick="goToCarousel(${index})">
+            <img src="${c.img}" class="absolute inset-0 w-full h-full object-cover object-top opacity-95">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+            <div class="absolute bottom-0 inset-x-0 p-5 text-center">
+              <p class="text-[10px] font-black uppercase tracking-[0.3em] mb-1 text-white/70">No. ${(c.id).toString().padStart(2, '0')}</p>
+              <h3 class="text-2xl font-black tracking-tight leading-none text-white drop-shadow-md">${c.name}</h3>
+            </div>
+          </div>
+        `).join('');
+        window.updateCarousel(); window.startCarouselAutoPlay();
+      }
+
+      if (isVotingEnabled) {
+        if(document.getElementById('vote-prompt-section')) document.getElementById('vote-prompt-section').classList.remove('hidden');
+        if(document.getElementById('voting-gallery')) {
+          document.getElementById('voting-gallery').innerHTML = window.candidates.map((c, index) => `
+            <div class="card-panel flex items-center p-4 gap-4 mb-4 shadow-md bg-[var(--t-surface)] animate-slide-right" style="animation-delay: ${index * 0.1}s;">
+              <img src="${c.img}" class="w-16 h-16 rounded-[1rem] object-cover shadow-sm border border-black/5">
+              <div class="flex-1">
+                  <h4 class="font-black text-lg tracking-tight leading-none" style="color: var(--t-text-main);">${c.name}</h4>
+                  <p class="text-[9px] theme-text-muted font-bold uppercase tracking-widest mt-1">#${(c.id).toString().padStart(2, '0')} - ${c.location}</p>
+              </div>
+              <button onclick="submitPublicVote('${c.id}', '${c.name.replace(/'/g, "\\'")}')" class="theme-btn px-5 py-3 rounded-xl font-black text-xs uppercase shadow-md active:scale-95 transition-all tracking-wider">Vote</button>
+            </div>
+          `).join('');
+        }
+        window.setupVotingDeadline();
+      } else {
+        if(document.getElementById('vote-prompt-section')) document.getElementById('vote-prompt-section').classList.add('hidden');
+        if(window.votingTimerInterval) clearInterval(window.votingTimerInterval);
+      }
+    }
+
+    window.setupVotingDeadline = function() {
+      if (window.votingTimerInterval) clearInterval(window.votingTimerInterval);
+      let deadlineStr = window.settings['voting_deadline']; 
+      const voteBtn = document.getElementById('btn-cast-vote');
+      const countdownContainer = document.getElementById('vote-countdown'); 
+      const countdownTimer = document.getElementById('countdown-timer'); 
+      const closedMsg = document.getElementById('vote-closed-msg');
+      if(!voteBtn || !countdownContainer) return;
+
+      if (!deadlineStr) { voteBtn.classList.remove('hidden'); countdownContainer.classList.add('hidden'); closedMsg.classList.add('hidden'); return; }
+      if (!deadlineStr.includes('+') && !deadlineStr.includes('Z')) { deadlineStr += '+08:00'; }
+
+      const deadline = new Date(deadlineStr).getTime();
+      window.votingTimerInterval = setInterval(() => {
+        const distance = deadline - new Date().getTime();
+        if (distance <= 0) {
+            clearInterval(window.votingTimerInterval); voteBtn.classList.add('hidden'); countdownContainer.classList.add('hidden'); closedMsg.classList.remove('hidden');
+        } else {
+            voteBtn.classList.remove('hidden'); closedMsg.classList.add('hidden'); countdownContainer.classList.remove('hidden');
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24)); 
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); 
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)); 
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            let timeText = ""; if(days > 0) timeText += `${days}d `;
+            countdownTimer.innerText = timeText + `${hours.toString().padStart(2, '0')}h : ${minutes.toString().padStart(2, '0')}m : ${seconds.toString().padStart(2, '0')}s`;
+        }
+      }, 1000);
+    }
+
+    window.updateCarousel = function() {
+      const items = document.querySelectorAll('.carousel-item'); if(items.length === 0) return;
+      items.forEach((item, i) => {
+        item.className = 'carousel-item';
+        if (i === window.currentCarouselIndex) item.classList.add('item-active'); 
+        else if (i === window.currentCarouselIndex - 1 || (window.currentCarouselIndex === 0 && i === items.length - 1)) item.classList.add('item-prev'); 
+        else if (i === window.currentCarouselIndex + 1 || (window.currentCarouselIndex === items.length - 1 && i === 0)) item.classList.add('item-next'); 
+        else item.classList.add('item-hidden');
       });
+    }
+
+    window.startCarouselAutoPlay = function() {
+      if (window.carouselInterval) clearInterval(window.carouselInterval);
+      if (window.candidates.length > 1) { window.carouselInterval = setInterval(() => { window.currentCarouselIndex = (window.currentCarouselIndex + 1) % window.candidates.length; window.updateCarousel(); }, 3000); }
+    }
+    window.goToCarousel = function(index) { if(index === window.currentCarouselIndex) return; window.currentCarouselIndex = index; window.updateCarousel(); window.startCarouselAutoPlay(); }
+
+    window.resetCandForm = function() { window.editState.candidate = null; document.getElementById('cand-id').value = ''; document.getElementById('cand-id').readOnly = false; document.getElementById('cand-name').value = ''; document.getElementById('cand-loc').value = ''; document.getElementById('cand-img').value = ''; document.getElementById('label-cand-form').innerText = "Initialize New Candidate"; document.getElementById('btn-add-cand').innerText = "Add Data"; document.getElementById('btn-add-cand').disabled = false; document.getElementById('btn-cancel-cand').classList.add('hidden'); }
+    window.resetCritForm = function() { window.editState.criteria = null; document.getElementById('crit-id').value = ''; document.getElementById('crit-id').readOnly = false; document.getElementById('crit-max').value = ''; document.getElementById('crit-label').value = ''; document.getElementById('crit-short').value = ''; document.getElementById('label-crit-form').innerText = "Define Criterion"; document.getElementById('btn-add-crit').innerText = "Add Criterion"; document.getElementById('btn-add-crit').disabled = false; document.getElementById('btn-cancel-crit').classList.add('hidden'); }
+    window.resetUserForm = function() { window.editState.user = null; document.getElementById('user-name').value = ''; document.getElementById('user-role').value = ''; document.getElementById('user-username').value = ''; document.getElementById('user-username').readOnly = false; document.getElementById('user-password').value = ''; document.getElementById('user-password').placeholder = "Passkey"; document.getElementById('label-user-form').innerText = "Provision Account"; document.getElementById('btn-add-user').innerText = "Add User"; document.getElementById('btn-add-user').disabled = false; document.getElementById('btn-cancel-user').classList.add('hidden'); }
+
+    window.renderAdminDashboard = function() {
+      window.resetCandForm(); window.resetCritForm(); window.resetUserForm();
+      if(document.getElementById('admin-setting-title')) document.getElementById('admin-setting-title').value = window.settings['app_title'] || ''; 
+      if(document.getElementById('admin-setting-subtitle')) document.getElementById('admin-setting-subtitle').value = window.settings['app_subtitle'] || ''; 
+      if(document.getElementById('admin-setting-location')) document.getElementById('admin-setting-location').value = window.settings['location_text'] || ''; 
+      if(document.getElementById('admin-setting-icon')) document.getElementById('admin-setting-icon').value = window.settings['event_icon'] || ''; 
+      if(document.getElementById('admin-setting-theme')) document.getElementById('admin-setting-theme').value = window.settings['theme_color'] || 'red';
+      
+      const isVotingOn = String(window.settings['public_voting'] || '').toLowerCase() === 'true'; 
+      const toggleEl = document.getElementById('admin-setting-voting'); const statusEl = document.getElementById('toggle-status'); const deadlineContainer = document.getElementById('admin-deadline-container'); const deadlineInput = document.getElementById('admin-setting-deadline');
+
+      if (toggleEl) {
+        toggleEl.checked = isVotingOn;
+        toggleEl.onchange = function() {
+            const isChecked = this.checked;
+            if (statusEl) { statusEl.innerText = isChecked ? 'ON' : 'OFF'; statusEl.className = isChecked ? 'text-xs font-black tracking-widest uppercase text-emerald-500' : 'text-xs font-black tracking-widest uppercase text-gray-400'; }
+            if (deadlineContainer) { if (isChecked) deadlineContainer.classList.remove('hidden'); else deadlineContainer.classList.add('hidden'); }
+        };
+      }
+      
+      if (statusEl) { statusEl.innerText = isVotingOn ? 'ON' : 'OFF'; statusEl.className = isVotingOn ? 'text-xs font-black tracking-widest uppercase text-emerald-500' : 'text-xs font-black tracking-widest uppercase text-gray-400'; }
+      if (deadlineContainer && !isVotingOn) deadlineContainer.classList.add('hidden'); else if (deadlineContainer && isVotingOn) deadlineContainer.classList.remove('hidden');
+      if (deadlineInput) deadlineInput.value = window.settings['voting_deadline'] || '';
+
+      const renderList = (data, getHtml) => data.map(getHtml).join('');
+      if(document.getElementById('admin-candidates-list')) document.getElementById('admin-candidates-list').innerHTML = renderList(window.candidates, c => `<div class="flex flex-col theme-bg-soft p-4 rounded-xl border border-black/5 shadow-inner mb-3"><div class="text-inherit"><span class="text-[10px] font-black opacity-60 tracking-widest uppercase block mb-1">Candidate #${c.id}</span><span class="font-black text-base tracking-wide">${c.name}</span></div><div class="flex gap-2 border-t border-black/10 pt-3 mt-3"><button onclick="editCandidate('${c.id}')" class="theme-text-muted hover:theme-text font-black px-3 py-1.5 transition-colors uppercase text-[10px] tracking-widest bg-black/10 rounded-lg">✎ Modify</button><button onclick="deleteCandidateUI('${c.id}')" class="text-red-500 hover:text-red-400 font-black px-3 py-1.5 transition-colors uppercase text-[10px] tracking-widest bg-red-500/10 rounded-lg border border-red-500/20">X Delete</button></div></div>`);
+      if(document.getElementById('admin-criteria-list')) document.getElementById('admin-criteria-list').innerHTML = renderList(window.criteria, c => `<div class="flex flex-col theme-bg-soft p-4 rounded-xl border border-black/5 shadow-inner mb-3"><div class="text-inherit"><span class="text-[10px] font-black opacity-60 tracking-widest uppercase block mb-1">Max: ${c.max} pts</span><span class="font-black text-base tracking-wide">${c.short}</span></div><div class="flex gap-2 border-t border-black/10 pt-3 mt-3"><button onclick="editCriteria('${c.id}')" class="theme-text-muted hover:theme-text font-black px-3 py-1.5 transition-colors uppercase text-[10px] tracking-widest bg-black/10 rounded-lg">✎ Modify</button><button onclick="deleteCriteriaUI('${c.id}')" class="text-red-500 hover:text-red-400 font-black px-3 py-1.5 transition-colors uppercase text-[10px] tracking-widest bg-red-500/10 rounded-lg border border-red-500/20">X Delete</button></div></div>`);
+      if(document.getElementById('admin-users-list')) document.getElementById('admin-users-list').innerHTML = renderList(window.users.filter(u => u.role !== 'Super User'), u => `<div class="flex flex-col theme-bg-soft p-4 rounded-xl border border-black/5 shadow-inner mb-3"><div class="text-inherit"><span class="text-[10px] font-black theme-text tracking-widest uppercase block mb-1">${u.role}</span><span class="font-black text-base tracking-wide">${u.name}</span></div><div class="flex gap-2 border-t border-black/10 pt-3 mt-3"><button onclick="editUser('${u.username}')" class="theme-text-muted hover:theme-text font-black px-3 py-1.5 transition-colors uppercase text-[10px] tracking-widest bg-black/10 rounded-lg">✎ Modify</button><button onclick="deleteUserUI('${u.username}')" class="text-red-500 hover:text-red-400 font-black px-3 py-1.5 transition-colors uppercase text-[10px] tracking-widest bg-red-500/10 rounded-lg border border-red-500/20">X Delete</button></div></div>`);
+    }
+
+    window.editCandidate = function(id) { const c = window.candidates.find(can => can.id.toString() === id.toString()); if(!c) return; document.getElementById('cand-id').value = c.id; document.getElementById('cand-id').readOnly = true; document.getElementById('cand-name').value = c.name; document.getElementById('cand-loc').value = c.location; document.getElementById('cand-img').value = c.img; document.getElementById('label-cand-form').innerText = "Modify Candidate Data"; document.getElementById('btn-add-cand').innerText = "Update Record"; document.getElementById('btn-cancel-cand').classList.remove('hidden'); window.editState.candidate = c.id; }
+    window.editCriteria = function(id) { const c = window.criteria.find(cr => cr.id.toString() === id.toString()); if(!c) return; document.getElementById('crit-id').value = c.id; document.getElementById('crit-id').readOnly = true; document.getElementById('crit-max').value = c.max; document.getElementById('crit-label').value = c.label; document.getElementById('crit-short').value = c.short; document.getElementById('label-crit-form').innerText = "Modify Criterion Logic"; document.getElementById('btn-add-crit').innerText = "Update Criterion"; document.getElementById('btn-cancel-crit').classList.remove('hidden'); window.editState.criteria = c.id; }
+    window.editUser = function(username) { const u = window.users.find(user => user.username.toString() === username.toString()); if(!u) return; document.getElementById('user-name').value = u.name; document.getElementById('user-username').value = u.username; document.getElementById('user-username').readOnly = true; document.getElementById('user-password').value = ""; document.getElementById('user-password').placeholder = "(Blank = No Change)"; document.getElementById('user-role').value = u.role; document.getElementById('label-user-form').innerText = "Modify Account Provision"; document.getElementById('btn-add-user').innerText = "Update User"; document.getElementById('btn-cancel-user').classList.remove('hidden'); window.editState.user = u.username; }
+
+    window.processAndRenderScores = function(rawScores, rawVotes) {
+      const isVotingEnabled = window.settings['public_voting'] === true || String(window.settings['public_voting']).toLowerCase() === 'true';
+      const pcCard = document.getElementById('peoples-choice-card');
+      if (isVotingEnabled && pcCard) {
+        pcCard.classList.remove('hidden'); 
+        let votesArray = window.candidates.map(c => ({ name: c.name, votes: (rawVotes && rawVotes[c.name]) ? rawVotes[c.name] : 0 })).sort((a, b) => b.votes - a.votes);
+        let pcHTML = `<tr class="theme-table-header text-[10px] uppercase tracking-widest"><th class="p-5 font-black text-center w-24 theme-text-muted">Rank</th><th class="p-5 font-black theme-text-muted">Identity</th><th class="p-5 font-black text-right w-32 theme-text-muted">Total Votes</th></tr>`;
+        votesArray.forEach((c, index) => {
+          const rankBadge = index === 0 ? `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-amber-400 text-amber-900 font-black shadow-[0_0_15px_rgba(251,191,36,0.5)] text-xs mx-auto">1</div>` : index === 1 ? `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-300 text-slate-800 font-black shadow-md text-xs mx-auto">2</div>` : index === 2 ? `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-orange-700 text-orange-50 font-black shadow-md text-xs mx-auto">3</div>` : `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 theme-text-muted font-bold text-xs mx-auto">${index + 1}</div>`;
+          pcHTML += `<tr class="theme-table-row"><td class="p-4 align-middle">${rankBadge}</td><td class="p-5 font-black text-inherit tracking-wide uppercase text-sm align-middle">${c.name}</td><td class="p-5 font-black theme-text text-xl text-right align-middle">${c.votes.toLocaleString()}</td></tr>`;
+        });
+        document.getElementById('table-peoples-choice').innerHTML = pcHTML;
+      } else if (pcCard) pcCard.classList.add('hidden');
+
+      const normalizedScores = (rawScores || []).map(s => { 
+        let normalized = {}; 
+        for (let key in s) { normalized[key.toLowerCase().replace(/\s+/g, '')] = s[key]; }
+        normalized.judge = (s.judge || s.Judge || s.JUDGE || "").toString().trim(); 
+        normalized.candidate = (s.candidate || s.Candidate || s.CANDIDATE || "").toString().trim(); 
+        return normalized; 
+      });
+      
+      let aggregated = window.candidates.map(c => { 
+        let cleanCandidateName = c.name.toString().trim().toLowerCase();
+        let sc = normalizedScores.filter(s => s.candidate.toLowerCase() === cleanCandidateName); 
+        let count = sc.length; 
+        let candData = { name: c.name, count: count, total: 0 }; 
+        window.criteria.forEach(crit => { 
+          let safeCritId = crit.id.toString().toLowerCase().replace(/\s+/g, '');
+          let avg = count ? sc.reduce((sum, s) => sum + (parseFloat(s[safeCritId]) || parseFloat(s[crit.id]) || 0), 0) / count : 0; 
+          candData[crit.id] = avg; candData.total += avg; 
+        }); 
+        return candData; 
+      });
+      
       aggregated.sort((a, b) => b.total - a.total); 
+      const maxScores = {}; 
+      window.criteria.forEach(crit => { maxScores[crit.id] = Math.max(...aggregated.map(c => c[crit.id] || 0)); });
 
       const avgTable = document.getElementById('table-averages'); 
       if (avgTable) {
-        if (avgTable.innerHTML.trim() === "") {
-          let avgHTML = `<tr class="theme-table-header text-[10px] uppercase-tracking tracking-widest"><th class="p-5 font-black text-center w-24 theme-text-muted">Rank</th><th class="p-5 font-black theme-text-muted text-left">Identity</th>`;
-          window.criteria.forEach(crit => { avgHTML += `<th class="p-5 font-black theme-text-muted text-center">${crit.short}</th>`; }); avgHTML += `<th class="p-5 font-black theme-text text-right">Aggregated</th></tr>`;
-          aggregated.forEach((c, index) => {
-            avgHTML += `<tr class="theme-table-row" data-id="${c.name.replace(/\s+/g, '')}"><td class="p-4 align-middle text-center"><div class="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 theme-text-muted font-bold text-xs mx-auto">${index + 1}</div></td><td class="p-5 font-black uppercase-tracking text-sm align-middle">${c.name}</td>`;
-            window.criteria.forEach(crit => { avgHTML += `<td class="p-4 text-center align-middle"><span id="avg-${c.name.replace(/\s+/g, '')}-${crit.id}" class="score-number font-bold text-sm" data-current="${c[crit.id]}">${c[crit.id].toFixed(2)}</span></td>`; });
-            avgHTML += `<td class="p-5 font-black theme-text text-xl text-right align-middle"><span id="total-${c.name.replace(/\s+/g, '')}" class="score-number" data-current="${c.total}">${c.total.toFixed(2)}</span></td></tr>`;
+        let avgHTML = `<tr class="theme-table-header text-[10px] uppercase tracking-widest"><th class="p-5 font-black text-center w-24 theme-text-muted">Rank</th><th class="p-5 font-black theme-text-muted">Identity</th>`;
+        window.criteria.forEach(crit => { avgHTML += `<th class="p-5 font-black theme-text-muted text-center">${crit.short} <span class="font-mono text-[9px] opacity-70">(${crit.max})</span></th>`; }); 
+        avgHTML += `<th class="p-5 font-black theme-text text-right">Aggregated</th></tr>`;
+        aggregated.forEach((c, index) => {
+          const rankBadge = index === 0 ? `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-amber-400 text-amber-900 font-black shadow-[0_0_15px_rgba(251,191,36,0.5)] text-xs mx-auto">1</div>` : index === 1 ? `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-300 text-slate-800 font-black shadow-md text-xs mx-auto">2</div>` : index === 2 ? `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-orange-700 text-orange-50 font-black shadow-md text-xs mx-auto">3</div>` : `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 theme-text-muted font-bold text-xs mx-auto">${index + 1}</div>`;
+          avgHTML += `<tr class="theme-table-row"><td class="p-4 align-middle">${rankBadge}</td><td class="p-5 font-black text-inherit tracking-wide uppercase text-sm align-middle">${c.name}</td>`;
+          window.criteria.forEach(crit => { 
+            let isMax = c[crit.id] === maxScores[crit.id] && c[crit.id] > 0; 
+            let cellContent = isMax ? `<span class="inline-block px-3 py-1.5 rounded-lg theme-table-header theme-text font-black border border-[var(--t-primary)] shadow-sm text-sm">${c[crit.id].toFixed(2)}</span>` : `<span class="text-inherit opacity-80 font-bold text-sm">${c[crit.id].toFixed(2)}</span>`; 
+            avgHTML += `<td class="p-4 text-center align-middle">${cellContent}</td>`; 
+          });
+          avgHTML += `<td class="p-5 font-black theme-text text-xl text-right align-middle">${c.total.toFixed(2)}</td></tr>`;
+        }); 
+        avgTable.innerHTML = avgHTML;
+      }
+
+      const detailTable = document.getElementById('table-detailed'); 
+      if (detailTable) {
+        let detailHTML = `<tr class="theme-table-header text-[10px] uppercase tracking-widest"><th class="p-5 font-black theme-text-muted">Assessor</th><th class="p-5 font-black theme-text-muted">Identity</th>`;
+        window.criteria.forEach(crit => { detailHTML += `<th class="p-5 font-black theme-text-muted text-center">${crit.short}</th>`; }); 
+        detailHTML += `<th class="p-5 font-black theme-text text-right">Summation</th></tr>`;
+        normalizedScores.forEach((s) => {
+          detailHTML += `<tr class="theme-table-row"><td class="p-5 font-black text-inherit uppercase text-xs align-middle opacity-70">${s.judge}</td><td class="p-5 text-inherit font-bold tracking-wide text-xs align-middle">${s.candidate}</td>`;
+          let rowSum = 0; 
+          window.criteria.forEach(crit => { 
+            let safeCritId = crit.id.toString().toLowerCase().replace(/\s+/g, '');
+            let score = parseFloat(s[safeCritId]) || parseFloat(s[crit.id]) || 0; 
+            rowSum += score; 
+            let styleClass = score === 0 ? "!text-red-500 font-black drop-shadow-md !opacity-100" : "text-inherit font-medium opacity-80";
+            detailHTML += `<td class="p-4 ${styleClass} text-center align-middle">${score}</td>`; 
           }); 
-          avgTable.innerHTML = avgHTML;
-        } else {
-          if (avgFlipper) avgFlipper.play();
-          aggregated.forEach((c, index) => { const row = avgTable.querySelector(`tr[data-id="${c.name.replace(/\s+/g, '')}"]`); if(row) { row.querySelector('td:first-child div').innerText = index + 1; avgTable.appendChild(row); } });
-          aggregated.forEach(c => { const candSlug = c.name.replace(/\s+/g, ''); window.criteria.forEach(crit => { const el = document.getElementById(`avg-${candSlug}-${crit.id}`); if(el) window.animateCount(el, c[crit.id]); }); const totalEl = document.getElementById(`total-${candSlug}`); if(totalEl) window.animateCount(totalEl, c.total); });
-        }
+          detailHTML += `<td class="p-5 font-black theme-text text-right text-sm align-middle">${rowSum}</td></tr>`;
+        }); 
+        detailTable.innerHTML = detailHTML;
       }
     }
 
-    // 8. ADMIN & THEME ENGINE
-    window.renderAdminDashboard = function() {
-      const titleInput = document.getElementById('admin-setting-title');
-      if (titleInput) {
-        titleInput.value = window.settings['app_title'] || ''; document.getElementById('admin-setting-subtitle').value = window.settings['app_subtitle'] || ''; 
-        document.getElementById('admin-setting-location').value = window.settings['location_text'] || ''; document.getElementById('admin-setting-theme').value = window.settings['theme_color'] || 'red';
-      }
-    }
+    window.renderTabs = function() { const t = document.getElementById('segment-tabs'); if(t) t.innerHTML = window.criteria.map(crit => `<button onclick="switchSegment('${crit.id}')" class="flex-shrink-0 px-6 py-3 m-1 font-black text-[10px] uppercase tracking-widest rounded-2xl transition-all border ${window.currentSegment === crit.id ? 'theme-bg-soft theme-text border-black/10 shadow-sm' : 'bg-transparent theme-text-muted border-transparent hover:theme-bg-soft hover:border-black/5'}">${crit.short}</button>`).join(''); }
+    window.switchSegment = function(id) { window.currentSegment = id; window.renderTabs(); window.renderCandidates(); }
 
-    window.saveSettings = async function() {
-      try {
-        const btn = document.querySelector('#view-admin .theme-btn'); btn.innerText = "Deploying..."; btn.disabled = true;
-        const updates = {
-          'app_title': document.getElementById('admin-setting-title').value, 'app_subtitle': document.getElementById('admin-setting-subtitle').value,
-          'location_text': document.getElementById('admin-setting-location').value, 'theme_color': document.getElementById('admin-setting-theme').value
-        };
-        for (const [key, value] of Object.entries(updates)) { await setDoc(doc(db, "Settings", key), { value: value }); }
-        window.alert("Configuration deployed to all devices."); btn.innerText = "Deploy Configuration"; btn.disabled = false;
-      } catch (err) { window.alert("Error deploying: " + err.message); }
+    window.renderCandidates = function() {
+      const activeCriteria = window.criteria.find(c => c.id === window.currentSegment); if(!activeCriteria) return;
+      const cCont = document.getElementById('candidates-container'); if(!cCont) return;
+      cCont.innerHTML = window.candidates.map(c => {
+        const isLocked = window.lockedScores[c.id] && window.lockedScores[c.id][window.currentSegment]; 
+        const displayScore = isLocked ? window.scoresData[c.id][window.currentSegment] : (window.scoresData[c.id][window.currentSegment] || activeCriteria.max/2); 
+        const btnClass = isLocked ? 'bg-black/10 text-slate-500 cursor-not-allowed border border-black/5' : 'theme-btn active:scale-95';
+        return `<div class="card-panel mb-10 overflow-hidden border-none shadow-2xl rounded-[2rem] bg-[var(--t-surface)]"><div class="relative w-full h-[28rem]"><img src="${c.img}" class="absolute inset-0 w-full h-full object-cover object-top"><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-90"></div><div class="absolute bottom-4 inset-x-4 z-10"><div class="glass-panel p-5 rounded-[1.5rem] text-center"><p class="text-[10px] font-black uppercase tracking-[0.3em] mb-1 text-white/70">Candidate #${(c.id).toString().padStart(2, '0')}</p><h2 class="text-3xl font-black tracking-tight leading-none text-white drop-shadow-md">${c.name}</h2></div></div></div><div class="p-6 relative z-20 theme-surface rounded-b-[2rem]"><div class="flex justify-between items-center mb-8 theme-bg-soft p-5 rounded-2xl border border-black/5 shadow-inner"><div class="flex flex-col"><span class="text-[9px] theme-text font-black uppercase tracking-widest mb-1.5">Evaluation Parameter</span><label class="font-black text-sm tracking-wide uppercase leading-tight">${activeCriteria.label}</label></div><div class="theme-surface px-5 py-3 rounded-xl border border-black/10 min-w-[80px] text-center shadow-sm"><span class="font-black theme-text text-2xl tracking-tighter" id="score-val-${c.id}">${displayScore.toFixed(1)}</span></div></div><div class="px-2 mb-8 relative"><input type="range" id="slider-${c.id}" min="1" max="${activeCriteria.max}" step="0.5" value="${displayScore}" oninput="document.getElementById('score-val-${c.id}').innerText=parseFloat(this.value).toFixed(1); window.scoresData['${c.id}']['${window.currentSegment}']=parseFloat(this.value);" class="w-full relative z-10" ${isLocked ? 'disabled' : ''}></div><button onclick="submitScore('${c.id}')" id="btn-${c.id}" class="w-full py-4 rounded-xl font-black transition-all tracking-widest uppercase text-xs shadow-md ${btnClass} ${isLocked ? 'disabled' : ''}">${isLocked ? 'Score Locked' : 'Submit Evaluation'}</button></div></div>`;
+      }).join('');
+      
+      const observer = new IntersectionObserver((entries) => {  
+        entries.forEach((entry, i) => {    
+          if (entry.isIntersecting) {      
+            setTimeout(() => entry.target.classList.add('animate-entry'), i * 120);      
+            observer.unobserve(entry.target);    
+          }  
+        });
+      }, { threshold: 0.1 });
+      
+      document.querySelectorAll('.card-panel').forEach(el => { el.classList.add('stagger-card'); observer.observe(el); });
     }
 
     window.applyTheme = function(themeName) {
       const palettes = {
         red: { baseBg: '#fcfcfc', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#111827', textMuted: '#6b7280', primary: '#e11d48', grad: 'linear-gradient(135deg, #f43f5e, #be123c)', shadow: 'rgba(225, 29, 72, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(244, 63, 94, 0.15)', mesh2: 'rgba(225, 29, 72, 0.12)', mesh3: 'rgba(253, 164, 175, 0.18)' },
-        blue: { baseBg: '#f8fafc', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#0f172a', textMuted: '#64748b', primary: '#2563eb', grad: 'linear-gradient(135deg, #60a5fa, #1d4ed8)', shadow: 'rgba(37, 99, 235, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(96, 165, 250, 0.15)', mesh2: 'rgba(59, 130, 246, 0.12)', mesh3: 'rgba(191, 219, 254, 0.18)' }
+        pink: { baseBg: '#fcfcfc', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#111827', textMuted: '#6b7280', primary: '#db2777', grad: 'linear-gradient(135deg, #f472b6, #be185d)', shadow: 'rgba(219, 39, 119, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(244, 114, 182, 0.15)', mesh2: 'rgba(219, 39, 119, 0.12)', mesh3: 'rgba(252, 211, 227, 0.18)' },
+        blue: { baseBg: '#f8fafc', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#0f172a', textMuted: '#64748b', primary: '#2563eb', grad: 'linear-gradient(135deg, #60a5fa, #1d4ed8)', shadow: 'rgba(37, 99, 235, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(96, 165, 250, 0.15)', mesh2: 'rgba(59, 130, 246, 0.12)', mesh3: 'rgba(191, 219, 254, 0.18)' },
+        green: { baseBg: '#f8fafc', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#0f172a', textMuted: '#64748b', primary: '#16a34a', grad: 'linear-gradient(135deg, #4ade80, #15803d)', shadow: 'rgba(22, 163, 74, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(74, 222, 128, 0.12)', mesh2: 'rgba(22, 163, 74, 0.1)', mesh3: 'rgba(187, 247, 208, 0.15)' },
+        gold: { baseBg: '#fefce8', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#422006', textMuted: '#b45309', primary: '#d97706', grad: 'linear-gradient(135deg, #fbbf24, #92400e)', shadow: 'rgba(217, 119, 6, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(251, 191, 36, 0.15)', mesh2: 'rgba(217, 119, 6, 0.12)', mesh3: 'rgba(253, 230, 138, 0.18)' },
+        champagne: { baseBg: '#fafaf9', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#1c1917', textMuted: '#57534e', primary: '#78716c', grad: 'linear-gradient(135deg, #a8a29e, #44403c)', shadow: 'rgba(87, 83, 78, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(168, 162, 158, 0.15)', mesh2: 'rgba(120, 113, 108, 0.12)', mesh3: 'rgba(231, 229, 228, 0.18)' },
+        indigo: { baseBg: '#0f172a', surface: 'rgba(30, 41, 59, 0.92)', textMain: '#f8fafc', textMuted: '#94a3b8', primary: '#818cf8', grad: 'linear-gradient(135deg, #818cf8, #4f46e5)', shadow: 'rgba(0, 0, 0, 0.4)', border: 'rgba(255, 255, 255, 0.08)', mesh1: 'rgba(99, 102, 241, 0.15)', mesh2: 'rgba(129, 140, 248, 0.12)', mesh3: 'rgba(79, 70, 229, 0.15)' },
+        velvet: { baseBg: '#022c22', surface: 'rgba(6, 78, 59, 0.92)', textMain: '#f8fafc', textMuted: '#6ee7b7', primary: '#10b981', grad: 'linear-gradient(135deg, #34d399, #065f46)', shadow: 'rgba(0, 0, 0, 0.4)', border: 'rgba(255, 255, 255, 0.08)', mesh1: 'rgba(16, 185, 129, 0.15)', mesh2: 'rgba(52, 211, 153, 0.12)', mesh3: 'rgba(4, 120, 87, 0.15)' }
       };
-      const t = palettes[themeName] || palettes['red']; const r = document.documentElement;
-      for (const [key, value] of Object.entries(t)) { r.style.setProperty(`--t-${key.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}`, value); }
+      const t = palettes[themeName] || palettes['red']; 
+      const r = document.documentElement;
+      r.style.setProperty('--t-base-bg', t.baseBg); r.style.setProperty('--t-surface', t.surface); r.style.setProperty('--t-text-main', t.textMain); r.style.setProperty('--t-text-muted', t.textMuted); r.style.setProperty('--t-primary', t.primary); r.style.setProperty('--t-grad', t.grad); r.style.setProperty('--t-shadow', t.shadow); r.style.setProperty('--t-border', t.border); r.style.setProperty('--t-mesh-1', t.mesh1); r.style.setProperty('--t-mesh-2', t.mesh2); r.style.setProperty('--t-mesh-3', t.mesh3);
       window.generatePremiumParticles(themeName);
     }
 
     window.generatePremiumParticles = function(themeName) {
-      const config = { shape: 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z', count: 15, dir: 'down' };
+      const premiumShapes = { petal: 'M12 2C12 2 5 10 5 16C5 19.86 8.14 23 12 23C15.86 23 19 19.86 19 16C19 10 12 2 12 2Z', heart: 'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z', bubble: 'M12 2A10 10 0 1 1 2 12A10 10 0 0 1 12 2ZM12 4A8 8 0 1 0 20 12A8 8 0 0 0 12 4ZM8.5 7.5A1.5 1.5 0 1 1 7 9A1.5 1.5 0 0 1 8.5 7.5Z', leaf: 'M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66l.95-2.3c3.47.5 7.64-1.12 9.5-3.8 1.18-1.7 1.84-3.7 1.84-5.9z', sparkle: 'M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z', diamond: 'M12 2L2 11L12 22L22 11L12 2Z', moon: 'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z', gem: 'M12 2L4 6v12l8 4 8-4V6l-8-4zm0 2.2l5.5 2.7v8.2L12 17.8 6.5 15.1V6.9L12 4.2z' };
+      const themeVectors = { red: { shape: premiumShapes.petal, count: 15, dir: 'down' }, pink: { shape: premiumShapes.heart, count: 16, dir: 'down' }, blue: { shape: premiumShapes.bubble, count: 20, dir: 'up' }, green: { shape: premiumShapes.leaf, count: 14, dir: 'down' }, gold: { shape: premiumShapes.sparkle, count: 18, dir: 'down' }, champagne: { shape: premiumShapes.diamond, count: 14, dir: 'up' }, indigo: { shape: premiumShapes.moon, count: 12, dir: 'down' }, velvet: { shape: premiumShapes.gem, count: 14, dir: 'down' } };
       const container = document.getElementById('premium-particles'); if(!container) return; container.innerHTML = ''; 
+      const config = themeVectors[themeName] || themeVectors['red'];
       for(let i = 0; i < config.count; i++) {
         const p = document.createElement('div'); p.className = 'premium-svg-particle'; p.innerHTML = `<svg viewBox="0 0 24 24" width="100%" height="100%"><path d="${config.shape}"></path></svg>`;
         const size = Math.random() * 20 + 15; const left = Math.random() * 100; const duration = Math.random() * 15 + 15; const delay = Math.random() * -20;
@@ -602,68 +1146,8 @@
       }
     }
 
-    import { deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    window.handleLogout = function() { window.showModal("Terminate Session", "Securely log out?", "confirm", () => { localStorage.clear(); window.activeUser = { name: "", role: "" }; document.getElementById('login-username').value = ""; document.getElementById('login-password').value = ""; ['nav-judging', 'nav-scores', 'nav-admin'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.add('hidden'); }); const navL = document.getElementById('nav-login'); if(navL) navL.classList.remove('hidden'); window.switchView('home'); }); }
 
-    window.renderAdminDashboard = function() {
-      // Load Settings
-      if (document.getElementById('admin-setting-title')) {
-        document.getElementById('admin-setting-title').value = window.settings['app_title'] || ''; 
-        document.getElementById('admin-setting-subtitle').value = window.settings['app_subtitle'] || ''; 
-        document.getElementById('admin-setting-location').value = window.settings['location_text'] || ''; 
-        document.getElementById('admin-setting-theme').value = window.settings['theme_color'] || 'red';
-        document.getElementById('admin-setting-voting').checked = String(window.settings['public_voting']).toLowerCase() === 'true';
-        document.getElementById('admin-setting-deadline').value = window.settings['voting_deadline'] || '';
-      }
-      // Load Lists
-      if (document.getElementById('admin-candidates-list')) {
-        document.getElementById('admin-candidates-list').innerHTML = window.candidates.map(c => `<div class="flex justify-between items-center p-2 bg-slate-50 rounded border"><span><b>${c.id}</b>: ${c.name}</span><button onclick="window.deleteDocEntry('Candidates', '${c.id}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></div>`).join('');
-        document.getElementById('admin-criteria-list').innerHTML = window.criteria.map(c => `<div class="flex justify-between items-center p-2 bg-slate-50 rounded border"><span>${c.label} (${c.max}pt)</span><button onclick="window.deleteDocEntry('Criteria', '${c.id}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></div>`).join('');
-        document.getElementById('admin-users-list').innerHTML = window.users.map(u => `<div class="flex justify-between items-center p-2 bg-slate-50 rounded border"><span class="truncate pr-2">${u.username} (${u.role})</span><button onclick="window.deleteDocEntry('Users', '${u.id}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></div>`).join('');
-      }
-    }
-
-    window.saveSettings = async function() {
-      try {
-        const btn = document.querySelector('#view-admin .theme-btn'); btn.innerText = "Deploying..."; btn.disabled = true;
-        const updates = {
-          'app_title': document.getElementById('admin-setting-title').value, 
-          'app_subtitle': document.getElementById('admin-setting-subtitle').value,
-          'location_text': document.getElementById('admin-setting-location').value, 
-          'theme_color': document.getElementById('admin-setting-theme').value,
-          'public_voting': document.getElementById('admin-setting-voting').checked,
-          'voting_deadline': document.getElementById('admin-setting-deadline').value
-        };
-        for (const [key, value] of Object.entries(updates)) { await setDoc(doc(db, "Settings", key), { value: value }); }
-        window.alert("Configuration successfully deployed to all devices."); btn.innerText = "Deploy Configuration"; btn.disabled = false;
-      } catch (err) { window.alert("Error deploying: " + err.message); }
-    }
-
-    // CRUD Operations for Admin
-    window.addCandidate = async function() {
-        const id = document.getElementById('new-cand-id').value; const name = document.getElementById('new-cand-name').value;
-        if(!id || !name) return window.alert("ID and Name are required.");
-        await setDoc(doc(db, "Candidates", id), { id: parseInt(id), name: name, img: "" });
-        window.alert("Candidate added. Refresh to view changes.");
-    }
-    window.addCriteria = async function() {
-        const id = document.getElementById('new-crit-id').value; const label = document.getElementById('new-crit-label').value; const max = document.getElementById('new-crit-max').value;
-        if(!id || !label || !max) return window.alert("All fields are required.");
-        await setDoc(doc(db, "Criteria", id), { id: id, label: label, short: id.substring(0,4), max: max });
-        window.alert("Criteria added. Refresh to view changes.");
-    }
-    window.addUser = async function() {
-        const user = document.getElementById('new-user-username').value; const pass = document.getElementById('new-user-pass').value; const role = document.getElementById('new-user-role').value;
-        if(!user || !pass) return window.alert("Username and Password are required.");
-        const hashedPass = await window.sha256(pass);
-        await setDoc(doc(db, "Users", user), { username: user, name: user, password: hashedPass, role: role });
-        window.alert("User added. Refresh to view changes.");
-    }
-    window.deleteDocEntry = async function(collectionName, docId) {
-        if(confirm(`Are you sure you want to delete ${docId} from ${collectionName}?`)) {
-            await deleteDoc(doc(db, collectionName, docId));
-            window.alert(`Deleted. Refresh page to update view.`);
-        }
-    }
   </script>
 </body>
 </html>
