@@ -418,7 +418,7 @@
       const overlay = document.createElement('div');
       overlay.id = 'tile-overlay';
       overlay.style.cssText = `position:absolute;bottom:0;inset-x:0;padding:1.25rem;text-align:center;z-index:10;background:linear-gradient(to top, rgba(0,0,0,0.88) 0%, transparent 100%);border-radius:0 0 2rem 2rem;pointer-events:none;`;
-      overlay.innerHTML = `<p id="tile-num" style="font-size:.6rem;font-weight:900;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:.2rem"></p><h3 id="tile-name" style="font-size:1.4rem;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.02em"></h3>`;
+      overlay.innerHTML = `<p id="tile-num" style="font-size:.6rem;font-weight:900;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:.2rem"></p><h3 id="tile-name" style="font-size:1.4rem;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.02em"></h3><p id="tile-loc" style="font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.8);margin-top:.4rem;display:flex;justify-content:center;align-items:center;gap:.3rem;"></p>`;
       
       for (let row = 0; row < window.ROWS; row++) {
         for (let col = 0; col < window.COLS; col++) {
@@ -452,8 +452,17 @@
       document.querySelectorAll('.tile').forEach(t => { t.style.backgroundImage = `url('${img}')`; });
       const numEl = document.getElementById('tile-num');
       const nameEl = document.getElementById('tile-name');
+      const locEl = document.getElementById('tile-loc');
       if (numEl) numEl.innerText = 'No. ' + String(c.id).padStart(2, '0');
       if (nameEl) nameEl.innerText = c.name;
+      if (locEl) {
+        if (c.loc) {
+          locEl.innerHTML = `<i class="fas fa-map-marker-alt" style="color: var(--t-primary)"></i> ${c.loc}`;
+          locEl.style.display = 'flex';
+        } else {
+          locEl.style.display = 'none'; // Hide completely if the candidate has no location data
+        }
+      }
     };
 
     window.scatterTiles = function() {
@@ -574,8 +583,13 @@
 
     window.switchView = function(targetView) {
       if ((targetView === 'judging' || targetView === 'scores' || targetView === 'admin') && !window.activeUser.name) targetView = 'login';
+      
+      // Trigger data renders immediately when routing
       if (targetView === 'scores') window.fetchScoresData();
       if (targetView === 'admin' && typeof window.renderAdminDashboard === 'function') window.renderAdminDashboard();
+      if (targetView === 'judging') { window.renderTabs(); window.renderCandidates(); }
+      if (targetView === 'home') { window.renderHomeGallery(); }
+      
       ['home', 'login', 'judging', 'scores', 'admin'].forEach(v => { const el = document.getElementById(`view-${v}`); if(el) el.classList.add('hidden'); });
       const targetEl = document.getElementById(`view-${targetView}`); 
       if (targetEl) { targetEl.classList.remove('hidden'); targetEl.classList.add('view-animate'); setTimeout(() => targetEl.classList.remove('view-animate'), 450); }
@@ -697,8 +711,41 @@
       try {
         const savedName = localStorage.getItem('msval27_name'); const savedRole = localStorage.getItem('msval27_role');
         if (savedRole === "undefined" || !savedRole) localStorage.clear();
+        
+        // Initial Fetch for sequential boot
         const [criteriaSnap, candSnap, usersSnap] = await Promise.all([ getDocs(collection(db, "Criteria")), getDocs(collection(db, "Candidates")), getDocs(collection(db, "Users")) ]);
-        criteriaSnap.forEach(doc => { window.criteria.push({ id: doc.id, ...doc.data() }); }); candSnap.forEach(doc => { window.candidates.push({ id: doc.id, ...doc.data() }); }); usersSnap.forEach(doc => { window.users.push({ id: doc.id, ...doc.data() }); });
+        criteriaSnap.forEach(doc => { window.criteria.push({ id: doc.id, ...doc.data() }); }); 
+        candSnap.forEach(doc => { window.candidates.push({ id: doc.id, ...doc.data() }); }); 
+        usersSnap.forEach(doc => { window.users.push({ id: doc.id, ...doc.data() }); });
+
+        if(window.criteria.length > 0) window.currentSegment = window.criteria[0].id;
+        window.candidates.forEach(c => { window.scoresData[c.id] = {}; window.criteria.forEach(crit => { window.scoresData[c.id][crit.id] = parseFloat(crit.max) / 2 || 5; }); });
+
+        // --- REAL-TIME DATABASE LISTENERS (Ensures sync across all pages and devices) ---
+        onSnapshot(collection(db, "Criteria"), (snapshot) => {
+            window.criteria = []; snapshot.forEach(doc => { window.criteria.push({ id: doc.id, ...doc.data() }); });
+            if(!window.currentSegment && window.criteria.length > 0) window.currentSegment = window.criteria[0].id;
+            window.candidates.forEach(c => { window.scoresData[c.id] = window.scoresData[c.id] || {}; window.criteria.forEach(crit => { if(window.scoresData[c.id][crit.id] === undefined) window.scoresData[c.id][crit.id] = parseFloat(crit.max) / 2 || 5; }); });
+            
+            // Auto-refresh visible views
+            if(!document.getElementById('view-judging').classList.contains('hidden')) { window.renderTabs(); window.renderCandidates(); }
+            if(!document.getElementById('view-admin').classList.contains('hidden')) window.renderAdminDashboard();
+        });
+
+        onSnapshot(collection(db, "Candidates"), (snapshot) => {
+            window.candidates = []; snapshot.forEach(doc => { window.candidates.push({ id: doc.id, ...doc.data() }); });
+            window.candidates.forEach(c => { window.scoresData[c.id] = window.scoresData[c.id] || {}; window.criteria.forEach(crit => { if(window.scoresData[c.id][crit.id] === undefined) window.scoresData[c.id][crit.id] = parseFloat(crit.max) / 2 || 5; }); });
+            
+            // Auto-refresh visible views
+            if(!document.getElementById('view-home').classList.contains('hidden')) window.renderHomeGallery();
+            if(!document.getElementById('view-judging').classList.contains('hidden')) window.renderCandidates();
+            if(!document.getElementById('view-admin').classList.contains('hidden')) window.renderAdminDashboard();
+        });
+
+        onSnapshot(collection(db, "Users"), (snapshot) => {
+            window.users = []; snapshot.forEach(doc => { window.users.push({ id: doc.id, ...doc.data() }); });
+            if(!document.getElementById('view-admin').classList.contains('hidden')) window.renderAdminDashboard();
+        });
 
         onSnapshot(collection(db, "Settings"), (snapshot) => {
             snapshot.forEach(doc => { window.settings[doc.id] = doc.data().value; });
@@ -712,8 +759,6 @@
         });
 
         if(document.getElementById('status-text')) document.getElementById('status-text').classList.add('hidden');
-        if(window.criteria.length > 0) window.currentSegment = window.criteria[0].id;
-        window.candidates.forEach(c => { window.scoresData[c.id] = {}; window.criteria.forEach(crit => { window.scoresData[c.id][crit.id] = parseFloat(crit.max) / 2 || 5; }); });
         
         const loader = document.getElementById('loader'); if (loader) loader.classList.add('hidden');
         window.renderHomeGallery(); window.renderTabs(); window.renderCandidates(); window.renderAdminDashboard();
