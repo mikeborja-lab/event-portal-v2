@@ -216,12 +216,26 @@
 
     <div id="view-home" class="hidden">
       <div id="carousel-track" class="mb-8"></div>
-      <div id="vote-prompt-section" class="hidden text-center mb-4">
-        <div id="vote-countdown" class="mb-4">
-          <span class="text-xs uppercase-tracking theme-text-muted font-bold">Voting Closes In</span>
-          <h3 id="countdown-timer" class="text-2xl font-black score-number theme-text mt-1">--:--:--</h3>
+      <div id="vote-prompt-section" class="hidden text-center mb-8 px-2">
+        <div class="card-panel p-6 border border-[var(--t-primary)]/20 bg-black/5 relative overflow-hidden">
+           <div class="relative z-10">
+             <h3 class="text-lg font-black uppercase-tracking theme-text mb-1">Support your favorite candidate!</h3>
+             <p class="text-[10px] font-bold theme-text-muted mb-4 opacity-80 uppercase-tracking tracking-widest">Help them win the People's Choice Award</p>
+             
+             <button id="btn-cast-vote" onclick="window.showVotingGallery()" class="theme-btn px-8 py-3 rounded-xl font-black uppercase-tracking text-xs mb-4 shadow-lg active:scale-95 transition-all">
+               <i class="fas fa-check-circle mr-1.5"></i> Cast Vote
+             </button>
+             <button id="btn-cancel-vote" onclick="window.hideVotingGallery()" class="hidden px-8 py-3 rounded-xl font-black uppercase-tracking text-xs mb-4 text-slate-500 hover:bg-slate-100 transition-all border border-slate-200">
+               <i class="fas fa-arrow-left mr-1.5"></i> Back to Carousel
+             </button>
+             
+             <div id="vote-countdown" class="mt-2 hidden">
+               <span class="text-[10px] uppercase-tracking theme-text-muted font-bold tracking-widest">Voting Closes In</span>
+               <h4 id="countdown-timer" class="text-2xl font-black score-number theme-text mt-1">--:--:--</h4>
+             </div>
+             <p id="vote-closed-msg" class="hidden text-red-500 font-bold uppercase-tracking text-sm mt-2">Voting is Closed</p>
+           </div>
         </div>
-        <p id="vote-closed-msg" class="hidden text-red-500 font-bold uppercase-tracking text-sm mb-4">Voting is Closed</p>
       </div>
       <div id="voting-gallery" class="max-w-md mx-auto mb-10"></div>
       
@@ -622,6 +636,41 @@
       if (r) { loginBtn.innerHTML = '<i class="fas fa-sign-out-alt text-lg mb-1"></i><span class="text-[9px] font-black uppercase-tracking tracking-wider">Out</span>'; loginBtn.onclick = () => { localStorage.clear(); location.reload(); }; }
     };
 
+    window.showVotingGallery = function() {
+      document.getElementById('carousel-track').classList.add('hidden'); // Hide carousel
+      document.getElementById('btn-cast-vote').classList.add('hidden');  // Hide Vote button
+      document.getElementById('btn-cancel-vote').classList.remove('hidden'); // Show Back button
+      document.getElementById('voting-gallery').classList.remove('hidden'); // Reveal gallery
+    };
+
+    window.hideVotingGallery = function() {
+      document.getElementById('voting-gallery').classList.add('hidden'); // Hide gallery
+      document.getElementById('carousel-track').classList.remove('hidden'); // Show carousel
+      document.getElementById('btn-cancel-vote').classList.add('hidden'); // Hide Back button
+      window.checkVoteStatus(); // Re-evaluate the vote button status
+    };
+
+    window.checkVoteStatus = function() {
+      const voteKey = `voted_${window.settings['app_title']}`;
+      const voteBtn = document.getElementById('btn-cast-vote');
+      if (!voteBtn) return;
+      
+      if (localStorage.getItem(voteKey)) {
+        // User has already voted
+        voteBtn.innerHTML = `<i class="fas fa-check-double mr-1.5"></i> Vote Recorded`;
+        voteBtn.className = "px-8 py-3 rounded-xl font-black uppercase-tracking text-xs mb-4 shadow-sm bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-not-allowed";
+        voteBtn.onclick = null; // Disable clicking
+        voteBtn.classList.remove('hidden'); 
+        document.getElementById('btn-cancel-vote').classList.add('hidden');
+      } else {
+        // User has NOT voted yet
+        voteBtn.innerHTML = `<i class="fas fa-check-circle mr-1.5"></i> Cast Vote`;
+        voteBtn.className = "theme-btn px-8 py-3 rounded-xl font-black uppercase-tracking text-xs mb-4 shadow-lg active:scale-95 transition-all";
+        voteBtn.onclick = window.showVotingGallery;
+        voteBtn.classList.remove('hidden');
+      }
+    };
+
     window.renderHomeGallery = function() {
       const cTrack = document.getElementById('carousel-track'); 
       const isVotingEnabled = String(window.settings['public_voting']).toLowerCase() === 'true';
@@ -646,8 +695,12 @@
               <button onclick="window.submitPublicVote('${c.id}', '${c.name.replace(/'/g, "\\'")}')" class="theme-btn px-5 py-3 rounded-xl font-black text-xs uppercase-tracking shadow-md active:scale-95 transition-all tracking-wider">Vote</button>
             </div>`;
           }).join('');
+          
+          // CRITICAL: Ensure gallery starts hidden on page load
+          document.getElementById('voting-gallery').classList.add('hidden');
         }
         window.setupVotingDeadline();
+        window.checkVoteStatus(); // Check storage and update the button immediately
       } else {
         if(document.getElementById('vote-prompt-section')) document.getElementById('vote-prompt-section').classList.add('hidden');
         if(document.getElementById('voting-gallery')) document.getElementById('voting-gallery').innerHTML = '';
@@ -659,7 +712,16 @@
       const voteKey = `voted_${window.settings['app_title']}`;
       if (localStorage.getItem(voteKey)) { window.alert("You have already cast your vote for this event."); return; }
       window.showModal("Confirm Vote", `Cast your official public vote for <b>${candidateName}</b>? This cannot be undone.`, "confirm", async () => {
-        try { await setDoc(doc(collection(db, "PublicVotes")), { candidateId: candidateId, candidateName: candidateName, timestamp: Date.now(), userAgent: navigator.userAgent }); localStorage.setItem(voteKey, "true"); window.alert(`Success! Your vote for ${candidateName} has been recorded.`); } catch (err) { window.alert("Error submitting vote: " + err.message); }
+        try { 
+          await setDoc(doc(collection(db, "PublicVotes")), { candidateId: candidateId, candidateName: candidateName, timestamp: Date.now(), userAgent: navigator.userAgent }); 
+          localStorage.setItem(voteKey, "true"); 
+          window.alert(`Success! Your vote for ${candidateName} has been recorded.`); 
+          
+          // Upon successful vote, close the gallery and show the success button state
+          window.hideVotingGallery();
+        } catch (err) { 
+          window.alert("Error submitting vote: " + err.message); 
+        }
       });
     };
 
