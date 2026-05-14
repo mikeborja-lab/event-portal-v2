@@ -1023,15 +1023,23 @@
     };
     
     // FIX: Automating Delete list updates
-    window.deleteDocEntry = async function(collectionName, docId) { 
-      if(confirm(`Are you sure you want to delete ${docId} from ${collectionName}?`)) { 
-        await deleteDoc(doc(db, collectionName, docId)); 
-        if(collectionName === 'Candidates') window.candidates = window.candidates.filter(c => String(c.id) !== String(docId));
-        if(collectionName === 'Criteria') window.criteria = window.criteria.filter(c => c.id !== docId);
-        if(collectionName === 'Users') window.users = window.users.filter(u => u.id !== docId);
-        window.alert(`Deleted successfully.`); 
-        window.renderAdminDashboard(); // Refresh lists immediately
-      } 
+    window.deleteDocEntry = function(collectionName, docId) { 
+      window.showModal(
+        "Confirm Deletion", 
+        `Are you sure you want to permanently delete <b>${docId}</b> from <b>${collectionName}</b>? This action cannot be undone.`, 
+        "confirm", 
+        async () => { 
+          // This block only executes if the user clicks the "Confirm" button on your custom modal
+          await deleteDoc(doc(db, collectionName, docId)); 
+          
+          if(collectionName === 'Candidates') window.candidates = window.candidates.filter(c => String(c.id) !== String(docId));
+          if(collectionName === 'Criteria') window.criteria = window.criteria.filter(c => c.id !== docId);
+          if(collectionName === 'Users') window.users = window.users.filter(u => u.id !== docId);
+          
+          window.alert(`Deleted successfully.`); 
+          window.renderAdminDashboard(); // Refresh lists immediately
+        }
+      );
     };
     window.applyTheme = function(themeName) {
       const palettes = {
