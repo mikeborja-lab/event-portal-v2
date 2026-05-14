@@ -328,6 +328,7 @@
             <div class="space-y-2">
               <input type="text" id="new-crit-id" placeholder="System ID (e.g. gown)" class="w-full p-2 border rounded text-sm bg-black/5">
               <input type="text" id="new-crit-label" placeholder="Full Label" class="w-full p-2 border rounded text-sm bg-black/5">
+              <input type="text" id="new-crit-short" placeholder="Short Name" class="w-full p-2 border rounded text-sm bg-black/5">
               <input type="number" id="new-crit-max" placeholder="Max Score (e.g. 10)" class="w-full p-2 border rounded text-sm bg-black/5">
               <button id="btn-add-crit" onclick="window.addCriteria()" class="w-full bg-slate-800 text-white rounded p-2 text-xs font-bold hover:bg-slate-700 uppercase-tracking tracking-wider mt-2 transition-colors">Add Criteria</button>
             </div>
@@ -341,6 +342,9 @@
             <div id="admin-users-list" class="space-y-2 mb-4 max-h-48 overflow-y-auto text-sm"></div>
             <div class="space-y-2">
               <input type="text" id="new-user-username" placeholder="Username" class="w-full p-2 border rounded text-sm bg-black/5">
+              <input type="text" id="new-user-name" placeholder="Full Name" class="w-full p-2 border rounded text-sm bg-black/5">
+              <input type="email" id="new-user-email" placeholder="Email Address" class="w-full p-2 border rounded text-sm bg-black/5">
+              
               <input type="text" id="new-user-pass" placeholder="Password (blank to keep)" class="w-full p-2 border rounded text-sm bg-black/5">
               <select id="new-user-role" class="w-full p-2 border rounded text-sm bg-black/5">
                 <option value="Judge">Judge</option><option value="Tabulator">Tabulator</option><option value="Admin">Admin</option>
@@ -602,7 +606,17 @@
           const fallbackImg = "https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=800&q=80";
           document.getElementById('voting-gallery').innerHTML = window.candidates.map((c, index) => {
             const imgSrc = (c.img && c.img.length > 5) ? c.img : fallbackImg;
-            return `<div class="card-panel flex items-center p-4 gap-4 mb-4 shadow-md bg-[var(--t-surface)] animate-slide-right" style="animation-delay: ${index * 0.1}s;"><img src="${imgSrc}" loading="lazy" onerror="this.src='${fallbackImg}'" class="w-16 h-16 rounded-[1rem] object-cover shadow-sm border border-black/5"><div class="flex-1"><h4 class="font-black text-lg tracking-tight leading-none" style="color: var(--t-text-main);">${c.name}</h4><p class="text-[9px] theme-text-muted font-bold uppercase-tracking tracking-widest mt-1">#${(c.id).toString().padStart(2, '0')}</p></div><button onclick="window.submitPublicVote('${c.id}', '${c.name.replace(/'/g, "\\'")}')" class="theme-btn px-5 py-3 rounded-xl font-black text-xs uppercase-tracking shadow-md active:scale-95 transition-all tracking-wider">Vote</button></div>`;
+            return `<div class="card-panel flex items-center p-4 gap-4 mb-4 shadow-md bg-[var(--t-surface)] animate-slide-right" style="animation-delay: ${index * 0.1}s;">
+              <img src="${imgSrc}" loading="lazy" onerror="this.src='${fallbackImg}'" class="w-16 h-16 rounded-[1rem] object-cover shadow-sm border border-black/5">
+              <div class="flex-1">
+                <h4 class="font-black text-lg tracking-tight leading-none" style="color: var(--t-text-main);">${c.name}</h4>
+                <p class="text-[9px] theme-text-muted font-bold uppercase-tracking tracking-widest mt-1">
+                  #${(c.id).toString().padStart(2, '0')} 
+                  ${c.loc ? `<span class="opacity-50 mx-1">•</span> <i class="fas fa-map-marker-alt opacity-70"></i> ${c.loc}` : ''}
+                </p>
+              </div>
+              <button onclick="window.submitPublicVote('${c.id}', '${c.name.replace(/'/g, "\\'")}')" class="theme-btn px-5 py-3 rounded-xl font-black text-xs uppercase-tracking shadow-md active:scale-95 transition-all tracking-wider">Vote</button>
+            </div>`;
           }).join('');
         }
         window.setupVotingDeadline();
@@ -655,6 +669,7 @@
                 <div class="glass-panel p-5 rounded-[1.5rem] text-center">
                   <p class="text-[10px] font-black uppercase-tracking tracking-[0.3em] mb-1 text-white/70">Candidate #${(c.id).toString().padStart(2, '0')}</p>
                   <h2 class="text-3xl font-black tracking-tight leading-none text-white drop-shadow-md">${c.name}</h2>
+                  ${c.loc ? `<p class="text-[10px] font-bold text-white/90 mt-2 uppercase-tracking tracking-widest flex items-center justify-center gap-1.5"><i class="fas fa-map-marker-alt" style="color: var(--t-primary)"></i> ${c.loc}</p>` : ''}
                 </div>
               </div>
             </div>
@@ -874,19 +889,105 @@
     // CANDIDATE EDIT LOGIC
     window.editCandidate = function(id) { const c = window.candidates.find(cand => String(cand.id) === String(id)); if (!c) return; window.editState.candidate = c.id; document.getElementById('new-cand-id').value = c.id; document.getElementById('new-cand-id').readOnly = true; document.getElementById('new-cand-name').value = c.name || ''; document.getElementById('new-cand-loc').value = c.loc || ''; document.getElementById('new-cand-img').value = c.img || ''; document.getElementById('btn-add-cand').innerText = "Update Candidate"; document.getElementById('btn-cancel-cand').classList.remove('hidden'); };
     window.resetCandForm = function() { window.editState.candidate = null; document.getElementById('new-cand-id').value = ''; document.getElementById('new-cand-id').readOnly = false; document.getElementById('new-cand-name').value = ''; document.getElementById('new-cand-loc').value = ''; document.getElementById('new-cand-img').value = ''; document.getElementById('btn-add-cand').innerText = "Add Candidate"; document.getElementById('btn-cancel-cand').classList.add('hidden'); };
-    window.addCandidate = async function() { const id = document.getElementById('new-cand-id').value; const name = document.getElementById('new-cand-name').value; const loc = document.getElementById('new-cand-loc').value; const img = document.getElementById('new-cand-img').value; if(!id || !name) return window.alert("ID and Name are required."); await setDoc(doc(db, "Candidates", id), { id: parseInt(id), name: name, loc: loc, img: img }, { merge: true }); window.alert(window.editState.candidate ? "Candidate updated. Refresh to view changes." : "Candidate added. Refresh to view changes."); window.resetCandForm(); };
+    
+    window.addCandidate = async function() { 
+      const id = document.getElementById('new-cand-id').value; const name = document.getElementById('new-cand-name').value; const loc = document.getElementById('new-cand-loc').value; const img = document.getElementById('new-cand-img').value; 
+      if(!id || !name) return window.alert("ID and Name are required."); 
+      const payload = { id: parseInt(id), name: name, loc: loc, img: img };
+      await setDoc(doc(db, "Candidates", id), payload, { merge: true }); 
+      
+      // Update local array & UI automatically
+      const idx = window.candidates.findIndex(c => String(c.id) === String(id));
+      if (idx >= 0) window.candidates[idx] = payload; else window.candidates.push(payload);
+      
+      window.alert(window.editState.candidate ? "Candidate updated." : "Candidate added."); 
+      window.resetCandForm(); 
+      window.renderAdminDashboard(); 
+    };
 
     // CRITERIA EDIT LOGIC
-    window.editCriteria = function(id) { const c = window.criteria.find(crit => crit.id === id); if (!c) return; window.editState.criteria = c.id; document.getElementById('new-crit-id').value = c.id; document.getElementById('new-crit-id').readOnly = true; document.getElementById('new-crit-label').value = c.label || ''; document.getElementById('new-crit-max').value = c.max || ''; document.getElementById('btn-add-crit').innerText = "Update Criteria"; document.getElementById('btn-cancel-crit').classList.remove('hidden'); };
-    window.resetCritForm = function() { window.editState.criteria = null; document.getElementById('new-crit-id').value = ''; document.getElementById('new-crit-id').readOnly = false; document.getElementById('new-crit-label').value = ''; document.getElementById('new-crit-max').value = ''; document.getElementById('btn-add-crit').innerText = "Add Criteria"; document.getElementById('btn-cancel-crit').classList.add('hidden'); };
-    window.addCriteria = async function() { const id = document.getElementById('new-crit-id').value; const label = document.getElementById('new-crit-label').value; const max = document.getElementById('new-crit-max').value; if(!id || !label || !max) return window.alert("All fields are required."); await setDoc(doc(db, "Criteria", id), { id: id, label: label, short: id.substring(0,4), max: parseFloat(max) }, { merge: true }); window.alert(window.editState.criteria ? "Criteria updated. Refresh to view changes." : "Criteria added. Refresh to view changes."); window.resetCritForm(); };
+    window.editCriteria = function(id) { const c = window.criteria.find(crit => crit.id === id); if (!c) return; window.editState.criteria = c.id; document.getElementById('new-crit-id').value = c.id; document.getElementById('new-crit-id').readOnly = true; document.getElementById('new-crit-label').value = c.label || ''; document.getElementById('new-crit-short').value = c.short || ''; document.getElementById('new-crit-max').value = c.max || ''; document.getElementById('btn-add-crit').innerText = "Update Criteria"; document.getElementById('btn-cancel-crit').classList.remove('hidden'); };
+    window.resetCritForm = function() { window.editState.criteria = null; document.getElementById('new-crit-id').value = ''; document.getElementById('new-crit-id').readOnly = false; document.getElementById('new-crit-label').value = ''; document.getElementById('new-crit-short').value = ''; document.getElementById('new-crit-max').value = ''; document.getElementById('btn-add-crit').innerText = "Add Criteria"; document.getElementById('btn-cancel-crit').classList.add('hidden'); };
+    
+    window.addCriteria = async function() { 
+      const id = document.getElementById('new-crit-id').value; const label = document.getElementById('new-crit-label').value; const short = document.getElementById('new-crit-short').value; const max = document.getElementById('new-crit-max').value; 
+      if(!id || !label || !max || !short) return window.alert("All fields are required."); 
+      const payload = { id: id, label: label, short: short, max: parseFloat(max) };
+      await setDoc(doc(db, "Criteria", id), payload, { merge: true }); 
+      
+      // Update local array & UI automatically
+      const idx = window.criteria.findIndex(c => c.id === id);
+      if (idx >= 0) window.criteria[idx] = payload; else window.criteria.push(payload);
+      
+      window.alert(window.editState.criteria ? "Criteria updated." : "Criteria added."); 
+      window.resetCritForm(); 
+      window.renderAdminDashboard(); 
+    };
 
     // USER EDIT LOGIC
-    window.editUser = function(id) { const u = window.users.find(usr => usr.id === id); if (!u) return; window.editState.user = u.id; document.getElementById('new-user-username').value = u.username || ''; document.getElementById('new-user-username').readOnly = true; document.getElementById('new-user-pass').value = ''; document.getElementById('new-user-role').value = u.role || 'Judge'; document.getElementById('btn-add-user').innerText = "Update User"; document.getElementById('btn-cancel-user').classList.remove('hidden'); };
-    window.resetUserForm = function() { window.editState.user = null; document.getElementById('new-user-username').value = ''; document.getElementById('new-user-username').readOnly = false; document.getElementById('new-user-pass').value = ''; document.getElementById('new-user-role').value = 'Judge'; document.getElementById('btn-add-user').innerText = "Add User"; document.getElementById('btn-cancel-user').classList.add('hidden'); };
-    window.addUser = async function() { const user = document.getElementById('new-user-username').value; const pass = document.getElementById('new-user-pass').value; const role = document.getElementById('new-user-role').value; if(!user) return window.alert("Username is required."); let payload = { username: user, name: user, role: role }; if (pass) { payload.password = await window.sha256(pass); } else if (!window.editState.user) { return window.alert("Password is required for new users."); } await setDoc(doc(db, "Users", user), payload, { merge: true }); window.alert(window.editState.user ? "User updated. Refresh to view changes." : "User added. Refresh to view changes."); window.resetUserForm(); };
-    window.deleteDocEntry = async function(collectionName, docId) { if(confirm(`Are you sure you want to delete ${docId} from ${collectionName}?`)) { await deleteDoc(doc(db, collectionName, docId)); window.alert(`Deleted. Refresh page to update view.`); } };
-
+    window.editUser = function(id) { 
+      const u = window.users.find(usr => usr.id === id); if (!u) return; 
+      window.editState.user = u.id; // Store original document ID
+      document.getElementById('new-user-username').value = u.username || ''; 
+      document.getElementById('new-user-username').readOnly = false; // FIX: Username is now editable
+      document.getElementById('new-user-name').value = u.name || ''; 
+      document.getElementById('new-user-email').value = u.email || ''; 
+      document.getElementById('new-user-pass').value = ''; 
+      document.getElementById('new-user-role').value = u.role || 'Judge'; 
+      document.getElementById('btn-add-user').innerText = "Update User"; 
+      document.getElementById('btn-cancel-user').classList.remove('hidden'); 
+    };
+    window.resetUserForm = function() { window.editState.user = null; document.getElementById('new-user-username').value = ''; document.getElementById('new-user-username').readOnly = false; document.getElementById('new-user-name').value = ''; document.getElementById('new-user-email').value = ''; document.getElementById('new-user-pass').value = ''; document.getElementById('new-user-role').value = 'Judge'; document.getElementById('btn-add-user').innerText = "Add User"; document.getElementById('btn-cancel-user').classList.add('hidden'); };
+    
+    window.addUser = async function() { 
+      const user = document.getElementById('new-user-username').value; 
+      const name = document.getElementById('new-user-name').value; 
+      const email = document.getElementById('new-user-email').value; 
+      const pass = document.getElementById('new-user-pass').value; 
+      const role = document.getElementById('new-user-role').value; 
+      
+      if(!user || !name) return window.alert("Username and Name are required."); 
+      let payload = { username: user, name: name, email: email, role: role }; 
+      
+      if (pass) { 
+        payload.password = await window.sha256(pass); 
+      } else if (!window.editState.user) { 
+        return window.alert("Password is required for new users."); 
+      } else {
+        const existingUser = window.users.find(u => u.id === window.editState.user);
+        if(existingUser) payload.password = existingUser.password; // Keep old password
+      }
+      
+      // Write the document (Using the new username as the document ID)
+      await setDoc(doc(db, "Users", user), payload, { merge: true }); 
+      
+      // FIX: If the Admin changed the username, delete the old document
+      if (window.editState.user && window.editState.user !== user) {
+        await deleteDoc(doc(db, "Users", window.editState.user));
+        window.users = window.users.filter(u => u.id !== window.editState.user); // Remove old from local
+      }
+      
+      // Update local array & UI automatically
+      payload.id = user;
+      const idx = window.users.findIndex(u => u.id === user);
+      if (idx >= 0) window.users[idx] = payload; else window.users.push(payload);
+      
+      window.alert(window.editState.user ? "User updated." : "User added."); 
+      window.resetUserForm(); 
+      window.renderAdminDashboard(); 
+    };
+    
+    // FIX: Automating Delete list updates
+    window.deleteDocEntry = async function(collectionName, docId) { 
+      if(confirm(`Are you sure you want to delete ${docId} from ${collectionName}?`)) { 
+        await deleteDoc(doc(db, collectionName, docId)); 
+        if(collectionName === 'Candidates') window.candidates = window.candidates.filter(c => String(c.id) !== String(docId));
+        if(collectionName === 'Criteria') window.criteria = window.criteria.filter(c => c.id !== docId);
+        if(collectionName === 'Users') window.users = window.users.filter(u => u.id !== docId);
+        window.alert(`Deleted successfully.`); 
+        window.renderAdminDashboard(); // Refresh lists immediately
+      } 
+    };
     window.applyTheme = function(themeName) {
       const palettes = {
         red: {
