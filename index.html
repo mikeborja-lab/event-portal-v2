@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@400;500;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   
   <style>
     :root {
@@ -273,6 +275,12 @@
     </div>
 
     <div id="view-scores" class="hidden max-w-5xl mx-auto">
+      <div class="flex justify-between items-center mb-6 px-2">
+        <h2 class="text-2xl font-black theme-text uppercase-tracking drop-shadow-sm">Official Tabulation</h2>
+        <button id="btn-export-pdf" onclick="window.exportScoresPDF()" class="theme-btn px-6 py-2.5 rounded-xl font-black uppercase-tracking text-[10px] shadow-lg flex items-center gap-2 active:scale-95 transition-transform">
+          <i class="fas fa-file-pdf text-sm"></i> Export to PDF
+        </button>
+      </div>
       <div id="peoples-choice-card" class="card-panel p-6 mb-8 hidden">
         <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2">People's Choice (Public Votes)</h3>
         <div class="overflow-x-auto"><table class="w-full" id="table-peoples-choice"></table></div>
@@ -1234,6 +1242,41 @@
       r.style.setProperty('--t-crystal-grad-start', t.cryStart);
       r.style.setProperty('--t-crystal-grad-mid',   t.cryMid);
       r.style.setProperty('--t-crystal-grad-end',    t.cryEnd);
+    };
+
+    // --- PDF EXPORT ENGINE ---
+    window.exportScoresPDF = function() {
+      const element = document.getElementById('view-scores');
+      const btn = document.getElementById('btn-export-pdf');
+      
+      // Temporarily hide the button so it doesn't print on the PDF
+      if (btn) btn.style.display = 'none';
+      
+      // Fire up your existing loader
+      document.getElementById('loader-text').innerText = "Generating PDF...";
+      document.getElementById('loader').classList.remove('hidden');
+
+      const eventName = window.settings['app_title'] || 'Event_Tabulation';
+      const cleanFileName = `${eventName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_results.pdf`;
+
+      const opt = {
+        margin:       [0.5, 0.5, 0.5, 0.5],
+        filename:     cleanFileName,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        // Using 'landscape' orientation since matrix tables can get wide!
+        jsPDF:        { unit: 'in', format: 'legal', orientation: 'landscape' } 
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        // Bring the button back and hide the loader when finished
+        if (btn) btn.style.display = ''; 
+        document.getElementById('loader').classList.add('hidden');
+      }).catch(err => {
+        document.getElementById('loader').classList.add('hidden');
+        if (btn) btn.style.display = '';
+        window.alert("PDF Generation Failed: " + err.message);
+      });
     };
 
     // --- DATABASE RESET PROTOCOLS ---
