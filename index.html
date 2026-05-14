@@ -727,14 +727,54 @@
 
     window.setupVotingDeadline = function() {
       if(window.votingTimerInterval) clearInterval(window.votingTimerInterval);
-      const deadlineStr = window.settings['voting_deadline']; const timerEl = document.getElementById('countdown-timer');
-      if(!deadlineStr || !timerEl) return;
+      
+      let deadlineStr = window.settings['voting_deadline']; 
+      const timerEl = document.getElementById('countdown-timer');
+      const countdownContainer = document.getElementById('vote-countdown');
+      const closedMsg = document.getElementById('vote-closed-msg');
+      
+      // Reset the closed states just in case the Admin extended the deadline
+      if (closedMsg) closedMsg.classList.add('hidden');
+      document.getElementById('voting-gallery')?.classList.remove('opacity-50', 'pointer-events-none', 'grayscale');
+
+      // If no deadline is set in Admin, hide the timer completely and stop.
+      if(!deadlineStr || !timerEl) {
+        if(countdownContainer) countdownContainer.classList.add('hidden');
+        return;
+      }
+      
+      // Fix Timezone: Ensure accurate local time execution 
+      if (!deadlineStr.includes('+') && !deadlineStr.includes('Z')) {
+        deadlineStr += '+08:00';
+      }
+      
+      // Show the timer container
+      if(countdownContainer) countdownContainer.classList.remove('hidden');
+      
       const deadline = new Date(deadlineStr).getTime();
-      window.votingTimerInterval = setInterval(() => {
+      
+      // Execute the math immediately so it appears instantly, rather than waiting 1 second
+      const runTimer = () => {
         const distance = deadline - new Date().getTime();
-        if (distance < 0) { clearInterval(window.votingTimerInterval); document.getElementById('vote-countdown')?.classList.add('hidden'); document.getElementById('vote-closed-msg')?.classList.remove('hidden'); document.getElementById('voting-gallery')?.classList.add('opacity-50', 'pointer-events-none', 'grayscale'); return; }
-        timerEl.innerText = `${Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0')}:${Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0')}:${Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0')}`;
-      }, 1000);
+        
+        // When the timer hits zero
+        if (distance < 0) { 
+          clearInterval(window.votingTimerInterval); 
+          countdownContainer.classList.add('hidden'); 
+          if(closedMsg) closedMsg.classList.remove('hidden'); 
+          document.getElementById('voting-gallery')?.classList.add('opacity-50', 'pointer-events-none', 'grayscale'); 
+          return; 
+        }
+        
+        // Math for formatting
+        const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((distance % (1000 * 60)) / 1000);
+        timerEl.innerText = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      };
+
+      runTimer(); // Call immediately 
+      window.votingTimerInterval = setInterval(runTimer, 1000); // Then cycle every second
     };
 
     window.switchJudgingSegment = function(critId) { window.currentSegment = critId; window.renderTabs(); window.renderCandidates(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
@@ -830,7 +870,17 @@
             if(document.getElementById('display-location')) document.getElementById('display-location').innerText = window.settings['location_text'] || "Location Undefined";
             window.applyTheme(window.settings['theme_color'] || 'red');
             document.title = (window.settings['app_title'] || "Event Portal") + " - Secure Access";
-            if(document.getElementById('carousel-track') && window.candidates.length > 0) window.renderHomeGallery();
+            
+            // Real-time update for the Voting Prompts and Timer
+            if (String(window.settings['public_voting']).toLowerCase() === 'true') {
+                document.getElementById('vote-prompt-section')?.classList.remove('hidden');
+                window.setupVotingDeadline(); // Pushes the new deadline to the UI instantly
+                window.checkVoteStatus();
+            } else {
+                document.getElementById('vote-prompt-section')?.classList.add('hidden');
+                if(window.votingTimerInterval) clearInterval(window.votingTimerInterval);
+            }
+            
             if (typeof window.renderAdminDashboard === 'function') window.renderAdminDashboard();
         });
 
