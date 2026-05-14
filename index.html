@@ -11,18 +11,10 @@
   
   <style>
     :root {
-      /* Global Base & Surface (Mesh is Fixed fixed to prevent jumps) */
       --t-base-bg: #fcfcfc; --t-surface: rgba(255, 255, 255, 0.92); --t-text-main: #111827; --t-text-muted: #6b7280;
-      
-      /* Base Theme Colors */
       --t-primary: #e11d48; --t-grad: linear-gradient(135deg, #f43f5e, #be123c);
       --t-shadow: rgba(225, 29, 72, 0.15); --t-border: rgba(255, 255, 255, 0.6);
       --t-mesh-1: rgba(244, 63, 94, 0.15); --t-mesh-2: rgba(225, 29, 72, 0.12); --t-mesh-3: rgba(253, 164, 175, 0.18);
-
-      /* --- NEW: Responsive Crystal Gradient Variables --- */
-      --t-crystal-grad-start: #c2e0ff;
-      --t-crystal-grad-mid: #ffffff;
-      --t-crystal-grad-end: #b3d9ff;
     }
     body { background-color: var(--t-base-bg); color: var(--t-text-main); font-family: 'Inter', sans-serif; transition: background-color 0.4s ease, color 0.4s ease; overflow-x: hidden; }
     h1, h2, h3, h4, h5, h6, .nav-btn label, .theme-table-header th, .uppercase-tracking { font-family: 'Montserrat', sans-serif; }
@@ -51,34 +43,51 @@
     .score-pop { animation: score-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); display: inline-block; }
     @keyframes view-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
     .view-animate { animation: view-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
-    .stagger-card { opacity: 0; transform: translateY(28px); transition: opacity 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-    .stagger-card.visible { opacity: 1; transform: translateY(0); }
+    
+    /* NEW CSS KEYFRAME FIX FOR CANDIDATE CARDS */
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    
     @keyframes slide-in-right { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
     .animate-slide-right { animation: slide-in-right 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
     @keyframes lock-burst { 0% { transform: scale(1); } 40% { transform: scale(1.03); box-shadow: 0 0 0 6px var(--t-shadow); } 100% { transform: scale(1); box-shadow: none; } }
     .score-locked-flash { animation: lock-burst 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
 
-    /* --- RESPONSIVE CRYSTAL HEADER & DIAMOND SPARKLES --- */
+    /* --- THEME ADAPTIVE NEON CRYSTAL HEADER --- */
+    .neon-crystal-panel {
+      background: linear-gradient(135deg, var(--t-mesh-2) 0%, rgba(255,255,255,0) 100%);
+      border: 1px solid var(--t-primary);
+      border-top: 1px solid rgba(255,255,255,0.7);
+      border-left: 1px solid rgba(255,255,255,0.7);
+      border-radius: 1.5rem;
+      padding: 1.5rem 2.5rem;
+      box-shadow: 0 10px 30px var(--t-shadow), inset 0 0 25px var(--t-mesh-1);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      max-width: 95%;
+    }
+    .neon-crystal-panel::before {
+      content: ''; position: absolute; inset: -50%;
+      background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%);
+      animation: glass-shine 6s infinite;
+      pointer-events: none;
+    }
+    @keyframes glass-shine { 0% { transform: translateX(-100%) translateY(-100%); } 100% { transform: translateX(100%) translateY(100%); } }
+
+    /* Dynamic Text Gradient linked to Theme Primary */
     .header-crystal-text {
-      background: linear-gradient(110deg, 
-        var(--t-crystal-grad-start) 0%, 
-        var(--t-crystal-grad-mid) 20%, 
-        var(--t-crystal-grad-end) 35%, 
-        var(--t-crystal-grad-mid) 50%, 
-        var(--t-crystal-grad-start) 65%, 
-        var(--t-crystal-grad-mid) 80%, 
-        var(--t-crystal-grad-end) 100%
-      );
+      background: linear-gradient(110deg, var(--t-primary) 0%, #ffffff 40%, var(--t-primary) 80%, #ffffff 100%);
       background-size: 200% auto;
       color: transparent;
       -webkit-background-clip: text;
       background-clip: text;
-      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.35)) drop-shadow(0 0 8px rgba(255,255,255,0.5));
-      animation: shine-crystal 5s linear infinite;
-      position: relative;
-      text-shadow: 0 2px 12px rgba(0,0,0,0.2);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+      animation: shine-text 4s linear infinite;
     }
-    @keyframes shine-crystal { 0% { background-position: 0% center; } 100% { background-position: -200% center; } }
+    @keyframes shine-text { 0% { background-position: 0% center; } 100% { background-position: -200% center; } }
 
     .diamond-sparkle {
       position: absolute; width: 26px; height: 26px;
@@ -91,121 +100,20 @@
       animation: diamond-glint 3s infinite ease-in-out;
       filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9));
     }
-    @keyframes diamond-glint { 
-      0% { transform: scale(0) rotate(0deg); opacity: 0; } 
-      50% { transform: scale(1.3) rotate(45deg); opacity: 1; filter: drop-shadow(0 0 10px #ffffff); } 
-      100% { transform: scale(0) rotate(90deg); opacity: 0; } 
-    }
+    @keyframes diamond-glint { 0% { transform: scale(0) rotate(0deg); opacity: 0; } 50% { transform: scale(1.3) rotate(45deg); opacity: 1; filter: drop-shadow(0 0 10px #ffffff); } 100% { transform: scale(0) rotate(90deg); opacity: 0; } }
 
-    /* ── NEON CRYSTAL HEADER PANEL ─────────────────────────────── */
-    .neon-crystal-panel {
-      /* Crystal base: translucent theme surface tinted by the primary color */
-      background:
-        linear-gradient(135deg,
-          rgba(255,255,255,0.12) 0%,
-          rgba(255,255,255,0.06) 40%,
-          rgba(255,255,255,0.10) 100%
-        ),
-        var(--t-grad);
-      background-size: 300% 300%;
-      animation: neon-panel-breathe 6s ease infinite;
-    
-      /* Neon edge glow — primary color, layered for depth */
-      border: 1.5px solid rgba(255,255,255,0.35);
-      box-shadow:
-        0 0 0 1px var(--t-primary),
-        0 0 18px 2px var(--t-shadow),
-        0 0 40px 6px var(--t-shadow),
-        inset 0 0 24px rgba(255,255,255,0.08),
-        inset 0 1px 0 rgba(255,255,255,0.4);
-    
-      border-radius: 2rem;
-      padding: 1.75rem 2rem;
-      backdrop-filter: blur(28px);
-      -webkit-backdrop-filter: blur(28px);
-      position: relative;
-      overflow: hidden;
-      display: inline-block;
-      max-width: 92%;
-      z-index: 10;
-      transition: box-shadow 0.5s ease, background 0.5s ease;
-    }
-    
-    /* Panning gradient animation so the panel itself feels alive */
-    @keyframes neon-panel-breathe {
-      0%   { background-position: 0% 50%; }
-      50%  { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    
-    /* Prismatic light sweep — simulates crystal refraction */
-    .neon-crystal-panel::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        115deg,
-        transparent 30%,
-        rgba(255,255,255,0.22) 45%,
-        rgba(255,255,255,0.40) 50%,
-        rgba(255,255,255,0.22) 55%,
-        transparent 70%
-      );
-      background-size: 250% 250%;
-      animation: crystal-sweep 4s ease-in-out infinite;
-      pointer-events: none;
-      z-index: 1;
-    }
-    @keyframes crystal-sweep {
-      0%   { background-position: 200% 50%; opacity: 0; }
-      30%  { opacity: 1; }
-      70%  { opacity: 1; }
-      100% { background-position: -50% 50%; opacity: 0; }
-    }
-    
-    /* Inner edge highlight — gives a glass-rim feel */
-    .neon-crystal-panel::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background: linear-gradient(
-        to bottom,
-        rgba(255,255,255,0.30) 0%,
-        transparent 40%,
-        transparent 60%,
-        rgba(255,255,255,0.08) 100%
-      );
-      pointer-events: none;
-      z-index: 2;
-    }
-
-    /* --- PARALLAX CLASSES (Judging Cards) --- */
+    /* --- PARALLAX CLASSES --- */
     .parallax-container { perspective: 1000px; }
     .parallax-inner { transform-style: preserve-3d; transition: transform 0.15s ease-out; will-change: transform; }
     .parallax-img { transform: translateZ(-30px) scale(1.15); }
     .parallax-front { transform: translateZ(45px); }
 
-    /* --- TILE GRID CAROUSEL CLASSES --- */
+    /* --- FIXED TILE GRID CAROUSEL CLASSES --- */
     .tile-stage { position: relative; width: 100%; max-width: 340px; height: 30rem; margin: 0 auto; border-radius: 2rem; overflow: hidden; box-shadow: 0 15px 35px var(--t-shadow); }
-    .tile-grid { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); border-radius: 2rem; overflow: hidden; }
-    
-    /* --- FIX: Eliminating vertical lines with anti-alias helper and outline --- */
-    .tile { 
-      position: relative; 
-      overflow: hidden; 
-      background-size: 400% 300%; 
-      will-change: transform, opacity; 
-      transition: transform 0.32s cubic-bezier(0.55, 0, 1, 0.45), opacity 0.28s ease-in; 
-      -webkit-backface-visibility: hidden; /* HELPER 1: Backface force */
-      backface-visibility: hidden; 
-      transform: translateZ(0); /* HELPER 2: TranslateZ force */
-      outline: 1px solid transparent; /* FIX: Added outline to reduce anti-aliasing gaps */
-    }
+    .tile-grid { position: absolute; inset: 0; border-radius: 2rem; overflow: hidden; }
+    .tile { position: absolute; overflow: hidden; background-size: 400% 300%; will-change: transform, opacity; transition: transform 0.32s cubic-bezier(0.55, 0, 1, 0.45), opacity 0.28s ease-in; -webkit-backface-visibility: hidden; backface-visibility: hidden; transform: translateZ(0); }
     .tile.scatter { opacity: 0; }
-    
-    /* FIX: Added subtle scale override during reassembly to ensure seamless coverage */
-    .tile.assemble { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1.002) !important; transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease-out; }
+    .tile.assemble { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1.001) !important; transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease-out; }
   </style>
 </head>
 <body class="min-h-screen pb-24">
@@ -236,16 +144,16 @@
     
     <p id="status-text" class="text-center text-slate-400 mb-8 font-bold">Initializing database...</p>
 
-    <div id="view-home" class="hidden stagger-card stagger-card.visible">
-      <div id="carousel-track" class="mb-8 stagger-card stagger-card.visible"></div>
-      <div id="vote-prompt-section" class="hidden text-center mb-4 stagger-card stagger-card.visible">
+    <div id="view-home" class="hidden">
+      <div id="carousel-track" class="mb-8"></div>
+      <div id="vote-prompt-section" class="hidden text-center mb-4">
         <div id="vote-countdown" class="mb-4">
           <span class="text-xs uppercase-tracking theme-text-muted font-bold">Voting Closes In</span>
           <h3 id="countdown-timer" class="text-2xl font-black score-number theme-text mt-1">--:--:--</h3>
         </div>
         <p id="vote-closed-msg" class="hidden text-red-500 font-bold uppercase-tracking text-sm mb-4">Voting is Closed</p>
       </div>
-      <div id="voting-gallery" class="max-w-md mx-auto mb-10 stagger-card stagger-card.visible"></div>
+      <div id="voting-gallery" class="max-w-md mx-auto mb-10"></div>
       
       <footer class="mt-12 text-center border-t border-black/5 pt-6 pb-2">
         <p class="text-[9px] font-black uppercase-tracking tracking-[0.2em] theme-text-muted opacity-60">Powered by Event Portal System &copy; 2026</p>
@@ -275,12 +183,12 @@
         <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2">People's Choice (Public Votes)</h3>
         <div class="overflow-x-auto"><table class="w-full" id="table-peoples-choice"></table></div>
       </div>
-      <div class="card-panel p-6 mb-8 stagger-card stagger-card.visible">
-        <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2 stagger-card stagger-card.visible">Aggregated Matrix</h3>
+      <div class="card-panel p-6 mb-8">
+        <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2">Aggregated Matrix</h3>
         <div class="overflow-x-auto"><table class="w-full" id="table-averages"></table></div>
       </div>
-      <div class="card-panel p-6 mb-8 stagger-card stagger-card.visible">
-        <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2 stagger-card stagger-card.visible">Detailed Judge Matrix</h3>
+      <div class="card-panel p-6 mb-8">
+        <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2">Detailed Judge Matrix</h3>
         <div class="overflow-x-auto"><table class="w-full" id="table-detailed"></table></div>
       </div>
     </div>
@@ -411,7 +319,7 @@
     window.showOfflineToast = function() { const t = document.getElementById('offline-toast'); if(!t) return; t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)'; setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(20px)'; }, 3500); };
     window.animateRowSwap = function(containerId) { const container = document.getElementById(containerId); if (!container) return null; const positions = new Map(); container.querySelectorAll('.theme-table-row').forEach(row => positions.set(row.dataset.id, row.getBoundingClientRect().top)); return { play: () => { container.querySelectorAll('.theme-table-row').forEach(row => { const firstTop = positions.get(row.dataset.id); const lastTop = row.getBoundingClientRect().top; if (firstTop && firstTop !== lastTop) { const deltaY = firstTop - lastTop; row.style.transition = 'none'; row.style.transform = `translateY(${deltaY}px)`; requestAnimationFrame(() => { row.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease'; row.style.transform = ''; }); } }); } }; };
 
-    // --- TILE GRID CAROUSEL LOGIC ---
+    // --- FIX: ABSOLUTE GRID TILE LOGIC ---
     window.COLS = 4; window.ROWS = 3; window.TOTAL = window.COLS * window.ROWS;
     window.tileStage = null; window.tileGrid = null; window.breakInterval = null;
 
@@ -419,7 +327,6 @@
       const container = document.getElementById('carousel-track');
       if (!container || window.candidates.length === 0) return;
       container.innerHTML = '';
-      // Cursor pointer added here
       container.style.cssText = 'display:flex;justify-content:center;align-items:center;height:34rem;cursor:pointer;';
       window.tileStage = document.createElement('div');
       window.tileStage.className = 'tile-stage';
@@ -435,6 +342,11 @@
         for (let col = 0; col < window.COLS; col++) {
           const tile = document.createElement('div');
           tile.className = 'tile';
+          // Fix: Absolutely position with +1px overlap to eliminate browser rendering lines completely
+          tile.style.width = 'calc(25% + 1px)';
+          tile.style.height = 'calc(33.333% + 1px)';
+          tile.style.left = `${col * 25}%`;
+          tile.style.top = `${row * 33.333}%`;
           tile.style.backgroundPositionX = (col / (window.COLS - 1) * 100) + '%';
           tile.style.backgroundPositionY = (row / (window.ROWS - 1) * 100) + '%';
           tile.dataset.col = col;
@@ -446,7 +358,6 @@
       window.tileStage.appendChild(overlay);
       container.appendChild(window.tileStage);
       
-      // FIX: Clicking the main container now triggers advance
       container.onclick = () => window.goToCarousel((window.currentCarouselIndex + 1) % window.candidates.length);
       
       window.setTileImage(window.currentCarouselIndex);
@@ -534,18 +445,14 @@
       });
     };
 
-    // KPR TEXT SCRAMBLE ANIMATION
     window.scrambleScore = function(el, target, decimals = 2, duration = 800) {
       const targetStr = parseFloat(target).toFixed(decimals);
       if (el.dataset.current === targetStr) return; 
-      
       const chars = '0123456789!@#$%^&*';
       let startTime = null;
-      
       (function step(ts) {
         if (!startTime) startTime = ts;
         const progress = Math.min((ts - startTime) / duration, 1);
-        
         if (progress < 1) {
           let scrambled = '';
           for(let i=0; i<targetStr.length; i++) {
@@ -561,7 +468,6 @@
       })(performance.now());
     };
 
-    // MULTI-LAYER PARALLAX LOGIC
     window.handleParallax = function(e, el) {
       const rect = el.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -652,16 +558,17 @@
     window.switchJudgingSegment = function(critId) { window.currentSegment = critId; window.renderTabs(); window.renderCandidates(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
     window.renderTabs = function() { const tabs = document.getElementById('segment-tabs'); if(!tabs) return; tabs.innerHTML = window.criteria.map(c => `<button onclick="window.switchJudgingSegment('${c.id}')" class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase-tracking whitespace-nowrap transition-all ${window.currentSegment === c.id ? 'theme-btn shadow-md' : 'text-gray-500 hover:bg-black/5'}">${c.short}</button>`).join(''); };
     
+    // --- FIX: NO MORE INTERSECTION OBSERVER FOR CARDS ---
     window.renderCandidates = function() {
       const activeCrit = window.criteria.find(c => c.id === window.currentSegment); const cCont = document.getElementById('candidates-container'); if(!activeCrit || !cCont) return;
       const fallbackImg = "https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=800&q=80";
-      cCont.innerHTML = window.candidates.map(c => {
+      cCont.innerHTML = window.candidates.map((c, i) => {
         const isLocked = window.lockedScores[c.id] && window.lockedScores[c.id][window.currentSegment]; 
         const dScore = isLocked ? window.scoresData[c.id][window.currentSegment] : (window.scoresData[c.id][window.currentSegment] || activeCrit.max/2); 
         const btnClass = isLocked ? 'bg-black/10 text-slate-500 cursor-not-allowed border border-black/5' : 'theme-btn active:scale-95';
         const fillPct = ((dScore - 1) / (activeCrit.max - 1)) * 100;
         
-        return `<div class="card-panel mb-10 overflow-hidden border-none shadow-2xl rounded-[2rem] bg-[var(--t-surface)]">
+        return `<div class="card-panel mb-10 overflow-hidden border-none shadow-2xl rounded-[2rem] bg-[var(--t-surface)] animate-fade-in-up" style="animation-delay: ${i * 0.1}s">
           <div class="parallax-container relative w-full h-[28rem] cursor-crosshair" onmousemove="window.handleParallax(event, this)" onmouseleave="window.resetParallax(this)" ontouchmove="window.handleParallax(event, this)" ontouchend="window.resetParallax(this)">
             <div class="parallax-inner w-full h-full">
               <img src="${(c.img && c.img.length > 5) ? c.img : fallbackImg}" loading="lazy" onerror="this.src='${fallbackImg}'" class="parallax-img absolute inset-0 w-full h-full object-cover object-top">
@@ -691,8 +598,6 @@
           </div>
         </div>`;
       }).join('');
-      const observer = new IntersectionObserver((entries) => { entries.forEach((entry, i) => { if (entry.isIntersecting) { setTimeout(() => entry.target.classList.add('visible'), i * 100); observer.unobserve(entry.target); } }); }, { threshold: 0.1 });
-      document.querySelectorAll('.card-panel').forEach(el => { el.classList.add('stagger-card'); observer.observe(el); });
     };
 
     window.onload = async function() {
@@ -904,71 +809,18 @@
     window.addUser = async function() { const user = document.getElementById('new-user-username').value; const pass = document.getElementById('new-user-pass').value; const role = document.getElementById('new-user-role').value; if(!user) return window.alert("Username is required."); let payload = { username: user, name: user, role: role }; if (pass) { payload.password = await window.sha256(pass); } else if (!window.editState.user) { return window.alert("Password is required for new users."); } await setDoc(doc(db, "Users", user), payload, { merge: true }); window.alert(window.editState.user ? "User updated. Refresh to view changes." : "User added. Refresh to view changes."); window.resetUserForm(); };
     window.deleteDocEntry = async function(collectionName, docId) { if(confirm(`Are you sure you want to delete ${docId} from ${collectionName}?`)) { await deleteDoc(doc(db, collectionName, docId)); window.alert(`Deleted. Refresh page to update view.`); } };
 
-    window.applyTheme = function(themeName) {
-      const palettes = {
-        red: {
-          baseBg:'#fcfcfc', surface:'rgba(255,255,255,0.92)', textMain:'#111827', textMuted:'#6b7280',
-          primary:'#e11d48', grad:'linear-gradient(135deg,#f43f5e,#be123c)',
-          shadow:'rgba(225,29,72,0.15)', border:'rgba(255,255,255,0.6)',
-          "mesh-1":'rgba(244,63,94,0.15)', "mesh-2":'rgba(225,29,72,0.12)', "mesh-3":'rgba(253,164,175,0.18)',
-          cryStart:'#fecdd3', cryMid:'#ffffff', cryEnd:'#fda4af'
-        },
-        blue: {
-          baseBg:'#f8fafc', surface:'rgba(255,255,255,0.92)', textMain:'#0f172a', textMuted:'#64748b',
-          primary:'#2563eb', grad:'linear-gradient(135deg,#60a5fa,#1d4ed8)',
-          shadow:'rgba(37,99,235,0.15)', border:'rgba(255,255,255,0.6)',
-          "mesh-1":'rgba(96,165,250,0.15)', "mesh-2":'rgba(59,130,246,0.12)', "mesh-3":'rgba(191,219,254,0.18)',
-          cryStart:'#bfdbfe', cryMid:'#ffffff', cryEnd:'#93c5fd'
-        },
-        dark: {
-          baseBg:'#0f172a', surface:'rgba(30,41,59,0.92)', textMain:'#f8fafc', textMuted:'#94a3b8',
-          primary:'#38bdf8', grad:'linear-gradient(135deg,#7dd3fc,#0284c7)',
-          shadow:'rgba(56,189,248,0.15)', border:'rgba(255,255,255,0.1)',
-          "mesh-1":'rgba(56,189,248,0.15)', "mesh-2":'rgba(14,165,233,0.12)', "mesh-3":'rgba(125,211,252,0.18)',
-          cryStart:'#bae6fd', cryMid:'#e0f2fe', cryEnd:'#7dd3fc'
-        },
-        amber: {
-          baseBg:'#fffbeb', surface:'rgba(255,255,255,0.92)', textMain:'#451a03', textMuted:'#78350f',
-          primary:'#d97706', grad:'linear-gradient(135deg,#fbbf24,#b45309)',
-          shadow:'rgba(217,119,6,0.15)', border:'rgba(255,255,255,0.6)',
-          "mesh-1":'rgba(251,191,36,0.15)', "mesh-2":'rgba(217,119,6,0.12)', "mesh-3":'rgba(252,211,77,0.18)',
-          cryStart:'#fde68a', cryMid:'#ffffff', cryEnd:'#fcd34d'
-        },
-        emerald: {
-          baseBg:'#f0fdf4', surface:'rgba(255,255,255,0.92)', textMain:'#064e3b', textMuted:'#047857',
-          primary:'#10b981', grad:'linear-gradient(135deg,#34d399,#059669)',
-          shadow:'rgba(16,185,129,0.15)', border:'rgba(255,255,255,0.6)',
-          "mesh-1":'rgba(52,211,153,0.15)', "mesh-2":'rgba(16,185,129,0.12)', "mesh-3":'rgba(110,231,183,0.18)',
-          cryStart:'#a7f3d0', cryMid:'#ffffff', cryEnd:'#6ee7b7'
-        },
-        indigo: {
-          baseBg:'#eef2ff', surface:'rgba(255,255,255,0.92)', textMain:'#312e81', textMuted:'#4338ca',
-          primary:'#4f46e5', grad:'linear-gradient(135deg,#818cf8,#3730a3)',
-          shadow:'rgba(79,70,229,0.15)', border:'rgba(255,255,255,0.6)',
-          "mesh-1":'rgba(129,140,248,0.15)', "mesh-2":'rgba(79,70,229,0.12)', "mesh-3":'rgba(165,180,252,0.18)',
-          cryStart:'#c7d2fe', cryMid:'#ffffff', cryEnd:'#a5b4fc'
-        },
-        velvet: {
-          baseBg:'#022c22', surface:'rgba(6,78,59,0.92)', textMain:'#ecfdf5', textMuted:'#6ee7b7',
-          primary:'#10b981', grad:'linear-gradient(135deg,#34d399,#047857)',
-          shadow:'rgba(16,185,129,0.15)', border:'rgba(255,255,255,0.1)',
-          "mesh-1":'rgba(52,211,153,0.15)', "mesh-2":'rgba(16,185,129,0.12)', "mesh-3":'rgba(4,120,87,0.15)',
-          cryStart:'#a7f3d0', cryMid:'#d1fae5', cryEnd:'#6ee7b7'
-        }
-      };
-    
-      const t = palettes[themeName] || palettes['red'];
-      const r = document.documentElement;
-    
-      // Set all CSS vars — mesh-1/2/3 keys now work correctly
-      for (const [key, value] of Object.entries(t)) {
-        r.style.setProperty(`--t-${key.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}`, value);
-      }
-    
-      // Crystal gradient vars for the header shimmer
-      r.style.setProperty('--t-crystal-grad-start', t.cryStart);
-      r.style.setProperty('--t-crystal-grad-mid',   t.cryMid);
-      r.style.setProperty('--t-crystal-grad-end',    t.cryEnd);
+    window.applyTheme = function(themeName) { 
+      const palettes = { 
+        red: { baseBg: '#fcfcfc', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#111827', textMuted: '#6b7280', primary: '#e11d48', grad: 'linear-gradient(135deg, #f43f5e, #be123c)', shadow: 'rgba(225, 29, 72, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(244, 63, 94, 0.15)', mesh2: 'rgba(225, 29, 72, 0.12)', mesh3: 'rgba(253, 164, 175, 0.18)' }, 
+        blue: { baseBg: '#f8fafc', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#0f172a', textMuted: '#64748b', primary: '#2563eb', grad: 'linear-gradient(135deg, #60a5fa, #1d4ed8)', shadow: 'rgba(37, 99, 235, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(96, 165, 250, 0.15)', mesh2: 'rgba(59, 130, 246, 0.12)', mesh3: 'rgba(191, 219, 254, 0.18)' },
+        dark: { baseBg: '#0f172a', surface: 'rgba(30, 41, 59, 0.92)', textMain: '#f8fafc', textMuted: '#94a3b8', primary: '#38bdf8', grad: 'linear-gradient(135deg, #7dd3fc, #0284c7)', shadow: 'rgba(56, 189, 248, 0.15)', border: 'rgba(255, 255, 255, 0.1)', mesh1: 'rgba(56, 189, 248, 0.15)', mesh2: 'rgba(14, 165, 233, 0.12)', mesh3: 'rgba(125, 211, 252, 0.18)' },
+        amber: { baseBg: '#fffbeb', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#451a03', textMuted: '#78350f', primary: '#d97706', grad: 'linear-gradient(135deg, #fbbf24, #b45309)', shadow: 'rgba(217, 119, 6, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(251, 191, 36, 0.15)', mesh2: 'rgba(217, 119, 6, 0.12)', mesh3: 'rgba(252, 211, 77, 0.18)' },
+        emerald: { baseBg: '#f0fdf4', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#064e3b', textMuted: '#047857', primary: '#10b981', grad: 'linear-gradient(135deg, #34d399, #059669)', shadow: 'rgba(16, 185, 129, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(52, 211, 153, 0.15)', mesh2: 'rgba(16, 185, 129, 0.12)', mesh3: 'rgba(110, 231, 183, 0.18)' },
+        indigo: { baseBg: '#eef2ff', surface: 'rgba(255, 255, 255, 0.92)', textMain: '#312e81', textMuted: '#4338ca', primary: '#4f46e5', grad: 'linear-gradient(135deg, #818cf8, #3730a3)', shadow: 'rgba(79, 70, 229, 0.15)', border: 'rgba(255, 255, 255, 0.6)', mesh1: 'rgba(129, 140, 248, 0.15)', mesh2: 'rgba(79, 70, 229, 0.12)', mesh3: 'rgba(165, 180, 252, 0.18)' },
+        velvet: { baseBg: '#022c22', surface: 'rgba(6, 78, 59, 0.92)', textMain: '#ecfdf5', textMuted: '#6ee7b7', primary: '#10b981', grad: 'linear-gradient(135deg, #34d399, #047857)', shadow: 'rgba(16, 185, 129, 0.15)', border: 'rgba(255, 255, 255, 0.1)', mesh1: 'rgba(52, 211, 153, 0.15)', mesh2: 'rgba(16, 185, 129, 0.12)', mesh3: 'rgba(110, 231, 183, 0.18)' }
+      }; 
+      const t = palettes[themeName] || palettes['red']; const r = document.documentElement; 
+      for (const [key, value] of Object.entries(t)) { r.style.setProperty(`--t-${key.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}`, value); } 
     };
   </script>
 </body>
