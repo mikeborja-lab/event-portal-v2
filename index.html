@@ -637,17 +637,19 @@
     };
 
     window.showVotingGallery = function() {
-      document.getElementById('carousel-track').classList.add('hidden'); // Hide carousel
-      document.getElementById('btn-cast-vote').classList.add('hidden');  // Hide Vote button
-      document.getElementById('btn-cancel-vote').classList.remove('hidden'); // Show Back button
-      document.getElementById('voting-gallery').classList.remove('hidden'); // Reveal gallery
+      // FIX: Force inline display to 'none' to override the carousel's flex style
+      document.getElementById('carousel-track').style.display = 'none'; 
+      document.getElementById('btn-cast-vote').classList.add('hidden');  
+      document.getElementById('btn-cancel-vote').classList.remove('hidden'); 
+      document.getElementById('voting-gallery').classList.remove('hidden'); 
     };
 
     window.hideVotingGallery = function() {
-      document.getElementById('voting-gallery').classList.add('hidden'); // Hide gallery
-      document.getElementById('carousel-track').classList.remove('hidden'); // Show carousel
-      document.getElementById('btn-cancel-vote').classList.add('hidden'); // Hide Back button
-      window.checkVoteStatus(); // Re-evaluate the vote button status
+      document.getElementById('voting-gallery').classList.add('hidden'); 
+      // FIX: Restore the flex layout so the carousel centers perfectly again
+      document.getElementById('carousel-track').style.display = 'flex'; 
+      document.getElementById('btn-cancel-vote').classList.add('hidden'); 
+      window.checkVoteStatus(); 
     };
 
     window.checkVoteStatus = function() {
