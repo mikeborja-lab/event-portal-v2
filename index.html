@@ -1246,37 +1246,311 @@
 
     // --- PDF EXPORT ENGINE ---
     window.exportScoresPDF = function() {
-      const element = document.getElementById('view-scores');
       const btn = document.getElementById('btn-export-pdf');
-      
-      // Temporarily hide the button so it doesn't print on the PDF
-      if (btn) btn.style.display = 'none';
-      
-      // Fire up your existing loader
-      document.getElementById('loader-text').innerText = "Generating PDF...";
+      if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generating...'; btn.disabled = true; }
+      document.getElementById('loader-text').innerText = "Building Report...";
       document.getElementById('loader').classList.remove('hidden');
-
-      const eventName = window.settings['app_title'] || 'Event_Tabulation';
-      const cleanFileName = `${eventName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_results.pdf`;
-
-      const opt = {
-        margin:       [0.5, 0.5, 0.5, 0.5],
-        filename:     cleanFileName,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false },
-        // Using 'landscape' orientation since matrix tables can get wide!
-        jsPDF:        { unit: 'in', format: 'legal', orientation: 'landscape' } 
-      };
-
-      html2pdf().set(opt).from(element).save().then(() => {
-        // Bring the button back and hide the loader when finished
-        if (btn) btn.style.display = ''; 
-        document.getElementById('loader').classList.add('hidden');
-      }).catch(err => {
-        document.getElementById('loader').classList.add('hidden');
-        if (btn) btn.style.display = '';
-        window.alert("PDF Generation Failed: " + err.message);
+    
+      // ── Pull live data ─────────────────────────────────────────
+      const eventName     = window.settings['app_title']    || 'Event';
+      const eventSubtitle = window.settings['app_subtitle'] || '';
+      const eventLocation = window.settings['location_text']|| '';
+      const now           = new Date().toLocaleString('en-PH', { dateStyle: 'long', timeStyle: 'short' });
+    
+      const rawScores  = window.latestScores  || [];
+      const rawVotes   = window.latestVotes   || {};
+      const isVoting   = String(window.settings['public_voting']).toLowerCase() === 'true';
+    
+      // ── Normalize & aggregate (mirrors your existing logic) ────
+      const norm = rawScores.map(s => {
+        const n = {};
+        for (const k in s) n[k.toLowerCase().replace(/\s+/g, '')] = s[k];
+        n.judge     = (s.judge     || '').toString().trim();
+        n.candidate = (s.candidate || '').toString().trim();
+        return n;
       });
+    
+      const agg = window.candidates.map(c => {
+        const sc    = norm.filter(s => s.candidate.toLowerCase() === c.name.toLowerCase().trim());
+        const count = sc.length;
+        const out   = { name: c.name, count, total: 0 };
+        window.criteria.forEach(cr => {
+          const safe = cr.id.toLowerCase().replace(/\s+/g, '');
+          const avg  = count ? sc.reduce((sum, s) => sum + (parseFloat(s[safe]) || 0), 0) / count : 0;
+          out[cr.id] = avg;
+          out.total += avg;
+        });
+        return out;
+      }).sort((a, b) => b.total - a.total);
+    
+      // ── Color palette (print-safe, no alpha) ──────────────────
+      const PRIMARY  = '#b91c1c';   // deep red — readable on white
+      const ACCENT   = '#1e3a5f';   // navy for headers
+      const GOLD     = '#b45309';
+      const SILVER   = '#475569';
+      const BRONZE   = '#92400e';
+      const STRIPE   = '#f8fafc';
+      const BORDER   = '#e2e8f0';
+      const TEXT_MED = '#374151';
+      const TEXT_DIM = '#6b7280';
+    
+      // ── Medal helper ──────────────────────────────────────────
+      const medal = i =>
+        i === 0 ? `<span style="color:${GOLD};font-weight:900;font-size:1rem;">🥇 1st</span>`
+      : i === 1 ? `<span style="color:${SILVER};font-weight:900;font-size:.95rem;">🥈 2nd</span>`
+      : i === 2 ? `<span style="color:${BRONZE};font-weight:900;font-size:.95rem;">🥉 3rd</span>`
+                : `<span style="color:${TEXT_DIM};font-weight:700;font-size:.9rem;">${i + 1}</span>`;
+    
+      // ── Shared table cell style ───────────────────────────────
+      const th = `style="padding:10px 14px;text-align:center;font-size:11px;font-weight:800;
+                  text-transform:uppercase;letter-spacing:.06em;color:#fff;background:${ACCENT};
+                  border:1px solid ${ACCENT};"`;
+      const thL = `style="padding:10px 14px;text-align:left;font-size:11px;font-weight:800;
+                   text-transform:uppercase;letter-spacing:.06em;color:#fff;background:${ACCENT};
+                   border:1px solid ${ACCENT};"`;
+      const td  = (extra = '') =>
+        `style="padding:9px 14px;text-align:center;font-size:12px;border:1px solid ${BORDER};
+         vertical-align:middle;${extra}"`;
+      const tdL = (extra = '') =>
+        `style="padding:9px 14px;text-align:left;font-size:12px;border:1px solid ${BORDER};
+         vertical-align:middle;${extra}"`;
+    
+      // ── Section heading ───────────────────────────────────────
+      const sectionHead = (title, sub = '') => `
+        <div style="margin:28px 0 10px;border-left:4px solid ${PRIMARY};padding-left:10px;">
+          <div style="font-size:14px;font-weight:900;color:${ACCENT};text-transform:uppercase;
+                      letter-spacing:.08em;">${title}</div>
+          ${sub ? `<div style="font-size:11px;color:${TEXT_DIM};margin-top:2px;">${sub}</div>` : ''}
+        </div>`;
+    
+      // ── People's Choice table ─────────────────────────────────
+      let pcSection = '';
+      if (isVoting) {
+        const pcArr = window.candidates
+          .map(c => ({ name: c.name, votes: rawVotes[c.name] || 0 }))
+          .sort((a, b) => b.votes - a.votes);
+        const pcRows = pcArr.map((c, i) => `
+          <tr style="background:${i % 2 === 0 ? '#fff' : STRIPE};">
+            <td ${td()}>${medal(i)}</td>
+            <td ${tdL('font-weight:700;')}>${c.name}</td>
+            <td ${td(`color:${PRIMARY};font-weight:900;font-size:15px;`)}>${c.votes.toLocaleString()}</td>
+          </tr>`).join('');
+        pcSection = sectionHead("People's Choice", "Public vote count per candidate") + `
+          <table style="width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;">
+            <thead><tr>
+              <th ${th} style="width:80px;">Rank</th>
+              <th ${thL}>Candidate</th>
+              <th ${th} style="width:100px;">Votes</th>
+            </tr></thead>
+            <tbody>${pcRows}</tbody>
+          </table>`;
+      }
+    
+      // ── Aggregated rankings table ─────────────────────────────
+      const maxS = {};
+      window.criteria.forEach(cr => { maxS[cr.id] = Math.max(...agg.map(c => c[cr.id] || 0)); });
+    
+      const critHeaders = window.criteria.map(cr =>
+        `<th ${th} style="width:70px;">${cr.short}<br><span style="font-size:9px;font-weight:600;
+         opacity:.75;">(max ${cr.max})</span></th>`).join('');
+    
+      const aggRows = agg.map((c, i) => {
+        const critCells = window.criteria.map(cr => {
+          const val   = c[cr.id] || 0;
+          const isMax = val > 0 && val === maxS[cr.id];
+          return `<td ${td(isMax
+            ? `color:#065f46;font-weight:900;background:#d1fae5;`
+            : `color:${TEXT_MED};font-weight:600;`)}>${val.toFixed(2)}</td>`;
+        }).join('');
+        return `
+          <tr style="background:${i % 2 === 0 ? '#fff' : STRIPE};">
+            <td ${td()}>${medal(i)}</td>
+            <td ${tdL('font-weight:800;font-size:13px;')}>${c.name}</td>
+            ${critCells}
+            <td ${td(`color:${PRIMARY};font-weight:900;font-size:15px;`)}>${c.total.toFixed(2)}</td>
+          </tr>`;
+      }).join('');
+    
+      const aggSection = sectionHead("Official Rankings", "Aggregated average scores across all judges") + `
+        <table style="width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;">
+          <thead><tr>
+            <th ${th} style="width:80px;">Rank</th>
+            <th ${thL}>Candidate</th>
+            ${critHeaders}
+            <th ${th} style="width:90px;">Total</th>
+          </tr></thead>
+          <tbody>${aggRows}</tbody>
+        </table>`;
+    
+      // ── Judge detail table ────────────────────────────────────
+      const detailCritH = window.criteria.map(cr =>
+        `<th ${th} style="width:65px;">${cr.short}</th>`).join('');
+    
+      const detailRows = norm.map((s, i) => {
+        let rowSum = 0;
+        const cells = window.criteria.map(cr => {
+          const safe = cr.id.toLowerCase().replace(/\s+/g, '');
+          const val  = parseFloat(s[safe]) || 0;
+          rowSum += val;
+          return `<td ${td(val === 0
+            ? 'color:#dc2626;font-weight:700;background:#fee2e2;'
+            : `color:${TEXT_MED};`)}>${val.toFixed(1)}</td>`;
+        }).join('');
+        return `
+          <tr style="background:${i % 2 === 0 ? '#fff' : STRIPE};">
+            <td ${tdL(`color:${PRIMARY};font-weight:700;`)}>${s.judge}</td>
+            <td ${tdL('font-weight:700;')}>${s.candidate}</td>
+            ${cells}
+            <td ${td(`color:${ACCENT};font-weight:900;`)}>${rowSum.toFixed(2)}</td>
+          </tr>`;
+      }).join('');
+    
+      const detailSection = sectionHead("Judge Matrix", "Individual scores submitted by each judge") + `
+        <table style="width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;">
+          <thead><tr>
+            <th ${thL} style="width:130px;">Judge</th>
+            <th ${thL}>Candidate</th>
+            ${detailCritH}
+            <th ${th} style="width:80px;">Total</th>
+          </tr></thead>
+          <tbody>${detailRows}</tbody>
+        </table>`;
+    
+      // ── Criteria legend ───────────────────────────────────────
+      const legendItems = window.criteria.map(cr =>
+        `<div style="display:flex;justify-content:space-between;padding:5px 0;
+                     border-bottom:1px solid ${BORDER};font-size:11px;">
+           <span style="font-weight:700;color:${ACCENT};">${cr.short}</span>
+           <span style="color:${TEXT_MED};flex:1;margin:0 12px;">${cr.label}</span>
+           <span style="color:${PRIMARY};font-weight:700;">Max: ${cr.max} pts</span>
+         </div>`).join('');
+    
+      const legendSection = sectionHead("Scoring Criteria") + `
+        <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;
+                    padding:14px 18px;">${legendItems}</div>`;
+    
+      // ── Signature / attestation block ─────────────────────────
+      const sigLine = `<div style="border-top:2px solid #1e3a5f;margin-top:60px;padding-top:6px;
+                                   text-align:center;font-size:11px;color:${TEXT_DIM};">
+                         Authorized Signature &amp; Date
+                       </div>`;
+      const attestation = `
+        <div style="margin-top:36px;border:1px solid ${BORDER};border-radius:8px;padding:20px 24px;
+                    background:${STRIPE};">
+          <div style="font-size:11px;font-weight:800;color:${ACCENT};text-transform:uppercase;
+                      letter-spacing:.07em;margin-bottom:16px;">Official Attestation</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;">
+            ${sigLine.replace('Authorized Signature', 'Head Judge')}
+            ${sigLine.replace('Authorized Signature', 'Event Coordinator')}
+            ${sigLine.replace('Authorized Signature', 'Admin Officer')}
+          </div>
+        </div>`;
+    
+      // ── Build the full print document ─────────────────────────
+      const printDoc = document.createElement('div');
+      printDoc.style.cssText = `
+        position:fixed; top:-9999px; left:-9999px;
+        width:900px; background:#fff; color:#111; padding:48px 52px;
+        font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:1.5;
+        box-sizing:border-box;
+      `;
+    
+      printDoc.innerHTML = `
+        <!-- ── COVER HEADER ── -->
+        <div style="border-bottom:3px solid ${PRIMARY};padding-bottom:20px;margin-bottom:4px;
+                    display:flex;justify-content:space-between;align-items:flex-end;">
+          <div>
+            <div style="font-size:24px;font-weight:900;color:${ACCENT};line-height:1.15;
+                        letter-spacing:-.02em;">${eventName}</div>
+            ${eventSubtitle
+              ? `<div style="font-size:14px;font-weight:600;color:${TEXT_MED};margin-top:3px;">
+                   ${eventSubtitle}</div>` : ''}
+            ${eventLocation
+              ? `<div style="font-size:12px;color:${TEXT_DIM};margin-top:4px;">
+                   📍 ${eventLocation}</div>` : ''}
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;font-weight:700;color:${PRIMARY};text-transform:uppercase;
+                        letter-spacing:.07em;">Official Results</div>
+            <div style="font-size:11px;color:${TEXT_DIM};margin-top:3px;">Generated: ${now}</div>
+            <div style="font-size:10px;color:${TEXT_DIM};margin-top:2px;">
+              ${norm.length} score entries &nbsp;·&nbsp;
+              ${window.candidates.length} candidates &nbsp;·&nbsp;
+              ${window.criteria.length} criteria
+            </div>
+          </div>
+        </div>
+    
+        <!-- ── SUMMARY STAT STRIP ── -->
+        <div style="display:grid;grid-template-columns:repeat(${window.candidates.length > 0 ? 4 : 3},1fr);
+                    gap:12px;margin:16px 0 4px;">
+          ${agg.length > 0 ? `
+            <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;
+                        padding:12px 14px;border-top:3px solid ${GOLD};">
+              <div style="font-size:10px;font-weight:700;color:${TEXT_DIM};text-transform:uppercase;
+                          letter-spacing:.06em;">🥇 Top Candidate</div>
+              <div style="font-size:15px;font-weight:900;color:${ACCENT};margin-top:4px;
+                          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${agg[0].name}</div>
+              <div style="font-size:12px;color:${GOLD};font-weight:700;">${agg[0].total.toFixed(2)} pts</div>
+            </div>` : ''}
+          <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;padding:12px 14px;
+                      border-top:3px solid ${PRIMARY};">
+            <div style="font-size:10px;font-weight:700;color:${TEXT_DIM};text-transform:uppercase;
+                        letter-spacing:.06em;">Candidates</div>
+            <div style="font-size:22px;font-weight:900;color:${ACCENT};margin-top:4px;">${window.candidates.length}</div>
+          </div>
+          <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;padding:12px 14px;
+                      border-top:3px solid ${ACCENT};">
+            <div style="font-size:10px;font-weight:700;color:${TEXT_DIM};text-transform:uppercase;
+                        letter-spacing:.06em;">Judges</div>
+            <div style="font-size:22px;font-weight:900;color:${ACCENT};margin-top:4px;">
+              ${[...new Set(norm.map(s => s.judge))].length}
+            </div>
+          </div>
+          <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;padding:12px 14px;
+                      border-top:3px solid #059669;">
+            <div style="font-size:10px;font-weight:700;color:${TEXT_DIM};text-transform:uppercase;
+                        letter-spacing:.06em;">Score Entries</div>
+            <div style="font-size:22px;font-weight:900;color:${ACCENT};margin-top:4px;">${norm.length}</div>
+          </div>
+        </div>
+    
+        ${legendSection}
+        ${pcSection}
+        ${aggSection}
+        ${detailSection}
+        ${attestation}
+    
+        <!-- ── FOOTER ── -->
+        <div style="margin-top:36px;padding-top:12px;border-top:1px solid ${BORDER};
+                    display:flex;justify-content:space-between;font-size:10px;color:${TEXT_DIM};">
+          <span>Generated by Dynamic Event System &nbsp;·&nbsp; Designed by Michael Borja</span>
+          <span>${now}</span>
+        </div>
+      `;
+    
+      document.body.appendChild(printDoc);
+    
+      const opt = {
+        margin:      [0.4, 0.4, 0.45, 0.4],
+        filename:    `${eventName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_official_results.pdf`,
+        image:       { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+        jsPDF:       { unit: 'in', format: 'legal', orientation: 'landscape' }
+      };
+    
+      html2pdf().set(opt).from(printDoc).save()
+        .then(() => {
+          document.body.removeChild(printDoc);
+          document.getElementById('loader').classList.add('hidden');
+          if (btn) { btn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i> Export to PDF'; btn.disabled = false; }
+        })
+        .catch(err => {
+          document.body.removeChild(printDoc);
+          document.getElementById('loader').classList.add('hidden');
+          if (btn) { btn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i> Export to PDF'; btn.disabled = false; }
+          window.alert("PDF Generation Failed: " + err.message);
+        });
     };
 
     // --- DATABASE RESET PROTOCOLS ---
