@@ -1447,106 +1447,96 @@
         </div>`;
     
       // ── Build the full print document ─────────────────────────
-      const printDoc = document.createElement('div');
-      printDoc.style.cssText = `
-        position:fixed; top:-9999px; left:-9999px;
-        width:900px; background:#fff; color:#111; padding:48px 52px;
-        font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:1.5;
-        box-sizing:border-box;
-      `;
-    
-      printDoc.innerHTML = `
-        <!-- ── COVER HEADER ── -->
-        <div style="border-bottom:3px solid ${PRIMARY};padding-bottom:20px;margin-bottom:4px;
-                    display:flex;justify-content:space-between;align-items:flex-end;">
-          <div>
-            <div style="font-size:24px;font-weight:900;color:${ACCENT};line-height:1.15;
-                        letter-spacing:-.02em;">${eventName}</div>
-            ${eventSubtitle
-              ? `<div style="font-size:14px;font-weight:600;color:${TEXT_MED};margin-top:3px;">
-                   ${eventSubtitle}</div>` : ''}
-            ${eventLocation
-              ? `<div style="font-size:12px;color:${TEXT_DIM};margin-top:4px;">
-                   📍 ${eventLocation}</div>` : ''}
-          </div>
-          <div style="text-align:right;">
-            <div style="font-size:11px;font-weight:700;color:${PRIMARY};text-transform:uppercase;
-                        letter-spacing:.07em;">Official Results</div>
-            <div style="font-size:11px;color:${TEXT_DIM};margin-top:3px;">Generated: ${now}</div>
-            <div style="font-size:10px;color:${TEXT_DIM};margin-top:2px;">
-              ${norm.length} score entries &nbsp;·&nbsp;
-              ${window.candidates.length} candidates &nbsp;·&nbsp;
-              ${window.criteria.length} criteria
+      // Wrap everything in a string. No need to use document.createElement or append to body!
+      const printHtml = `
+        <div style="width:1050px; background:#fff; color:#111; padding:48px 52px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:1.5; box-sizing:border-box;">
+          <div style="border-bottom:3px solid ${PRIMARY};padding-bottom:20px;margin-bottom:4px;
+                      display:flex;justify-content:space-between;align-items:flex-end;">
+            <div>
+              <div style="font-size:24px;font-weight:900;color:${ACCENT};line-height:1.15;
+                          letter-spacing:-.02em;">${eventName}</div>
+              ${eventSubtitle
+                ? `<div style="font-size:14px;font-weight:600;color:${TEXT_MED};margin-top:3px;">
+                     ${eventSubtitle}</div>` : ''}
+              ${eventLocation
+                ? `<div style="font-size:12px;color:${TEXT_DIM};margin-top:4px;">
+                     📍 ${eventLocation}</div>` : ''}
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:11px;font-weight:700;color:${PRIMARY};text-transform:uppercase;
+                          letter-spacing:.07em;">Official Results</div>
+              <div style="font-size:11px;color:${TEXT_DIM};margin-top:3px;">Generated: ${now}</div>
+              <div style="font-size:10px;color:${TEXT_DIM};margin-top:2px;">
+                ${norm.length} score entries &nbsp;·&nbsp;
+                ${window.candidates.length} candidates &nbsp;·&nbsp;
+                ${window.criteria.length} criteria
+              </div>
             </div>
           </div>
-        </div>
     
-        <!-- ── SUMMARY STAT STRIP ── -->
-        <div style="display:grid;grid-template-columns:repeat(${window.candidates.length > 0 ? 4 : 3},1fr);
-                    gap:12px;margin:16px 0 4px;">
-          ${agg.length > 0 ? `
-            <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;
-                        padding:12px 14px;border-top:3px solid ${GOLD};">
+          <div style="display:grid;grid-template-columns:repeat(${window.candidates.length > 0 ? 4 : 3},1fr);
+                      gap:12px;margin:16px 0 4px;">
+            ${agg.length > 0 ? `
+              <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;
+                          padding:12px 14px;border-top:3px solid ${GOLD};">
+                <div style="font-size:10px;font-weight:700;color:${TEXT_DIM};text-transform:uppercase;
+                            letter-spacing:.06em;">🥇 Top Candidate</div>
+                <div style="font-size:15px;font-weight:900;color:${ACCENT};margin-top:4px;
+                            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${agg[0].name}</div>
+                <div style="font-size:12px;color:${GOLD};font-weight:700;">${agg[0].total.toFixed(2)} pts</div>
+              </div>` : ''}
+            <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;padding:12px 14px;
+                        border-top:3px solid ${PRIMARY};">
               <div style="font-size:10px;font-weight:700;color:${TEXT_DIM};text-transform:uppercase;
-                          letter-spacing:.06em;">🥇 Top Candidate</div>
-              <div style="font-size:15px;font-weight:900;color:${ACCENT};margin-top:4px;
-                          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${agg[0].name}</div>
-              <div style="font-size:12px;color:${GOLD};font-weight:700;">${agg[0].total.toFixed(2)} pts</div>
-            </div>` : ''}
-          <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;padding:12px 14px;
-                      border-top:3px solid ${PRIMARY};">
-            <div style="font-size:10px;font-weight:700;color:${TEXT_DIM};text-transform:uppercase;
-                        letter-spacing:.06em;">Candidates</div>
-            <div style="font-size:22px;font-weight:900;color:${ACCENT};margin-top:4px;">${window.candidates.length}</div>
-          </div>
-          <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;padding:12px 14px;
-                      border-top:3px solid ${ACCENT};">
-            <div style="font-size:10px;font-weight:700;color:${TEXT_DIM};text-transform:uppercase;
-                        letter-spacing:.06em;">Judges</div>
-            <div style="font-size:22px;font-weight:900;color:${ACCENT};margin-top:4px;">
-              ${[...new Set(norm.map(s => s.judge))].length}
+                          letter-spacing:.06em;">Candidates</div>
+              <div style="font-size:22px;font-weight:900;color:${ACCENT};margin-top:4px;">${window.candidates.length}</div>
+            </div>
+            <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;padding:12px 14px;
+                        border-top:3px solid ${ACCENT};">
+              <div style="font-size:10px;font-weight:700;color:${TEXT_DIM};text-transform:uppercase;
+                          letter-spacing:.06em;">Judges</div>
+              <div style="font-size:22px;font-weight:900;color:${ACCENT};margin-top:4px;">
+                ${[...new Set(norm.map(s => s.judge))].length}
+              </div>
+            </div>
+            <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;padding:12px 14px;
+                        border-top:3px solid #059669;">
+              <div style="font-size:10px;font-weight:700;color:${TEXT_DIM};text-transform:uppercase;
+                          letter-spacing:.06em;">Score Entries</div>
+              <div style="font-size:22px;font-weight:900;color:${ACCENT};margin-top:4px;">${norm.length}</div>
             </div>
           </div>
-          <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;padding:12px 14px;
-                      border-top:3px solid #059669;">
-            <div style="font-size:10px;font-weight:700;color:${TEXT_DIM};text-transform:uppercase;
-                        letter-spacing:.06em;">Score Entries</div>
-            <div style="font-size:22px;font-weight:900;color:${ACCENT};margin-top:4px;">${norm.length}</div>
+    
+          ${legendSection}
+          ${pcSection}
+          ${aggSection}
+          ${detailSection}
+          ${attestation}
+    
+          <div style="margin-top:36px;padding-top:12px;border-top:1px solid ${BORDER};
+                      display:flex;justify-content:space-between;font-size:10px;color:${TEXT_DIM};">
+            <span>Generated by Pageant Engine &nbsp;·&nbsp; Authorized Export</span>
+            <span>${now}</span>
           </div>
         </div>
-    
-        ${legendSection}
-        ${pcSection}
-        ${aggSection}
-        ${detailSection}
-        ${attestation}
-    
-        <!-- ── FOOTER ── -->
-        <div style="margin-top:36px;padding-top:12px;border-top:1px solid ${BORDER};
-                    display:flex;justify-content:space-between;font-size:10px;color:${TEXT_DIM};">
-          <span>Generated by Dynamic Event System &nbsp;·&nbsp; Designed by Michael Borja</span>
-          <span>${now}</span>
-        </div>
       `;
-    
-      document.body.appendChild(printDoc);
     
       const opt = {
         margin:      [0.4, 0.4, 0.45, 0.4],
         filename:    `${eventName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_official_results.pdf`,
         image:       { type: 'jpeg', quality: 0.98 },
+        // scale: 2 ensures high DPI printing without blur
         html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
         jsPDF:       { unit: 'in', format: 'legal', orientation: 'landscape' }
       };
     
-      html2pdf().set(opt).from(printDoc).save()
+      // Pass the raw HTML string directly into the engine
+      html2pdf().set(opt).from(printHtml).save()
         .then(() => {
-          document.body.removeChild(printDoc);
           document.getElementById('loader').classList.add('hidden');
           if (btn) { btn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i> Export to PDF'; btn.disabled = false; }
         })
         .catch(err => {
-          document.body.removeChild(printDoc);
           document.getElementById('loader').classList.add('hidden');
           if (btn) { btn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i> Export to PDF'; btn.disabled = false; }
           window.alert("PDF Generation Failed: " + err.message);
