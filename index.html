@@ -353,6 +353,18 @@
             </div>
          </div>
        </div>
+      <div class="card-panel p-6 border-2 border-red-100 bg-red-50/30 mt-8">
+         <h3 class="font-black uppercase-tracking text-red-600 mb-2">Danger Zone</h3>
+         <p class="text-xs theme-text-muted mb-4 opacity-80 font-bold">Wipe submitted data to start a fresh session. This action is permanent.</p>
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+           <button onclick="window.resetJudgeScores()" class="w-full bg-red-600 text-white py-3 rounded-xl font-black uppercase-tracking text-xs hover:bg-red-700 transition-colors shadow-lg shadow-red-200">
+             <i class="fas fa-gavel mr-2"></i> Reset Judge Scores
+           </button>
+           <button onclick="window.resetPublicVotes()" class="w-full bg-orange-600 text-white py-3 rounded-xl font-black uppercase-tracking text-xs hover:bg-orange-700 transition-colors shadow-lg shadow-orange-200">
+             <i class="fas fa-users mr-2"></i> Reset Public Votes
+           </button>
+         </div>
+       </div>
     </div>
   </div>
 
@@ -1106,6 +1118,70 @@
       r.style.setProperty('--t-crystal-grad-start', t.cryStart);
       r.style.setProperty('--t-crystal-grad-mid',   t.cryMid);
       r.style.setProperty('--t-crystal-grad-end',    t.cryEnd);
+    };
+
+    // --- DATABASE RESET PROTOCOLS ---
+    window.resetJudgeScores = function() {
+      window.showModal(
+        "Reset Judge Matrix", 
+        "Are you <b>absolutely sure</b>? This will permanently delete all official judge scores. This action is irreversible.", 
+        "confirm", 
+        async () => {
+          document.getElementById('loader-text').innerText = "Wiping Scores...";
+          document.getElementById('loader').classList.remove('hidden');
+          
+          try {
+            const querySnapshot = await getDocs(collection(db, "Scores"));
+            const deletePromises = [];
+            
+            querySnapshot.forEach((docSnap) => {
+              deletePromises.push(deleteDoc(doc(db, "Scores", docSnap.id)));
+            });
+
+            await Promise.all(deletePromises);
+            
+            document.getElementById('loader').classList.add('hidden');
+            window.alert("Database cleared. All official judge scores have been reset.");
+            
+          } catch (error) {
+            document.getElementById('loader').classList.add('hidden');
+            window.alert("Reset Failed: " + error.message);
+          }
+        }
+      );
+    };
+
+    window.resetPublicVotes = function() {
+      window.showModal(
+        "Reset Public Votes", 
+        "Are you <b>absolutely sure</b>? This will permanently delete all public votes. This action is irreversible.", 
+        "confirm", 
+        async () => {
+          document.getElementById('loader-text').innerText = "Wiping Votes...";
+          document.getElementById('loader').classList.remove('hidden');
+          
+          try {
+            const querySnapshot = await getDocs(collection(db, "PublicVotes"));
+            const deletePromises = [];
+            
+            querySnapshot.forEach((docSnap) => {
+              deletePromises.push(deleteDoc(doc(db, "PublicVotes", docSnap.id)));
+            });
+
+            await Promise.all(deletePromises);
+            
+            // Clear the local storage lock for the Admin so they can test voting again
+            localStorage.removeItem(`voted_${window.settings['app_title']}`);
+            
+            document.getElementById('loader').classList.add('hidden');
+            window.alert("Database cleared. All public votes have been reset.");
+            
+          } catch (error) {
+            document.getElementById('loader').classList.add('hidden');
+            window.alert("Reset Failed: " + error.message);
+          }
+        }
+      );
     };
   </script>
 </body>
