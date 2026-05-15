@@ -181,19 +181,37 @@
     .tile.assemble { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1.001) !important; transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease-out; }
 
     .header-crystal-text {
-      /* Creates the frosted white to semi-transparent white gradient */
-      background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.2) 100%);
+      /* Creates a solid crystal-white base with an ultra-bright strike in the middle */
+      background: linear-gradient(
+        110deg,
+        rgba(255, 255, 255, 0.85) 0%,
+        rgba(255, 255, 255, 0.85) 40%,
+        rgba(255, 255, 255, 1) 48%,
+        #ffffff 50%,
+        rgba(255, 255, 255, 1) 52%,
+        rgba(255, 255, 255, 0.85) 60%,
+        rgba(255, 255, 255, 0.85) 100%
+      );
+      background-size: 200% auto;
       
       /* Clips the gradient to the shape of the text */
       -webkit-background-clip: text;
       background-clip: text;
-      
-      /* Makes the default text color invisible so the gradient shows through */
       -webkit-text-fill-color: transparent;
       color: transparent;
       
-      /* A tiny drop shadow behind the "glass" to make it pop off the background */
-      filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.3));
+      /* Adds a pure white outer glow to match the physical sparkles */
+      filter: drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.7));
+      
+      /* Triggers the sparkling shimmer sweep */
+      animation: crystal-shimmer 3s linear infinite;
+    }
+
+    /* The animation that moves the light reflection across the text */
+    @keyframes crystal-shimmer {
+      to {
+        background-position: 200% center;
+      }
     }
   </style>
 </head>
