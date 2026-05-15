@@ -179,6 +179,22 @@
     .tile { position: absolute; overflow: hidden; background-size: 400% 300%; will-change: transform, opacity; transition: transform 0.32s cubic-bezier(0.55, 0, 1, 0.45), opacity 0.28s ease-in; -webkit-backface-visibility: hidden; backface-visibility: hidden; transform: translateZ(0); }
     .tile.scatter { opacity: 0; }
     .tile.assemble { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1.001) !important; transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease-out; }
+
+    .header-crystal-text {
+      /* Creates the frosted white to semi-transparent white gradient */
+      background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.2) 100%);
+      
+      /* Clips the gradient to the shape of the text */
+      -webkit-background-clip: text;
+      background-clip: text;
+      
+      /* Makes the default text color invisible so the gradient shows through */
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      
+      /* A tiny drop shadow behind the "glass" to make it pop off the background */
+      filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.3));
+    }
   </style>
 </head>
 <body class="min-h-screen pb-24">
