@@ -449,6 +449,7 @@
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, doc, setDoc, getDocs, onSnapshot, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCVTCaxujL7Q0UmBqr-d5ev3CAZB5t3oxQ", authDomain: "dynamic-event-system.firebaseapp.com",
@@ -456,7 +457,14 @@
       messagingSenderId: "588923118511", appId: "1:588923118511:web:1dba0b6be0c253d8bec55a"
     };
 
-    const app = initializeApp(firebaseConfig); const db = getFirestore(app); window.db = db;
+    const app = initializeApp(firebaseConfig); 
+    const db = getFirestore(app); 
+    const auth = getAuth(app); 
+    window.db = db;
+    
+    // Secondary App (Specifically so Admins can create users without getting logged out)
+    const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+    const secondaryAuth = getAuth(secondaryApp);
 
     window.settings = {}; window.criteria = []; window.candidates = []; window.users = []; 
     window.scoresData = {}; window.lockedScores = {}; window.currentSegment = ''; 
@@ -941,18 +949,47 @@
     };
 
     window.processLogin = async function() {
-      const user = document.getElementById('login-username').value.trim(); const pass = document.getElementById('login-password').value; 
-      const btn = document.getElementById('login-btn'); const err = document.getElementById('login-error');
-      if (!user || !pass) { err.innerText = "Credentials required."; err.classList.remove('hidden'); return; }
+      const rawUsername = document.getElementById('login-username').value.trim(); 
+      const pass = document.getElementById('login-password').value; 
+      const btn = document.getElementById('login-btn'); 
+      const err = document.getElementById('login-error');
+      
+      if (!rawUsername || !pass) { err.innerText = "Credentials required."; err.classList.remove('hidden'); return; }
       btn.innerText = "Authenticating..."; btn.disabled = true; err.classList.add('hidden');
-      const hashedPass = await window.sha256(pass); 
+      
+      // THE TRICK: Convert username to a dummy email format for Firebase Auth
+      const safeUsername = rawUsername.toLowerCase().replace(/\s+/g, '');
+      const authEmail = `${safeUsername}@eventportal.local`;
+      
       try {
-        const q = query(collection(db, "Users"), where("username", "==", user)); const querySnapshot = await getDocs(q); if (querySnapshot.empty) throw new Error("Invalid username.");
-        let validUser = null; querySnapshot.forEach((doc) => { const data = doc.data(); if (data.password === hashedPass || data.password === pass) validUser = data; });
-        if (!validUser) throw new Error("Invalid password.");
-        window.activeUser = { name: validUser.name, role: validUser.role }; localStorage.setItem('msval27_name', window.activeUser.name); localStorage.setItem('msval27_role', window.activeUser.role); window.updateNavForRole();
-        const r = window.activeUser.role.toLowerCase().trim(); if (r === 'tabulator') window.switchView('scores'); else if (r === 'admin' || r === 'super user') window.switchView('admin'); else { window.switchView('judging'); window.syncJudgeScores(); }
-      } catch (error) { err.innerText = error.message; err.classList.remove('hidden'); } finally { btn.innerText = "Authenticate"; btn.disabled = false; }
+        // 1. Authenticate with Firebase securely using the dummy email
+        const userCredential = await signInWithEmailAndPassword(auth, authEmail, pass);
+        const fbUser = userCredential.user;
+        
+        // 2. Fetch their role from your database using their secure Auth UID
+        const userDoc = await getDoc(doc(db, "Users", fbUser.uid));
+        
+        if (!userDoc.exists()) throw new Error("Account verified, but role not found in database.");
+        
+        const validUser = userDoc.data();
+        
+        window.activeUser = { name: validUser.name, role: validUser.role };
+        localStorage.setItem('msval27_name', validUser.name); 
+        localStorage.setItem('msval27_role', validUser.role);
+        
+        const r = validUser.role.toLowerCase().trim();
+        if (r === 'admin' || r === 'super user') window.switchView('admin');
+        else if (r === 'tabulator') window.switchView('scores');
+        else { window.switchView('judging'); window.syncJudgeScores(); }
+        
+        document.getElementById('login-username').value = ''; 
+        document.getElementById('login-password').value = '';
+      } catch (error) {
+        err.innerText = error.message.includes("auth/") ? "Invalid Username or Password." : error.message;
+        err.classList.remove('hidden');
+      } finally {
+        btn.innerText = "Authenticate"; btn.disabled = false;
+      }
     };
 
     window.syncJudgeScores = async function() {
@@ -1154,41 +1191,49 @@
     window.resetUserForm = function() { window.editState.user = null; document.getElementById('new-user-username').value = ''; document.getElementById('new-user-username').readOnly = false; document.getElementById('new-user-name').value = ''; document.getElementById('new-user-email').value = ''; document.getElementById('new-user-pass').value = ''; document.getElementById('new-user-role').value = 'Judge'; document.getElementById('btn-add-user').innerText = "Add User"; document.getElementById('btn-cancel-user').classList.add('hidden'); };
     
     window.addUser = async function() { 
-      const user = document.getElementById('new-user-username').value; 
+      const username = document.getElementById('new-user-username').value.trim(); 
       const name = document.getElementById('new-user-name').value; 
-      const email = document.getElementById('new-user-email').value; 
       const pass = document.getElementById('new-user-pass').value; 
       const role = document.getElementById('new-user-role').value; 
       
-      if(!user || !name) return window.alert("Username and Name are required."); 
-      let payload = { username: user, name: name, email: email, role: role }; 
+      if(!username || !name) return window.alert("Username and Name are required."); 
       
-      if (pass) { 
-        payload.password = await window.sha256(pass); 
-      } else if (!window.editState.user) { 
-        return window.alert("Password is required for new users."); 
-      } else {
-        const existingUser = window.users.find(u => u.id === window.editState.user);
-        if(existingUser) payload.password = existingUser.password; // Keep old password
+      // THE TRICK: Convert username to a dummy email format
+      const safeUsername = username.toLowerCase().replace(/\s+/g, '');
+      const authEmail = `${safeUsername}@eventportal.local`;
+      
+      let payload = { username: safeUsername, name: name, role: role }; 
+      
+      try {
+        if (!window.editState.user) { 
+          // NEW USER: Create in Firebase Auth
+          if (!pass) return window.alert("Password is required for new users."); 
+          document.getElementById('btn-add-user').innerText = "Creating...";
+          
+          const userCredential = await createUserWithEmailAndPassword(secondaryAuth, authEmail, pass);
+          const newUid = userCredential.user.uid;
+          
+          // Save role document using the secure UID as the document ID
+          await setDoc(doc(db, "Users", newUid), payload); 
+          payload.id = newUid;
+        } else {
+          // EDITING EXISTING
+          if (pass) window.alert("Note: To change a password, recreate the account.");
+          await setDoc(doc(db, "Users", window.editState.user), payload, { merge: true }); 
+          payload.id = window.editState.user;
+        }
+        
+        const idx = window.users.findIndex(u => u.id === payload.id);
+        if (idx >= 0) window.users[idx] = payload; else window.users.push(payload);
+        
+        window.alert(window.editState.user ? "User updated." : "Secure user account created."); 
+        window.resetUserForm(); 
+        window.renderAdminDashboard(); 
+      } catch (error) {
+        window.alert("Error adding user: " + error.message);
+      } finally {
+        document.getElementById('btn-add-user').innerText = window.editState.user ? "Update User Role" : "Add User";
       }
-      
-      // Write the document (Using the new username as the document ID)
-      await setDoc(doc(db, "Users", user), payload, { merge: true }); 
-      
-      // FIX: If the Admin changed the username, delete the old document
-      if (window.editState.user && window.editState.user !== user) {
-        await deleteDoc(doc(db, "Users", window.editState.user));
-        window.users = window.users.filter(u => u.id !== window.editState.user); // Remove old from local
-      }
-      
-      // Update local array & UI automatically
-      payload.id = user;
-      const idx = window.users.findIndex(u => u.id === user);
-      if (idx >= 0) window.users[idx] = payload; else window.users.push(payload);
-      
-      window.alert(window.editState.user ? "User updated." : "User added."); 
-      window.resetUserForm(); 
-      window.renderAdminDashboard(); 
     };
     
     // FIX: Automating Delete list updates
