@@ -976,6 +976,8 @@
         window.activeUser = { name: validUser.name, role: validUser.role };
         localStorage.setItem('msval27_name', validUser.name); 
         localStorage.setItem('msval27_role', validUser.role);
+
+        window.updateNavForRole();
         
         const r = validUser.role.toLowerCase().trim();
         if (r === 'admin' || r === 'super user') window.switchView('admin');
