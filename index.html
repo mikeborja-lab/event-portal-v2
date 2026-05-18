@@ -289,7 +289,7 @@
     
     <div id="view-login" class="hidden max-w-sm mx-auto card-panel p-8">
       <h2 class="text-2xl font-black mb-6 text-center">Secure Access</h2>
-      <input type="text" id="login-username" placeholder="Username" class="w-full p-3 rounded-xl mb-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-400" onkeydown="if(event.key === 'Enter') document.getElementById('login-password').focus();">
+      <input type="text" id="login-username" placeholder="Username" class="w-full p-3 rounded-xl mb-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-400 text-black" onkeydown="if(event.key === 'Enter') document.getElementById('login-password').focus();">
       <div class="relative w-full mb-6">
         <input type="password" id="login-password" placeholder="Passkey" class="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-400 pr-12 text-black" onkeydown="if(event.key === 'Enter') window.processLogin();">
         <button type="button" onclick="const p=document.getElementById('login-password'); const i=document.getElementById('eye-icon'); if(p.type==='password'){p.type='text'; i.className='fas fa-eye-slash';}else{p.type='password'; i.className='fas fa-eye';}" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-800 transition-colors">
