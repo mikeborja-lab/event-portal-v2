@@ -1362,14 +1362,17 @@
     window.saveSettings = async function() { try { const btn = document.querySelector('#view-admin .theme-btn'); btn.innerText = "Deploying..."; btn.disabled = true; const updates = { 'app_title': document.getElementById('admin-setting-title').value, 'app_subtitle': document.getElementById('admin-setting-subtitle').value, 'location_text': document.getElementById('admin-setting-location').value, 'theme_color': document.getElementById('admin-setting-theme').value, 'public_voting': document.getElementById('admin-setting-voting').checked, 'voting_deadline': document.getElementById('admin-setting-deadline').value }; for (const [key, value] of Object.entries(updates)) { await setDoc(doc(db, "Settings", key), { value: value }); } window.alert("Configuration successfully deployed to all devices."); btn.innerText = "Deploy Configuration"; btn.disabled = false; } catch (err) { window.alert("Error deploying: " + err.message); } };
 
     // CANDIDATE EDIT LOGIC
-    window.editCandidate = function(id) { const c = window.candidates.find(cand => String(cand.id) === String(id)); if (!c) return; window.editState.candidate = c.id; document.getElementById('new-cand-id').value = c.candidateNumber; document.getElementById('new-cand-id').readOnly = true; document.getElementById('new-cand-name').value = c.name || ''; document.getElementById('new-cand-loc').value = c.loc || ''; document.getElementById('new-cand-img').value = c.img || ''; document.getElementById('btn-add-cand').innerText = "Update Candidate"; document.getElementById('btn-cancel-cand').classList.remove('hidden'); };
+    window.editCandidate = function(id) { const c = window.candidates.find(cand => String(cand.id) === String(id)); if (!c) return; window.editState.candidate = c.id; document.getElementById('new-cand-id').value = c.candidateNumber || c.id; document.getElementById('new-cand-id').readOnly = false; document.getElementById('new-cand-name').value = c.name || ''; document.getElementById('new-cand-loc').value = c.loc || ''; document.getElementById('new-cand-img').value = c.img || ''; document.getElementById('btn-add-cand').innerText = "Update Candidate"; document.getElementById('btn-cancel-cand').classList.remove('hidden'); };
     window.resetCandForm = function() { window.editState.candidate = null; document.getElementById('new-cand-id').value = ''; document.getElementById('new-cand-id').readOnly = false; document.getElementById('new-cand-name').value = ''; document.getElementById('new-cand-loc').value = ''; document.getElementById('new-cand-img').value = ''; document.getElementById('btn-add-cand').innerText = "Add Candidate"; document.getElementById('btn-cancel-cand').classList.add('hidden'); };
     
     window.addCandidate = async function() { 
       const id = document.getElementById('new-cand-id').value; const name = document.getElementById('new-cand-name').value; const loc = document.getElementById('new-cand-loc').value; const img = document.getElementById('new-cand-img').value; 
       if(!id || !name) return window.alert("ID and Name are required."); 
       const payload = { id: parseInt(id), candidateNumber: parseInt(id), name: name, loc: loc, img: img };
-      await setDoc(doc(db, "Candidates", id), payload, { merge: true }); 
+      const firestoreDocId = window.editState.candidate 
+        ? String(window.editState.candidate) 
+        : String(id);
+      await setDoc(doc(db, "Candidates", firestoreDocId), payload, { merge: true }); 
       
       // Update local array & UI automatically
       const idx = window.candidates.findIndex(c => String(c.id) === String(id));
