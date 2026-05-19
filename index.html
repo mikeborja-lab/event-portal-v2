@@ -1014,13 +1014,39 @@
     };
 
     window.fetchScoresData = async function() { 
-      document.getElementById('loader-text').innerText = "Initializing Live Matrix..."; document.getElementById('loader').classList.remove('hidden'); 
-      window.activeListeners.forEach(unsub => unsub()); window.activeListeners = [];
+      document.getElementById('loader-text').innerText = "Initializing Live Matrix..."; 
+      document.getElementById('loader').classList.remove('hidden'); 
+      
+      // Clear any old listeners to prevent memory leaks when switching tabs
+      window.activeListeners.forEach(unsub => unsub()); 
+      window.activeListeners = [];
+      
       try {
-        const unsubScores = onSnapshot(collection(db, "Scores"), (snapshot) => { window.latestScores = snapshot.docs.map(d => d.data()); window.processAndRenderScores(window.latestScores, window.latestVotes); document.getElementById('loader').classList.add('hidden'); }); window.activeListeners.push(unsubScores);
-        const fetchVotes = async () => { const votesSnap = await getDocs(collection(db, "PublicVotes")); window.latestVotes = {}; votesSnap.forEach(doc => { const cName = doc.data().candidateName; window.latestVotes[cName] = (window.latestVotes[cName] || 0) + 1; }); window.processAndRenderScores(window.latestScores, window.latestVotes); };
-        await fetchVotes(); const voteInterval = setInterval(fetchVotes, 60000); window.activeListeners.push(() => clearInterval(voteInterval));
-      } catch (error) { document.getElementById('loader').classList.add('hidden'); alert("Matrix Error: " + error.message); }
+        // 1. Real-time listener for Judge Scores
+        const unsubScores = onSnapshot(collection(db, "Scores"), (snapshot) => { 
+          window.latestScores = snapshot.docs.map(d => d.data()); 
+          window.processAndRenderScores(window.latestScores, window.latestVotes); 
+          document.getElementById('loader').classList.add('hidden'); 
+        }); 
+        window.activeListeners.push(unsubScores);
+        
+        // 2. NEW: Real-time listener for Public Votes
+        const unsubVotes = onSnapshot(collection(db, "PublicVotes"), (snapshot) => {
+          window.latestVotes = {};
+          // Tally the votes instantly as they come in
+          snapshot.forEach(doc => { 
+            const cName = doc.data().candidateName; 
+            window.latestVotes[cName] = (window.latestVotes[cName] || 0) + 1; 
+          });
+          // Re-render the matrix with the fresh vote count
+          window.processAndRenderScores(window.latestScores, window.latestVotes);
+        });
+        window.activeListeners.push(unsubVotes);
+
+      } catch (error) { 
+        document.getElementById('loader').classList.add('hidden'); 
+        alert("Matrix Error: " + error.message); 
+      }
     };
 
     window.processAndRenderScores = function(rawScores, rawVotes) {
@@ -1657,7 +1683,7 @@
     window.resetPublicVotes = function() {
       window.showModal(
         "Reset Public Votes", 
-        "Are you <b>absolutely sure</b>? This will permanently delete all public votes. This action is irreversible.", 
+        "Are you <b>absolutely sure</b>? This will permanently delete all public votes.", 
         "confirm", 
         async () => {
           document.getElementById('loader-text').innerText = "Wiping Votes...";
@@ -1673,11 +1699,11 @@
 
             await Promise.all(deletePromises);
             
-            // Clear the local storage lock for the Admin so they can test voting again
-            localStorage.removeItem(`voted_${window.settings['app_title']}`);
+            // NEW: Push a global reset token to Settings to unlock all audience devices instantly
+            await setDoc(doc(db, "Settings", "voting_reset_token"), { value: Date.now() }, { merge: true });
             
             document.getElementById('loader').classList.add('hidden');
-            window.alert("Database cleared. All public votes have been reset.");
+            window.alert("Database cleared. All public votes have been reset and devices unlocked.");
             
           } catch (error) {
             document.getElementById('loader').classList.add('hidden');
