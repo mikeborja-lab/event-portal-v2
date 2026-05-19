@@ -10,6 +10,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
   
   <style>
     :root {
@@ -364,7 +365,12 @@
               <span>Candidates</span>
               <button id="btn-cancel-cand" onclick="window.resetCandForm()" class="hidden text-[10px] uppercase-tracking tracking-wider text-red-500 font-bold hover:underline">Cancel Edit</button>
             </h3>
-            <div id="admin-candidates-list" class="space-y-2 mb-4 max-h-48 overflow-y-auto text-sm"></div>
+            <div id="admin-candidates-list" class="space-y-2">
+              <div class="candidate-sort-item p-3 theme-surface rounded cursor-move flex items-center" data-id="${c.id}">
+                 <i class="fas fa-grip-lines text-slate-400 mr-3"></i> 
+                 <span class="font-bold">#${c.candidateNumber} - ${c.name}</span>
+              </div>
+            </div>
             <div class="space-y-2">
               <input type="number" id="new-cand-id" placeholder="Candidate #" class="w-full p-2 border rounded text-sm bg-black/5">
               <input type="text" id="new-cand-name" placeholder="Full Name" class="w-full p-2 border rounded text-sm bg-black/5">
@@ -379,7 +385,12 @@
               <span>Criteria</span>
               <button id="btn-cancel-crit" onclick="window.resetCritForm()" class="hidden text-[10px] uppercase-tracking tracking-wider text-red-500 font-bold hover:underline">Cancel Edit</button>
             </h3>
-            <div id="admin-criteria-list" class="space-y-2 mb-4 max-h-48 overflow-y-auto text-sm"></div>
+            <div id="admin-criteria-list" class="space-y-2">
+              <div class="criteria-sort-item p-3 theme-surface rounded cursor-move flex items-center" data-id="${crit.id}">
+                 <i class="fas fa-grip-lines text-slate-400 mr-3"></i> 
+                 <span class="font-bold">${crit.short}</span>
+              </div>
+            </div>
             <div class="space-y-2">
               <input type="text" id="new-crit-id" placeholder="System ID (e.g. gown)" class="w-full p-2 border rounded text-sm bg-black/5">
               <input type="text" id="new-crit-label" placeholder="Full Label" class="w-full p-2 border rounded text-sm bg-black/5">
@@ -471,7 +482,7 @@
     window.onerror = function(msg, url, line) { alert("System Error: " + msg + "\nLine: " + line); };
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, doc, getDoc, setDoc, getDocs, onSnapshot, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, doc, getDoc, setDoc, getDocs, onSnapshot, query, where, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     const firebaseConfig = {
@@ -1278,6 +1289,7 @@
           </div>`).join(''); 
       }
       window.initOverridePanel();
+      window.initSortableLists();
     };
 
     window.saveSettings = async function() { try { const btn = document.querySelector('#view-admin .theme-btn'); btn.innerText = "Deploying..."; btn.disabled = true; const updates = { 'app_title': document.getElementById('admin-setting-title').value, 'app_subtitle': document.getElementById('admin-setting-subtitle').value, 'location_text': document.getElementById('admin-setting-location').value, 'theme_color': document.getElementById('admin-setting-theme').value, 'public_voting': document.getElementById('admin-setting-voting').checked, 'voting_deadline': document.getElementById('admin-setting-deadline').value }; for (const [key, value] of Object.entries(updates)) { await setDoc(doc(db, "Settings", key), { value: value }); } window.alert("Configuration successfully deployed to all devices."); btn.innerText = "Deploy Configuration"; btn.disabled = false; } catch (err) { window.alert("Error deploying: " + err.message); } };
@@ -1941,6 +1953,76 @@
           }
         }
       );
+    };
+
+    // ── DRAG AND DROP SORTING ENGINE ───────────────────────────────────────
+    window.initSortableLists = function() {
+      const candList = document.getElementById('admin-candidates-list');
+      const critList = document.getElementById('admin-criteria-list');
+
+      // 1. Initialize Candidate Sorting
+      if (candList) {
+        new Sortable(candList, {
+          animation: 150, // Smooth sliding animation
+          ghostClass: 'opacity-50', // Dim the item while dragging
+          onEnd: async function () {
+            document.getElementById('loader-text').innerText = "Updating Candidate Numbers...";
+            document.getElementById('loader').classList.remove('hidden');
+            
+            try {
+              const batch = writeBatch(db);
+              const items = candList.querySelectorAll('.candidate-sort-item');
+              
+              // Loop through the new visual order
+              items.forEach((item, index) => {
+                const docId = item.getAttribute('data-id');
+                const newNumber = index + 1; // 1st item becomes #1, 2nd becomes #2, etc.
+                
+                const docRef = doc(db, "Candidates", docId);
+                // Update the database with the new sequential number
+                batch.update(docRef, { candidateNumber: newNumber });
+              });
+
+              await batch.commit();
+              document.getElementById('loader').classList.add('hidden');
+              // The real-time onSnapshot listener will automatically re-render the UI!
+            } catch (error) {
+              document.getElementById('loader').classList.add('hidden');
+              window.alert("Failed to reorder candidates: " + error.message);
+            }
+          }
+        });
+      }
+
+      // 2. Initialize Criteria Sorting
+      if (critList) {
+        new Sortable(critList, {
+          animation: 150,
+          ghostClass: 'opacity-50',
+          onEnd: async function () {
+            document.getElementById('loader-text').innerText = "Saving Criteria Order...";
+            document.getElementById('loader').classList.remove('hidden');
+            
+            try {
+              const batch = writeBatch(db);
+              const items = critList.querySelectorAll('.criteria-sort-item');
+              
+              items.forEach((item, index) => {
+                const docId = item.getAttribute('data-id');
+                const docRef = doc(db, "Criteria", docId);
+                // Add/update an 'order' field in the database
+                batch.update(docRef, { order: index });
+              });
+
+              await batch.commit();
+              document.getElementById('loader').classList.add('hidden');
+            } catch (error) {
+              document.getElementById('loader').classList.add('hidden');
+              window.alert("Failed to reorder criteria: " + error.message);
+            }
+          }
+        });
+      }
     };
   </script>
 </body>
