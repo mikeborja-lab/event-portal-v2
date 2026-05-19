@@ -1006,13 +1006,11 @@
         onSnapshot(collection(db, "Criteria"), (snapshot) => {
             window.criteria = []; 
             snapshot.forEach(doc => { 
-                // ADDED: firebaseDocId to guarantee we have the true database reference
                 window.criteria.push({ firebaseDocId: doc.id, id: doc.id, ...doc.data() }); 
             });
             
-            // ADDED: Instantly sort the criteria by their new drag-and-drop order
             window.criteria.sort((a, b) => (a.order || 0) - (b.order || 0));
-
+        
             if(!window.currentSegment && window.criteria.length > 0) window.currentSegment = window.criteria[0].id;
             window.candidates.forEach(c => { 
                 window.scoresData[c.id] = window.scoresData[c.id] || {}; 
@@ -1020,10 +1018,20 @@
                     if(window.scoresData[c.id][crit.id] === undefined) window.scoresData[c.id][crit.id] = parseFloat(crit.max) / 2 || 5; 
                 }); 
             });
-            
+
+            const avgTable = document.getElementById('table-averages');
+            const detailTable = document.getElementById('table-detailed');
+            if (avgTable) avgTable.innerHTML = '';
+            if (detailTable) detailTable.innerHTML = '';
+        
             // Auto-refresh visible views
             if(!document.getElementById('view-judging').classList.contains('hidden')) { window.renderTabs(); window.renderCandidates(); }
             if(!document.getElementById('view-admin').classList.contains('hidden')) window.renderAdminDashboard();
+        
+            // Re-render the scores view if it's currently open
+            if(!document.getElementById('view-scores').classList.contains('hidden')) {
+                window.processAndRenderScores(window.latestScores, window.latestVotes);
+            }
         });
 
         onSnapshot(collection(db, "Candidates"), (snapshot) => {
