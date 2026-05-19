@@ -1359,7 +1359,7 @@
     window.addCandidate = async function() { 
       const id = document.getElementById('new-cand-id').value; const name = document.getElementById('new-cand-name').value; const loc = document.getElementById('new-cand-loc').value; const img = document.getElementById('new-cand-img').value; 
       if(!id || !name) return window.alert("ID and Name are required."); 
-      const payload = { id: parseInt(id), candidateName: parseInt(id), name: name, loc: loc, img: img };
+      const payload = { id: parseInt(id), candidateNumber: parseInt(id), name: name, loc: loc, img: img };
       await setDoc(doc(db, "Candidates", id), payload, { merge: true }); 
       
       // Update local array & UI automatically
@@ -1378,7 +1378,9 @@
     window.addCriteria = async function() { 
       const id = document.getElementById('new-crit-id').value; const label = document.getElementById('new-crit-label').value; const short = document.getElementById('new-crit-short').value; const max = document.getElementById('new-crit-max').value; 
       if(!id || !label || !max || !short) return window.alert("All fields are required."); 
-      const payload = { id: id, label: label, short: short, max: parseFloat(max) };
+      // Determine the next order so the new criterion lands at the bottom
+      const maxOrder = window.criteria.reduce((m, c) => Math.max(m, c.order ?? -1), -1);
+      const payload = { id: id, label: label, short: short, max: parseFloat(max), order: maxOrder + 1 };
       await setDoc(doc(db, "Criteria", id), payload, { merge: true }); 
       
       // Update local array & UI automatically
