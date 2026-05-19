@@ -422,6 +422,27 @@
            </button>
          </div>
        </div>
+      <div class="card-panel p-6 border-t-4 border-[#b45309]">
+          <h3 class="text-xs font-black uppercase-tracking tracking-widest text-slate-400 mb-4 flex items-center"><i class="fas fa-edit mr-2 text-[#b45309]"></i> Manual Score Override</h3>
+          <p class="text-[10px] text-slate-500 mb-4 leading-relaxed">Forcefully adjust a judge's submitted score. Changes will reflect on all dashboards instantly.</p>
+          
+          <div class="space-y-3">
+            <select id="override-candidate" class="w-full p-2 border rounded text-sm bg-black/5 text-black" onchange="window.loadOverrideJudges()">
+              <option value="">-- Select Candidate --</option>
+            </select>
+            
+            <select id="override-judge" class="w-full p-2 border rounded text-sm bg-black/5 text-black hidden" onchange="window.loadOverrideScores()">
+              <option value="">-- Select Judge --</option>
+            </select>
+            
+            <div id="override-scores-container" class="hidden space-y-2 bg-slate-100 p-3 rounded-lg border border-slate-200">
+              </div>
+            
+            <button id="btn-override-save" onclick="window.saveOverrideScore()" class="hidden w-full bg-[#b45309] text-white rounded p-3 text-xs font-bold hover:bg-[#92400e] uppercase-tracking tracking-wider mt-2 transition-colors shadow-md">
+              Force Update Score
+            </button>
+          </div>
+        </div>
     </div>
   </div>
 
@@ -1195,6 +1216,7 @@
             </div>
           </div>`).join(''); 
       }
+      window.initOverridePanel();
     };
 
     window.saveSettings = async function() { try { const btn = document.querySelector('#view-admin .theme-btn'); btn.innerText = "Deploying..."; btn.disabled = true; const updates = { 'app_title': document.getElementById('admin-setting-title').value, 'app_subtitle': document.getElementById('admin-setting-subtitle').value, 'location_text': document.getElementById('admin-setting-location').value, 'theme_color': document.getElementById('admin-setting-theme').value, 'public_voting': document.getElementById('admin-setting-voting').checked, 'voting_deadline': document.getElementById('admin-setting-deadline').value }; for (const [key, value] of Object.entries(updates)) { await setDoc(doc(db, "Settings", key), { value: value }); } window.alert("Configuration successfully deployed to all devices."); btn.innerText = "Deploy Configuration"; btn.disabled = false; } catch (err) { window.alert("Error deploying: " + err.message); } };
@@ -1712,6 +1734,104 @@
           }
         }
       );
+    };
+
+    // ── SCORE OVERRIDE LOGIC ───────────────────────────────────────
+    
+    // 1. Initialize the dropdowns when Admin loads
+    window.initOverridePanel = function() {
+      const candSelect = document.getElementById('override-candidate');
+      if(!candSelect) return;
+      candSelect.innerHTML = '<option value="">-- Select Candidate --</option>' + 
+          window.candidates.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+      document.getElementById('override-judge').classList.add('hidden');
+      document.getElementById('override-scores-container').classList.add('hidden');
+      document.getElementById('btn-override-save').classList.add('hidden');
+    };
+
+    // 2. When Candidate is selected, find which judges scored them
+    window.loadOverrideJudges = function() {
+      const candName = document.getElementById('override-candidate').value;
+      const judgeSelect = document.getElementById('override-judge');
+      if(!candName) { judgeSelect.classList.add('hidden'); return; }
+      
+      const judges = [...new Set((window.latestScores || []).filter(s => s.candidate === candName).map(s => s.judge))];
+      
+      if(judges.length === 0) {
+          judgeSelect.innerHTML = '<option value="">No scores found yet</option>';
+      } else {
+          judgeSelect.innerHTML = '<option value="">-- Select Judge --</option>' + 
+              judges.map(j => `<option value="${j}">${j}</option>`).join('');
+      }
+      judgeSelect.classList.remove('hidden');
+      document.getElementById('override-scores-container').classList.add('hidden');
+      document.getElementById('btn-override-save').classList.add('hidden');
+    };
+
+    // 3. When Judge is selected, load their specific scores into inputs
+    window.loadOverrideScores = function() {
+      const candName = document.getElementById('override-candidate').value;
+      const judgeName = document.getElementById('override-judge').value;
+      const container = document.getElementById('override-scores-container');
+      const saveBtn = document.getElementById('btn-override-save');
+      
+      if(!judgeName) { container.classList.add('hidden'); saveBtn.classList.add('hidden'); return; }
+      
+      const scoreRecord = window.latestScores.find(s => s.candidate === candName && s.judge === judgeName);
+      if(!scoreRecord) return;
+
+      let html = `<div class="text-[10px] font-bold text-slate-500 mb-2 uppercase text-center">Edit Raw Points</div>`;
+      window.criteria.forEach(crit => {
+          const val = scoreRecord[crit.id] !== undefined ? scoreRecord[crit.id] : 0;
+          html += `
+              <div class="flex justify-between items-center bg-white p-2 rounded border border-slate-200">
+                  <span class="text-xs font-bold text-slate-700">${crit.short} <span class="text-[9px] font-normal text-slate-400">(Max: ${crit.max})</span></span>
+                  <input type="number" id="override-val-${crit.id}" value="${val}" step="0.5" max="${crit.max}" min="0" class="w-20 p-1 border border-rose-300 rounded text-rose-700 font-black text-center focus:outline-none focus:ring-2 focus:ring-rose-400 bg-rose-50">
+              </div>
+          `;
+      });
+      container.innerHTML = html;
+      container.classList.remove('hidden');
+      saveBtn.classList.remove('hidden');
+    };
+
+    // 4. Save the new scores directly to the database
+    window.saveOverrideScore = async function() {
+      const candName = document.getElementById('override-candidate').value;
+      const judgeName = document.getElementById('override-judge').value;
+      if(!candName || !judgeName) return;
+      
+      window.showModal("Force Override", `Are you sure you want to alter <b>${judgeName}'s</b> official score for <b>${candName}</b>?`, "confirm", async () => {
+          document.getElementById('loader-text').innerText = "Overriding...";
+          document.getElementById('loader').classList.remove('hidden');
+          
+          try {
+              // Find the exact document in Firebase
+              const q = query(collection(db, "Scores"), where("candidate", "==", candName), where("judge", "==", judgeName));
+              const querySnapshot = await getDocs(q);
+              
+              if(querySnapshot.empty) throw new Error("Could not locate the original score document.");
+              
+              const docId = querySnapshot.docs[0].id;
+              let updates = { timestamp: Date.now() }; 
+              
+              window.criteria.forEach(crit => {
+                  const input = document.getElementById(`override-val-${crit.id}`);
+                  if(input) updates[crit.id] = parseFloat(input.value) || 0;
+              });
+              
+              // Apply the override
+              await setDoc(doc(db, "Scores", docId), updates, { merge: true });
+              
+              document.getElementById('loader').classList.add('hidden');
+              window.alert("Score successfully overridden! Dashboards have been updated.");
+              window.initOverridePanel();
+              
+          } catch(error) {
+              document.getElementById('loader').classList.add('hidden');
+              window.alert("Override failed: " + error.message);
+          }
+      });
     };
 
     window.resetPublicVotes = function() {
