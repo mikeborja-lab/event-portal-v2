@@ -496,7 +496,6 @@
     window.editState = { candidate: null, criteria: null, user: null };
     let offlineQueue = JSON.parse(localStorage.getItem('pageant_offline_queue')) || [];
 
-    window.alert = function(msg) { window.showModal("System Notice", msg, "alert"); };
     window.sha256 = async function(msg) { const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg)); return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join(''); };
     window.showOfflineToast = function() { const t = document.getElementById('offline-toast'); if(!t) return; t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)'; setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(20px)'; }, 3500); };
     window.animateRowSwap = function(containerId) { const container = document.getElementById(containerId); if (!container) return null; const positions = new Map(); container.querySelectorAll('.theme-table-row').forEach(row => positions.set(row.dataset.id, row.getBoundingClientRect().top)); return { play: () => { container.querySelectorAll('.theme-table-row').forEach(row => { const firstTop = positions.get(row.dataset.id); const lastTop = row.getBoundingClientRect().top; if (firstTop && firstTop !== lastTop) { const deltaY = firstTop - lastTop; row.style.transition = 'none'; row.style.transform = `translateY(${deltaY}px)`; requestAnimationFrame(() => { row.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease'; row.style.transform = ''; }); } }); } }; };
@@ -677,9 +676,69 @@
       if(inner) inner.style.transform = `rotateX(0deg) rotateY(0deg)`;
     };
 
-    window.showModal = function(title, msg, type = 'alert', callback = null) { const m = document.getElementById('custom-modal'); const c = document.getElementById('custom-modal-content'); document.getElementById('modal-title').innerText = title; document.getElementById('modal-message').innerHTML = msg; window.activeConfirmCallback = callback; const actions = document.getElementById('modal-actions'); if (type === 'confirm') { actions.innerHTML = `<button onclick="window.closeModal()" class="px-5 py-2.5 text-xs font-black theme-text-muted uppercase-tracking">Abort</button><button onclick="window.executeModalAction()" class="theme-btn px-6 py-2.5 text-xs font-black rounded-xl uppercase-tracking">Confirm</button>`; } else { actions.innerHTML = `<button onclick="window.executeModalAction()" class="theme-btn px-8 py-3 rounded-xl font-black uppercase-tracking text-xs">Acknowledge</button>`; } m.classList.remove('hidden'); setTimeout(() => { m.classList.remove('opacity-0'); c.classList.remove('scale-95'); }, 10); };
-    window.closeModal = function() { const m = document.getElementById('custom-modal'); const c = document.getElementById('custom-modal-content'); c.classList.add('scale-95'); m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300); if(window.activeConfirmCallback && document.getElementById('modal-actions').innerHTML.includes('Acknowledge')) window.activeConfirmCallback = null; };
-    window.executeModalAction = function() { if (window.activeConfirmCallback) window.activeConfirmCallback(); window.closeModal(); };
+    // ── MODAL UI ENGINE ───────────────────────────────────────
+    window.modalTimeout = null;
+
+    window.alert = function(msg) { 
+      window.showModal("System Notice", msg, "alert"); 
+    };
+
+    window.showModal = function(title, msg, type = 'alert', callback = null) { 
+      // FIX: If a previous modal is still fading out, cancel its hide timer!
+      if (window.modalTimeout) clearTimeout(window.modalTimeout);
+      
+      const m = document.getElementById('custom-modal'); 
+      const c = document.getElementById('custom-modal-content'); 
+      document.getElementById('modal-title').innerText = title; 
+      document.getElementById('modal-message').innerHTML = msg; 
+      window.activeConfirmCallback = callback; 
+      
+      const actions = document.getElementById('modal-actions'); 
+      if (type === 'confirm') { 
+        actions.innerHTML = `<button onclick="window.closeModal()" class="px-5 py-2.5 text-xs font-black theme-text-muted uppercase-tracking">Abort</button><button onclick="window.executeModalAction()" class="theme-btn px-6 py-2.5 text-xs font-black rounded-xl uppercase-tracking">Confirm</button>`; 
+      } else { 
+        actions.innerHTML = `<button onclick="window.executeModalAction()" class="theme-btn px-8 py-3 rounded-xl font-black uppercase-tracking text-xs">Acknowledge</button>`; 
+      } 
+      
+      m.classList.remove('hidden'); 
+      setTimeout(() => { 
+        m.classList.remove('opacity-0'); 
+        c.classList.remove('scale-95'); 
+      }, 10); 
+    };
+
+    window.executeModalAction = async function() { 
+      // Save the callback in a temporary variable
+      const callback = window.activeConfirmCallback;
+      window.activeConfirmCallback = null;
+      
+      // FIX: Trigger the UI to close FIRST
+      window.closeModal(); 
+      
+      // Then execute the database action. If the action succeeds and triggers 
+      // a new window.alert, it will cleanly override the close timer!
+      if (callback) {
+        try {
+          await callback();
+        } catch(e) {
+          console.error(e);
+        }
+      }
+    };
+
+    window.closeModal = function() { 
+      const m = document.getElementById('custom-modal'); 
+      const c = document.getElementById('custom-modal-content'); 
+      c.classList.add('scale-95'); 
+      m.classList.add('opacity-0'); 
+      
+      if (window.modalTimeout) clearTimeout(window.modalTimeout);
+      
+      // Save the timer so we can abort it if a new modal pops up instantly
+      window.modalTimeout = setTimeout(() => {
+        m.classList.add('hidden');
+      }, 300); 
+    };
 
     window.switchView = function(targetView) {
       if ((targetView === 'judging' || targetView === 'scores' || targetView === 'admin') && !window.activeUser.name) targetView = 'login';
