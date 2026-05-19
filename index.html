@@ -1359,7 +1359,7 @@
     window.addCandidate = async function() { 
       const id = document.getElementById('new-cand-id').value; const name = document.getElementById('new-cand-name').value; const loc = document.getElementById('new-cand-loc').value; const img = document.getElementById('new-cand-img').value; 
       if(!id || !name) return window.alert("ID and Name are required."); 
-      const payload = { id: parseInt(id), name: name, loc: loc, img: img };
+      const payload = { id: parseInt(id), candidateName: parseInt(id), name: name, loc: loc, img: img };
       await setDoc(doc(db, "Candidates", id), payload, { merge: true }); 
       
       // Update local array & UI automatically
