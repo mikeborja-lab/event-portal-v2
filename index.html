@@ -1289,22 +1289,33 @@
     window.renderAdminDashboard = function() {
       if (document.getElementById('admin-setting-title')) { document.getElementById('admin-setting-title').value = window.settings['app_title'] || ''; document.getElementById('admin-setting-subtitle').value = window.settings['app_subtitle'] || ''; document.getElementById('admin-setting-location').value = window.settings['location_text'] || ''; document.getElementById('admin-setting-theme').value = window.settings['theme_color'] || 'red'; document.getElementById('admin-setting-voting').checked = String(window.settings['public_voting']).toLowerCase() === 'true'; document.getElementById('admin-setting-deadline').value = window.settings['voting_deadline'] || ''; }
       if (document.getElementById('admin-candidates-list')) { 
+        // ── CANDIDATES — sortable rows ─────────────────────────────
         document.getElementById('admin-candidates-list').innerHTML = window.candidates.map(c => `
-          <div class="flex justify-between items-center p-3 bg-black/5 rounded-xl border border-black/5">
-            <span><b>#${c.id}</b>: ${c.name}</span>
-            <div class="flex gap-3">
+          <div class="candidate-sort-item flex justify-between items-center p-3 bg-black/5 rounded-xl border border-black/5 cursor-move select-none"
+               data-id="${c.firebaseDocId || c.id}">
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+              <i class="fas fa-grip-lines text-slate-400 flex-shrink-0"></i>
+              <span class="font-bold truncate"><b>#${c.candidateNumber || c.id}</b> — ${c.name}</span>
+            </div>
+            <div class="flex gap-3 flex-shrink-0 ml-2">
               <button onclick="window.editCandidate('${c.id}')" class="text-blue-500 hover:text-blue-700 transition-colors"><i class="fas fa-edit"></i></button>
               <button onclick="window.deleteDocEntry('Candidates', '${c.id}')" class="text-red-500 hover:text-red-700 transition-colors"><i class="fas fa-trash"></i></button>
             </div>
-          </div>`).join(''); 
+          </div>`).join('');
+        
+        // ── CRITERIA — sortable rows ───────────────────────────────
         document.getElementById('admin-criteria-list').innerHTML = window.criteria.map(c => `
-          <div class="flex justify-between items-center p-3 bg-black/5 rounded-xl border border-black/5">
-            <span>${c.label} (${c.max}pt)</span>
-            <div class="flex gap-3">
+          <div class="criteria-sort-item flex justify-between items-center p-3 bg-black/5 rounded-xl border border-black/5 cursor-move select-none"
+               data-id="${c.firebaseDocId || c.id}">
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+              <i class="fas fa-grip-lines text-slate-400 flex-shrink-0"></i>
+              <span class="font-bold truncate">${c.short} — ${c.label} <span class="font-normal text-xs opacity-60">(${c.max}pt)</span></span>
+            </div>
+            <div class="flex gap-3 flex-shrink-0 ml-2">
               <button onclick="window.editCriteria('${c.id}')" class="text-blue-500 hover:text-blue-700 transition-colors"><i class="fas fa-edit"></i></button>
               <button onclick="window.deleteDocEntry('Criteria', '${c.id}')" class="text-red-500 hover:text-red-700 transition-colors"><i class="fas fa-trash"></i></button>
             </div>
-          </div>`).join(''); 
+          </div>`).join('');
         document.getElementById('admin-users-list').innerHTML = window.users.filter(u => u.name !== 'Michael Borja' || window.activeUser.name === 'Michael Borja').map(u => `
           <div class="flex justify-between items-center p-3 bg-black/5 rounded-xl border border-black/5">
             <span class="truncate pr-2">${u.username} (${u.role})</span>
@@ -1985,66 +1996,85 @@
     window.initSortableLists = function() {
       const candList = document.getElementById('admin-candidates-list');
       const critList = document.getElementById('admin-criteria-list');
-
-      // 1. Initialize Candidate Sorting
-      if (candList) {
-        new Sortable(candList, {
-          animation: 150, // Smooth sliding animation
-          ghostClass: 'opacity-50', // Dim the item while dragging
-          onEnd: async function () {
-            document.getElementById('loader-text').innerText = "Updating Candidate Numbers...";
+    
+      // ── Candidate Sorting ────────────────────────────────────
+      if (candList && window.candidates.length > 1) {
+        // Destroy previous instance if it exists to prevent duplicates
+        if (window._sortableCands) window._sortableCands.destroy();
+    
+        window._sortableCands = new Sortable(candList, {
+          animation: 150,
+          ghostClass: 'opacity-40',
+          dragClass: 'shadow-2xl',
+          onEnd: async function() {
+            const items = candList.querySelectorAll('.candidate-sort-item');
+            if (!items.length) return;
+    
+            document.getElementById('loader-text').innerText = "Saving Candidate Order...";
             document.getElementById('loader').classList.remove('hidden');
-            
+    
             try {
-              const batch = writeBatch(db);
-              const items = candList.querySelectorAll('.candidate-sort-item');
-              
-              // Loop through the new visual order
+              // Use individual setDoc with merge:true so the field is created
+              // even if candidateNumber never existed in old documents
+              const writes = [];
               items.forEach((item, index) => {
                 const docId = item.getAttribute('data-id');
-                const newNumber = index + 1; // 1st item becomes #1, 2nd becomes #2, etc.
-                
-                const docRef = doc(db, "Candidates", docId);
-                // Update the database with the new sequential number
-                batch.update(docRef, { candidateNumber: newNumber });
+                if (!docId) return;
+                const newNum = index + 1;
+                // Update the badge text immediately so the user sees the change
+                const badge = item.querySelector('b');
+                if (badge) badge.innerText = `#${newNum}`;
+                writes.push(
+                  setDoc(doc(db, "Candidates", String(docId)),
+                    { candidateNumber: newNum },
+                    { merge: true }
+                  )
+                );
               });
-
-              await batch.commit();
+    
+              await Promise.all(writes);
               document.getElementById('loader').classList.add('hidden');
-              // The real-time onSnapshot listener will automatically re-render the UI!
             } catch (error) {
               document.getElementById('loader').classList.add('hidden');
-              window.alert("Failed to reorder candidates: " + error.message);
+              window.alert("Failed to save order: " + error.message);
             }
           }
         });
       }
-
-      // 2. Initialize Criteria Sorting
-      if (critList) {
-        new Sortable(critList, {
+    
+      // ── Criteria Sorting ─────────────────────────────────────
+      if (critList && window.criteria.length > 1) {
+        if (window._sortableCrit) window._sortableCrit.destroy();
+    
+        window._sortableCrit = new Sortable(critList, {
           animation: 150,
-          ghostClass: 'opacity-50',
-          onEnd: async function () {
+          ghostClass: 'opacity-40',
+          dragClass: 'shadow-2xl',
+          onEnd: async function() {
+            const items = critList.querySelectorAll('.criteria-sort-item');
+            if (!items.length) return;
+    
             document.getElementById('loader-text').innerText = "Saving Criteria Order...";
             document.getElementById('loader').classList.remove('hidden');
-            
+    
             try {
-              const batch = writeBatch(db);
-              const items = critList.querySelectorAll('.criteria-sort-item');
-              
+              const writes = [];
               items.forEach((item, index) => {
                 const docId = item.getAttribute('data-id');
-                const docRef = doc(db, "Criteria", docId);
-                // Add/update an 'order' field in the database
-                batch.update(docRef, { order: index });
+                if (!docId) return;
+                writes.push(
+                  setDoc(doc(db, "Criteria", String(docId)),
+                    { order: index },
+                    { merge: true }
+                  )
+                );
               });
-
-              await batch.commit();
+    
+              await Promise.all(writes);
               document.getElementById('loader').classList.add('hidden');
             } catch (error) {
               document.getElementById('loader').classList.add('hidden');
-              window.alert("Failed to reorder criteria: " + error.message);
+              window.alert("Failed to save order: " + error.message);
             }
           }
         });
