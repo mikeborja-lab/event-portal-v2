@@ -702,19 +702,22 @@
     };
 
     window.checkVoteStatus = function() {
-      const voteKey = `voted_${window.settings['app_title']}`;
       const voteBtn = document.getElementById('btn-cast-vote');
       if (!voteBtn) return;
+
+      // Include the global reset token in the lock key
+      const sessionToken = window.settings['voting_reset_token'] || '1';
+      const voteKey = `voted_${window.settings['app_title']}_${sessionToken}`;
       
       if (localStorage.getItem(voteKey)) {
-        // User has already voted
+        // User has already voted in this session
         voteBtn.innerHTML = `<i class="fas fa-check-double mr-1.5"></i> Vote Recorded`;
         voteBtn.className = "px-8 py-3 rounded-xl font-black uppercase-tracking text-xs mb-4 shadow-sm bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-not-allowed";
-        voteBtn.onclick = null; // Disable clicking
+        voteBtn.onclick = null; 
         voteBtn.classList.remove('hidden'); 
         document.getElementById('btn-cancel-vote').classList.add('hidden');
       } else {
-        // User has NOT voted yet
+        // User has NOT voted in this session
         voteBtn.innerHTML = `<i class="fas fa-check-circle mr-1.5"></i> Cast Vote`;
         voteBtn.className = "theme-btn px-8 py-3 rounded-xl font-black uppercase-tracking text-xs mb-4 shadow-lg active:scale-95 transition-all";
         voteBtn.onclick = window.showVotingGallery;
@@ -760,15 +763,17 @@
     };
 
     window.submitPublicVote = async function(candidateId, candidateName) {
-      const voteKey = `voted_${window.settings['app_title']}`;
-      if (localStorage.getItem(voteKey)) { window.alert("You have already cast your vote for this event."); return; }
+      const sessionToken = window.settings['voting_reset_token'] || '1';
+      const voteKey = `voted_${window.settings['app_title']}_${sessionToken}`;
+      
+      if (localStorage.getItem(voteKey)) { window.alert("You have already cast your vote."); return; }
+      
       window.showModal("Confirm Vote", `Cast your official public vote for <b>${candidateName}</b>? This cannot be undone.`, "confirm", async () => {
         try { 
           await setDoc(doc(collection(db, "PublicVotes")), { candidateId: candidateId, candidateName: candidateName, timestamp: Date.now(), userAgent: navigator.userAgent }); 
+          
           localStorage.setItem(voteKey, "true"); 
           window.alert(`Success! Your vote for ${candidateName} has been recorded.`); 
-          
-          // Upon successful vote, close the gallery and show the success button state
           window.hideVotingGallery();
         } catch (err) { 
           window.alert("Error submitting vote: " + err.message); 
