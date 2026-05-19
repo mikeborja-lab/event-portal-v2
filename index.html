@@ -366,8 +366,8 @@
               <button id="btn-cancel-cand" onclick="window.resetCandForm()" class="hidden text-[10px] uppercase-tracking tracking-wider text-red-500 font-bold hover:underline">Cancel Edit</button>
             </h3>
             <div id="admin-candidates-list" class="space-y-2">
-              <div class="candidate-sort-item p-3 theme-surface rounded cursor-move flex items-center border theme-border mb-2" data-id="${c.firebaseDocId}">
-                 <i class="fas fa-grip-lines text-slate-400 mr-3"></i> 
+              <div class="candidate-sort-item p-3 theme-surface rounded flex items-center border theme-border mb-2" data-id="${c.firebaseDocId}">
+                 <i class="fas fa-grip-lines text-slate-400 mr-3 p-2 drag-handle cursor-grab active:cursor-grabbing"></i> 
                  <span class="font-bold theme-text">#${c.candidateNumber} - ${c.name}</span>
               </div>
             </div>
@@ -386,8 +386,8 @@
               <button id="btn-cancel-crit" onclick="window.resetCritForm()" class="hidden text-[10px] uppercase-tracking tracking-wider text-red-500 font-bold hover:underline">Cancel Edit</button>
             </h3>
             <div id="admin-criteria-list" class="space-y-2">
-              <div class="criteria-sort-item p-3 theme-surface rounded cursor-move flex items-center border theme-border mb-2" data-id="${crit.firebaseDocId}">
-                 <i class="fas fa-grip-lines text-slate-400 mr-3"></i> 
+              <div class="criteria-sort-item p-3 theme-surface rounded flex items-center border theme-border mb-2" data-id="${crit.firebaseDocId}">
+                 <i class="fas fa-grip-lines text-slate-400 mr-3 p-2 drag-handle cursor-grab active:cursor-grabbing"></i> 
                  <span class="font-bold theme-text">${crit.short}</span>
               </div>
             </div>
@@ -2003,6 +2003,7 @@
         if (window._sortableCands) window._sortableCands.destroy();
     
         window._sortableCands = new Sortable(candList, {
+          handle: '.drag-handle',
           animation: 150,
           ghostClass: 'opacity-40',
           dragClass: 'shadow-2xl',
@@ -2047,6 +2048,7 @@
         if (window._sortableCrit) window._sortableCrit.destroy();
     
         window._sortableCrit = new Sortable(critList, {
+          handle: '.drag-handle',
           animation: 150,
           ghostClass: 'opacity-40',
           dragClass: 'shadow-2xl',
