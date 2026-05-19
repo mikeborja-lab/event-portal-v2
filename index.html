@@ -822,6 +822,9 @@
         voteBtn.className = "theme-btn px-8 py-3 rounded-xl font-black uppercase-tracking text-xs mb-4 shadow-lg active:scale-95 transition-all";
         voteBtn.onclick = window.showVotingGallery;
         voteBtn.classList.remove('hidden');
+        
+        // FIX: Explicitly hide the Back button if the user has not voted yet!
+        document.getElementById('btn-cancel-vote').classList.add('hidden');
       }
     };
 
