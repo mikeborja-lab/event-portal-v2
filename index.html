@@ -367,7 +367,9 @@
             </h3>
             <div id="admin-candidates-list" class="space-y-2">
               <div class="candidate-sort-item p-3 theme-surface rounded flex items-center border theme-border mb-2" data-id="${c.firebaseDocId}">
-                 <i class="fas fa-grip-lines text-slate-400 mr-3 p-2 drag-handle cursor-grab active:cursor-grabbing"></i> 
+                 <div class="drag-handle touch-none cursor-grab active:cursor-grabbing px-2 py-1 -ml-2 mr-2 opacity-50 hover:opacity-100 flex items-center justify-center">
+                     <i class="fas fa-grip-lines text-lg"></i> 
+                 </div>
                  <span class="font-bold theme-text">#${c.candidateNumber} - ${c.name}</span>
               </div>
             </div>
@@ -387,7 +389,9 @@
             </h3>
             <div id="admin-criteria-list" class="space-y-2">
               <div class="criteria-sort-item p-3 theme-surface rounded flex items-center border theme-border mb-2" data-id="${crit.firebaseDocId}">
-                 <i class="fas fa-grip-lines text-slate-400 mr-3 p-2 drag-handle cursor-grab active:cursor-grabbing"></i> 
+                 <div class="drag-handle touch-none cursor-grab active:cursor-grabbing px-2 py-1 -ml-2 mr-2 opacity-50 hover:opacity-100 flex items-center justify-center">
+                     <i class="fas fa-grip-lines text-lg"></i> 
+                 </div>
                  <span class="font-bold theme-text">${crit.short}</span>
               </div>
             </div>
