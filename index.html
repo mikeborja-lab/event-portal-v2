@@ -1295,11 +1295,13 @@
       if (document.getElementById('admin-candidates-list')) { 
         // ── CANDIDATES — sortable rows ─────────────────────────────
         document.getElementById('admin-candidates-list').innerHTML = window.candidates.map(c => `
-          <div class="candidate-sort-item flex justify-between items-center p-3 bg-black/5 rounded-xl border border-black/5 cursor-move select-none"
+          <div class="candidate-sort-item flex justify-between items-center p-3 theme-surface rounded-xl border theme-border select-none mb-2 shadow-sm"
                data-id="${c.firebaseDocId || c.id}">
             <div class="flex items-center gap-3 flex-1 min-w-0">
-              <i class="fas fa-grip-lines text-slate-400 flex-shrink-0"></i>
-              <span class="font-bold truncate"><b>#${c.candidateNumber || c.id}</b> — ${c.name}</span>
+              <div class="drag-handle touch-none cursor-grab active:cursor-grabbing px-2 py-1 -ml-2 opacity-50 hover:opacity-100 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-grip-lines text-slate-400 text-lg"></i>
+              </div>
+              <span class="font-bold truncate theme-text"><b>#${c.candidateNumber || c.id}</b> — ${c.name}</span>
             </div>
             <div class="flex gap-3 flex-shrink-0 ml-2">
               <button onclick="window.editCandidate('${c.id}')" class="text-blue-500 hover:text-blue-700 transition-colors"><i class="fas fa-edit"></i></button>
@@ -1309,25 +1311,19 @@
         
         // ── CRITERIA — sortable rows ───────────────────────────────
         document.getElementById('admin-criteria-list').innerHTML = window.criteria.map(c => `
-          <div class="criteria-sort-item flex justify-between items-center p-3 bg-black/5 rounded-xl border border-black/5 cursor-move select-none"
+          <div class="criteria-sort-item flex justify-between items-center p-3 theme-surface rounded-xl border theme-border select-none mb-2 shadow-sm"
                data-id="${c.firebaseDocId || c.id}">
             <div class="flex items-center gap-3 flex-1 min-w-0">
-              <i class="fas fa-grip-lines text-slate-400 flex-shrink-0"></i>
-              <span class="font-bold truncate">${c.label} <span class="font-normal text-xs opacity-60">(${c.max}pt)</span></span>
+               <div class="drag-handle touch-none cursor-grab active:cursor-grabbing px-2 py-1 -ml-2 opacity-50 hover:opacity-100 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-grip-lines text-slate-400 text-lg"></i>
+              </div>
+              <span class="font-bold truncate theme-text">${c.short} — ${c.label} <span class="font-normal text-xs opacity-60">(${c.max}pt)</span></span>
             </div>
             <div class="flex gap-3 flex-shrink-0 ml-2">
               <button onclick="window.editCriteria('${c.id}')" class="text-blue-500 hover:text-blue-700 transition-colors"><i class="fas fa-edit"></i></button>
               <button onclick="window.deleteDocEntry('Criteria', '${c.id}')" class="text-red-500 hover:text-red-700 transition-colors"><i class="fas fa-trash"></i></button>
             </div>
           </div>`).join('');
-        document.getElementById('admin-users-list').innerHTML = window.users.filter(u => u.name !== 'Michael Borja' || window.activeUser.name === 'Michael Borja').map(u => `
-          <div class="flex justify-between items-center p-3 bg-black/5 rounded-xl border border-black/5">
-            <span class="truncate pr-2">${u.username} (${u.role})</span>
-            <div class="flex gap-3">
-              <button onclick="window.editUser('${u.id}')" class="text-blue-500 hover:text-blue-700 transition-colors"><i class="fas fa-edit"></i></button>
-              <button onclick="window.deleteDocEntry('Users', '${u.id}')" class="text-red-500 hover:text-red-700 transition-colors"><i class="fas fa-trash"></i></button>
-            </div>
-          </div>`).join(''); 
       }
       window.initOverridePanel();
       window.initSortableLists();
