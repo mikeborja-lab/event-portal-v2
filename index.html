@@ -760,7 +760,10 @@
       
       // Trigger data renders immediately when routing
       if (targetView === 'scores') window.fetchScoresData();
-      if (targetView === 'admin' && typeof window.renderAdminDashboard === 'function') window.renderAdminDashboard();
+      if (targetView === 'admin') { 
+        if (window.fetchScoresData) window.fetchScoresData();
+        if (typeof window.renderAdminDashboard === 'function') window.renderAdminDashboard(); 
+      }
       if (targetView === 'judging') { window.renderTabs(); window.renderCandidates(); }
       if (targetView === 'home') { window.renderHomeGallery(); }
       
