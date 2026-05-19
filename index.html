@@ -423,26 +423,26 @@
          </div>
        </div>
       <div class="card-panel p-6 border-t-4 border-[#b45309]">
-          <h3 class="text-xs font-black uppercase-tracking tracking-widest text-slate-400 mb-4 flex items-center"><i class="fas fa-edit mr-2 text-[#b45309]"></i> Manual Score Override</h3>
-          <p class="text-[10px] text-slate-500 mb-4 leading-relaxed">Forcefully adjust a judge's submitted score. Changes will reflect on all dashboards instantly.</p>
+        <h3 class="text-xs font-black uppercase-tracking tracking-widest theme-text mb-4 flex items-center"><i class="fas fa-edit mr-2 text-[#b45309]"></i> Manual Score Override</h3>
+        <p class="text-[10px] theme-text-muted mb-4 leading-relaxed">Forcefully adjust a judge's submitted score. Changes will reflect on all dashboards instantly.</p>
+        
+        <div class="space-y-3">
+          <select id="override-candidate" class="w-full p-2 border theme-border rounded text-sm theme-bg-soft theme-text" onchange="window.loadOverrideJudges()">
+            <option value="" class="text-black bg-white">-- Select Candidate --</option>
+          </select>
           
-          <div class="space-y-3">
-            <select id="override-candidate" class="w-full p-2 border rounded text-sm bg-black/5 text-black" onchange="window.loadOverrideJudges()">
-              <option value="">-- Select Candidate --</option>
-            </select>
-            
-            <select id="override-judge" class="w-full p-2 border rounded text-sm bg-black/5 text-black hidden" onchange="window.loadOverrideScores()">
-              <option value="">-- Select Judge --</option>
-            </select>
-            
-            <div id="override-scores-container" class="hidden space-y-2 bg-slate-100 p-3 rounded-lg border border-slate-200">
-              </div>
-            
-            <button id="btn-override-save" onclick="window.saveOverrideScore()" class="hidden w-full bg-[#b45309] text-white rounded p-3 text-xs font-bold hover:bg-[#92400e] uppercase-tracking tracking-wider mt-2 transition-colors shadow-md">
-              Force Update Score
-            </button>
-          </div>
+          <select id="override-judge" class="w-full p-2 border theme-border rounded text-sm theme-bg-soft theme-text hidden" onchange="window.loadOverrideScores()">
+            <option value="" class="text-black bg-white">-- Select Judge --</option>
+          </select>
+          
+          <div id="override-scores-container" class="hidden space-y-2 theme-surface p-3 rounded-lg border theme-border">
+            </div>
+          
+          <button id="btn-override-save" onclick="window.saveOverrideScore()" class="hidden w-full bg-[#b45309] text-white rounded p-3 text-xs font-bold hover:bg-[#92400e] uppercase-tracking tracking-wider mt-2 transition-colors shadow-md">
+            Force Update Score
+          </button>
         </div>
+      </div>
     </div>
   </div>
 
