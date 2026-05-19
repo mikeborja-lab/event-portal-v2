@@ -764,7 +764,12 @@
         if (window.fetchScoresData) window.fetchScoresData();
         if (typeof window.renderAdminDashboard === 'function') window.renderAdminDashboard(); 
       }
-      if (targetView === 'judging') { window.renderTabs(); window.renderCandidates(); }
+      if (targetView === 'judging') {
+        if (window.criteria && window.criteria.length > 0) {
+              window.currentSegment = window.criteria[0].id;
+          }
+        window.renderTabs(); window.renderCandidates();
+      }
       if (targetView === 'home') { window.renderHomeGallery(); }
       
       ['home', 'login', 'judging', 'scores', 'admin'].forEach(v => { const el = document.getElementById(`view-${v}`); if(el) el.classList.add('hidden'); });
