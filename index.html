@@ -317,7 +317,7 @@
         <div class="overflow-x-auto"><table class="w-full" id="table-peoples-choice"></table></div>
       </div>
       <div class="card-panel p-6 mb-8">
-        <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2">Aggregated Matrix</h3>
+        <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2">Ranking Overview</h3>
         <div class="overflow-x-auto"><table class="w-full" id="table-averages"></table></div>
       </div>
       <div class="card-panel p-6 mb-8">
@@ -1117,7 +1117,7 @@
       if (avgTable) {
         if (avgTable.innerHTML.trim() === "") {
           let avgHTML = `<tr class="theme-table-header text-[10px] uppercase-tracking tracking-widest"><th class="p-5 font-black text-center w-24 theme-text-muted">Rank</th><th class="p-5 font-black theme-text-muted text-left">Identity</th>`;
-          window.criteria.forEach(crit => { avgHTML += `<th class="p-5 font-black theme-text-muted text-center">${crit.short}</th>`; }); avgHTML += `<th class="p-5 font-black theme-text text-right">Aggregated</th></tr>`;
+          window.criteria.forEach(crit => { avgHTML += `<th class="p-5 font-black theme-text-muted text-center">${crit.short}</th>`; }); avgHTML += `<th class="p-5 font-black theme-text text-right">Average</th></tr>`;
           aggregated.forEach((c, index) => {
             let rankBadge = `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 theme-text-muted font-bold text-xs mx-auto">${index + 1}</div>`;
             if (index === 0) rankBadge = `<div class="flex items-center justify-center w-12 h-10 rounded-full bg-yellow-100 text-yellow-600 font-black text-sm mx-auto shadow-md border border-yellow-300">🥇 1st</div>`;
