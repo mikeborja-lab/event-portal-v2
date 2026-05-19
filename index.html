@@ -366,9 +366,9 @@
               <button id="btn-cancel-cand" onclick="window.resetCandForm()" class="hidden text-[10px] uppercase-tracking tracking-wider text-red-500 font-bold hover:underline">Cancel Edit</button>
             </h3>
             <div id="admin-candidates-list" class="space-y-2">
-              <div class="candidate-sort-item p-3 theme-surface rounded cursor-move flex items-center" data-id="${c.id}">
+              <div class="candidate-sort-item p-3 theme-surface rounded cursor-move flex items-center border theme-border mb-2" data-id="${c.firebaseDocId}">
                  <i class="fas fa-grip-lines text-slate-400 mr-3"></i> 
-                 <span class="font-bold">#${c.candidateNumber} - ${c.name}</span>
+                 <span class="font-bold theme-text">#${c.candidateNumber} - ${c.name}</span>
               </div>
             </div>
             <div class="space-y-2">
@@ -386,9 +386,9 @@
               <button id="btn-cancel-crit" onclick="window.resetCritForm()" class="hidden text-[10px] uppercase-tracking tracking-wider text-red-500 font-bold hover:underline">Cancel Edit</button>
             </h3>
             <div id="admin-criteria-list" class="space-y-2">
-              <div class="criteria-sort-item p-3 theme-surface rounded cursor-move flex items-center" data-id="${crit.id}">
+              <div class="criteria-sort-item p-3 theme-surface rounded cursor-move flex items-center border theme-border mb-2" data-id="${crit.firebaseDocId}">
                  <i class="fas fa-grip-lines text-slate-400 mr-3"></i> 
-                 <span class="font-bold">${crit.short}</span>
+                 <span class="font-bold theme-text">${crit.short}</span>
               </div>
             </div>
             <div class="space-y-2">
@@ -988,9 +988,22 @@
 
         // --- REAL-TIME DATABASE LISTENERS (Ensures sync across all pages and devices) ---
         onSnapshot(collection(db, "Criteria"), (snapshot) => {
-            window.criteria = []; snapshot.forEach(doc => { window.criteria.push({ id: doc.id, ...doc.data() }); });
+            window.criteria = []; 
+            snapshot.forEach(doc => { 
+                // ADDED: firebaseDocId to guarantee we have the true database reference
+                window.criteria.push({ firebaseDocId: doc.id, id: doc.id, ...doc.data() }); 
+            });
+            
+            // ADDED: Instantly sort the criteria by their new drag-and-drop order
+            window.criteria.sort((a, b) => (a.order || 0) - (b.order || 0));
+
             if(!window.currentSegment && window.criteria.length > 0) window.currentSegment = window.criteria[0].id;
-            window.candidates.forEach(c => { window.scoresData[c.id] = window.scoresData[c.id] || {}; window.criteria.forEach(crit => { if(window.scoresData[c.id][crit.id] === undefined) window.scoresData[c.id][crit.id] = parseFloat(crit.max) / 2 || 5; }); });
+            window.candidates.forEach(c => { 
+                window.scoresData[c.id] = window.scoresData[c.id] || {}; 
+                window.criteria.forEach(crit => { 
+                    if(window.scoresData[c.id][crit.id] === undefined) window.scoresData[c.id][crit.id] = parseFloat(crit.max) / 2 || 5; 
+                }); 
+            });
             
             // Auto-refresh visible views
             if(!document.getElementById('view-judging').classList.contains('hidden')) { window.renderTabs(); window.renderCandidates(); }
@@ -998,8 +1011,21 @@
         });
 
         onSnapshot(collection(db, "Candidates"), (snapshot) => {
-            window.candidates = []; snapshot.forEach(doc => { window.candidates.push({ id: doc.id, ...doc.data() }); });
-            window.candidates.forEach(c => { window.scoresData[c.id] = window.scoresData[c.id] || {}; window.criteria.forEach(crit => { if(window.scoresData[c.id][crit.id] === undefined) window.scoresData[c.id][crit.id] = parseFloat(crit.max) / 2 || 5; }); });
+            window.candidates = []; 
+            snapshot.forEach(doc => { 
+                // ADDED: firebaseDocId to guarantee we have the true database reference
+                window.candidates.push({ firebaseDocId: doc.id, id: doc.id, ...doc.data() }); 
+            });
+
+            // ADDED: Instantly sort candidates by their candidateNumber
+            window.candidates.sort((a, b) => (a.candidateNumber || 0) - (b.candidateNumber || 0));
+
+            window.candidates.forEach(c => { 
+                window.scoresData[c.id] = window.scoresData[c.id] || {}; 
+                window.criteria.forEach(crit => { 
+                    if(window.scoresData[c.id][crit.id] === undefined) window.scoresData[c.id][crit.id] = parseFloat(crit.max) / 2 || 5; 
+                }); 
+            });
             
             // Auto-refresh visible views
             if(!document.getElementById('view-home').classList.contains('hidden')) window.renderHomeGallery();
