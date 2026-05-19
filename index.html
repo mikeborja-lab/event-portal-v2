@@ -1301,7 +1301,7 @@
               <div class="drag-handle touch-none cursor-grab active:cursor-grabbing px-2 py-1 -ml-2 opacity-50 hover:opacity-100 flex items-center justify-center flex-shrink-0">
                   <i class="fas fa-grip-lines text-slate-400 text-lg"></i>
               </div>
-              <span class="font-bold truncate theme-text"><b>#${c.candidateNumber || c.id}</b> — ${c.name}</span>
+              <span class="font-bold truncate theme-text"><b>#${c.candidateNumber || c.id}</b>: ${c.name}</span>
             </div>
             <div class="flex gap-3 flex-shrink-0 ml-2">
               <button onclick="window.editCandidate('${c.id}')" class="text-blue-500 hover:text-blue-700 transition-colors"><i class="fas fa-edit"></i></button>
@@ -1317,7 +1317,7 @@
               <div class="drag-handle touch-none cursor-grab active:cursor-grabbing px-2 py-1 -ml-2 opacity-50 hover:opacity-100 flex items-center justify-center flex-shrink-0">
                   <i class="fas fa-grip-lines text-slate-400 text-lg"></i>
               </div>
-              <span class="font-bold truncate theme-text">${c.short} — ${c.label} <span class="font-normal text-xs opacity-60">(${c.max}pt)</span></span>
+              <span class="font-bold truncate theme-text">${c.label} <span class="font-normal text-xs opacity-60">(${c.max}pt)</span></span>
             </div>
             <div class="flex gap-3 flex-shrink-0 ml-2">
               <button onclick="window.editCriteria('${c.id}')" class="text-blue-500 hover:text-blue-700 transition-colors"><i class="fas fa-edit"></i></button>
