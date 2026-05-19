@@ -999,13 +999,42 @@
       }
     };
 
-    window.syncJudgeScores = async function() {
+    window.syncJudgeScores = function() {
       if (!window.activeUser.name || (window.activeUser.role !== 'Judge' && window.activeUser.role !== 'Admin')) return;
       try {
-        const q = query(collection(db, "Scores"), where("judge", "==", window.activeUser.name)); const querySnapshot = await getDocs(q);
-        querySnapshot.forEach((doc) => { const data = doc.data(); const cand = window.candidates.find(c => c.name === data.candidate); if (cand) { window.lockedScores[cand.id] = window.lockedScores[cand.id] || {}; window.criteria.forEach(crit => { if (data[crit.id] !== undefined) { window.scoresData[cand.id][crit.id] = data[crit.id]; window.lockedScores[cand.id][crit.id] = true; } }); } });
-        if(document.getElementById('view-judging') && !document.getElementById('view-judging').classList.contains('hidden')) window.renderCandidates();
-      } catch (error) { console.error("Sync Error:", error); }
+        const q = query(collection(db, "Scores"), where("judge", "==", window.activeUser.name)); 
+        
+        // Clear existing listener if it exists to prevent duplicates
+        if (window.judgeScoresListener) window.judgeScoresListener(); 
+        
+        // Start real-time listening instead of a one-time fetch
+        window.judgeScoresListener = onSnapshot(q, (querySnapshot) => {
+          // 1. Instantly unlock all scores locally
+          window.lockedScores = {};
+          
+          // 2. Re-lock only what currently exists in the database
+          querySnapshot.forEach((doc) => { 
+            const data = doc.data(); 
+            const cand = window.candidates.find(c => c.name === data.candidate); 
+            if (cand) { 
+              window.lockedScores[cand.id] = window.lockedScores[cand.id] || {}; 
+              window.criteria.forEach(crit => { 
+                if (data[crit.id] !== undefined) { 
+                  window.scoresData[cand.id][crit.id] = data[crit.id]; 
+                  window.lockedScores[cand.id][crit.id] = true; 
+                } 
+              }); 
+            } 
+          });
+          
+          // 3. Re-render the UI instantly if they are on the judging page
+          if(document.getElementById('view-judging') && !document.getElementById('view-judging').classList.contains('hidden')) {
+              window.renderCandidates();
+          }
+        });
+      } catch (error) { 
+        console.error("Sync Error:", error); 
+      }
     };
 
     window.submitScore = async function(candidateId) {
