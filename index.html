@@ -523,6 +523,7 @@
       const container = document.getElementById('carousel-track');
       if (!container || window.candidates.length === 0) return;
       container.innerHTML = '';
+      window.currentCarouselIndex = 0;
       container.style.cssText = 'display:flex;justify-content:center;align-items:center;height:34rem;cursor:pointer;';
       window.tileStage = document.createElement('div');
       window.tileStage.className = 'tile-stage';
@@ -567,7 +568,7 @@
       const numEl = document.getElementById('tile-num');
       const nameEl = document.getElementById('tile-name');
       const locEl = document.getElementById('tile-loc');
-      if (numEl) numEl.innerText = 'No. ' + String(c.id).padStart(2, '0');
+      if (numEl) numEl.innerText = 'No. ' + String(c.candidateNumber || c.id).padStart(2, '0');
       if (nameEl) nameEl.innerText = c.name;
       if (locEl) {
         if (c.loc) {
