@@ -835,7 +835,7 @@
               <div class="flex-1">
                 <h4 class="font-black text-lg tracking-tight leading-none" style="color: var(--t-text-main);">${c.name}</h4>
                 <p class="text-[9px] theme-text-muted font-bold uppercase-tracking tracking-widest mt-1">
-                  #${(c.id).toString().padStart(2, '0')} 
+                  #${String(c.candidateNumber || (i + 1)).padStart(2, '0')} 
                   ${c.loc ? `<span class="opacity-50 mx-1">•</span> <i class="fas fa-map-marker-alt opacity-70"></i> ${c.loc}` : ''}
                 </p>
               </div>
@@ -946,7 +946,7 @@
               <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-90 parallax-front"></div>
               <div class="absolute bottom-4 inset-x-4 z-10 parallax-front">
                 <div class="glass-panel p-5 rounded-[1.5rem] text-center">
-                  <p class="text-[10px] font-black uppercase-tracking tracking-[0.3em] mb-1 text-white/70">Candidate #${(c.id).toString().padStart(2, '0')}</p>
+                  <p class="text-[10px] font-black uppercase-tracking tracking-[0.3em] mb-1 text-white/70">Candidate #${String(c.candidateNumber || (i + 1)).padStart(2, '0')}</p>
                   <h2 class="text-3xl font-black tracking-tight leading-none text-white drop-shadow-md">${c.name}</h2>
                   ${c.loc ? `<p class="text-[10px] font-bold text-white/90 mt-2 uppercase-tracking tracking-widest flex items-center justify-center gap-1.5"><i class="fas fa-map-marker-alt" style="color: var(--t-primary)"></i> ${c.loc}</p>` : ''}
                 </div>
