@@ -1780,13 +1780,13 @@
       const scoreRecord = window.latestScores.find(s => s.candidate === candName && s.judge === judgeName);
       if(!scoreRecord) return;
 
-      let html = `<div class="text-[10px] font-bold text-slate-500 mb-2 uppercase text-center">Edit Raw Points</div>`;
+      let html = `<div class="text-[10px] font-bold theme-text-muted mb-2 uppercase text-center">Edit Raw Points</div>`;
       window.criteria.forEach(crit => {
           const val = scoreRecord[crit.id] !== undefined ? scoreRecord[crit.id] : 0;
           html += `
-              <div class="flex justify-between items-center bg-white p-2 rounded border border-slate-200">
-                  <span class="text-xs font-bold text-slate-700">${crit.short} <span class="text-[9px] font-normal text-slate-400">(Max: ${crit.max})</span></span>
-                  <input type="number" id="override-val-${crit.id}" value="${val}" step="0.5" max="${crit.max}" min="0" class="w-20 p-1 border border-rose-300 rounded text-rose-700 font-black text-center focus:outline-none focus:ring-2 focus:ring-rose-400 bg-rose-50">
+              <div class="flex justify-between items-center theme-bg-soft p-2 rounded border theme-border mb-2">
+                  <span class="text-xs font-bold theme-text">${crit.short} <span class="text-[9px] font-normal theme-text-muted">(Max: ${crit.max})</span></span>
+                  <input type="number" id="override-val-${crit.id}" value="${val}" step="0.5" max="${crit.max}" min="0" class="w-20 p-1 border theme-border rounded theme-text font-black text-center focus:outline-none focus:ring-2 focus:ring-[#b45309] theme-surface">
               </div>
           `;
       });
