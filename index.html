@@ -1781,18 +1781,33 @@
       if(!scoreRecord) return;
 
       let html = `<div class="text-[10px] font-bold theme-text-muted mb-2 uppercase text-center">Edit Raw Points</div>`;
+      let hasScoredCriteria = false;
+
       window.criteria.forEach(crit => {
-          const val = scoreRecord[crit.id] !== undefined ? scoreRecord[crit.id] : 0;
-          html += `
-              <div class="flex justify-between items-center theme-bg-soft p-2 rounded border theme-border mb-2">
-                  <span class="text-xs font-bold theme-text">${crit.short} <span class="text-[9px] font-normal theme-text-muted">(Max: ${crit.max})</span></span>
-                  <input type="number" id="override-val-${crit.id}" value="${val}" step="0.5" max="${crit.max}" min="0" class="w-20 p-1 border theme-border rounded theme-text font-black text-center focus:outline-none focus:ring-2 focus:ring-[#b45309] theme-surface">
-              </div>
-          `;
+          // FIX: Only render the input HTML if the score actually exists in the database
+          if (scoreRecord[crit.id] !== undefined && scoreRecord[crit.id] !== '') {
+              hasScoredCriteria = true;
+              const val = scoreRecord[crit.id];
+              
+              html += `
+                  <div class="flex justify-between items-center theme-bg-soft p-2 rounded border theme-border mb-2">
+                      <span class="text-xs font-bold theme-text">${crit.short} <span class="text-[9px] font-normal theme-text-muted">(Max: ${crit.max})</span></span>
+                      <input type="number" id="override-val-${crit.id}" value="${val}" step="0.5" max="${crit.max}" min="0" class="w-20 p-1 border theme-border rounded theme-text font-black text-center focus:outline-none focus:ring-2 focus:ring-[#b45309] theme-surface">
+                  </div>
+              `;
+          }
       });
+
+      // If they haven't scored anything, show a message and hide the save button
+      if (!hasScoredCriteria) {
+          html += `<div class="text-xs text-center theme-text-muted py-4 italic">This judge has not scored any criteria for this candidate yet.</div>`;
+          saveBtn.classList.add('hidden');
+      } else {
+          saveBtn.classList.remove('hidden');
+      }
+
       container.innerHTML = html;
       container.classList.remove('hidden');
-      saveBtn.classList.remove('hidden');
     };
 
     // 4. Save the new scores directly to the database
