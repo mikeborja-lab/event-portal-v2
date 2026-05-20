@@ -353,6 +353,13 @@
                 <option value="ember_orange">Ember Orange (Dark)</option>
               </select>
            </div>
+           <div>
+              <label class="text-xs font-bold uppercase-tracking theme-text-muted">Event Type</label>
+              <select id="admin-setting-event-type" class="w-full p-2 border rounded-lg mt-1 text-black">
+                <option value="pageant">👑 Pageant</option>
+                <option value="performance">🎤 Performance Contest</option>
+              </select>
+            </div>
          </div>
          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-black/5 rounded-xl border border-black/10">
             <div class="flex items-center justify-between">
@@ -951,10 +958,32 @@
     };
 
     window.switchJudgingSegment = function(critId) { window.currentSegment = critId; window.renderTabs(); window.renderCandidates(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-    window.renderTabs = function() { const tabs = document.getElementById('segment-tabs'); if(!tabs) return; tabs.innerHTML = window.criteria.map(c => `<button onclick="window.switchJudgingSegment('${c.id}')" class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase-tracking whitespace-nowrap transition-all ${window.currentSegment === c.id ? 'theme-btn shadow-md' : 'text-gray-500 hover:bg-black/5'}">${c.short}</button>`).join(''); };
+    window.renderTabs = function() {
+      const tabs = document.getElementById('segment-tabs');
+      if (!tabs) return;
+      const isPageant = (window.settings['event_type'] || 'pageant') === 'pageant';
+      if (!isPageant) {
+        tabs.style.display = 'none';
+        return;
+      }
+      tabs.style.display = 'flex';
+      tabs.innerHTML = window.criteria.map(c =>
+        `<button onclick="window.switchJudgingSegment('${c.id}')"
+          class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase-tracking whitespace-nowrap transition-all
+                 ${window.currentSegment === c.id ? 'theme-btn shadow-md' : 'text-gray-500 hover:bg-black/5'}">
+          ${c.short}
+        </button>`
+      ).join('');
+    };
     
-    // --- FIX: NO MORE INTERSECTION OBSERVER FOR CARDS ---
     window.renderCandidates = function() {
+      const isPageant = (window.settings['event_type'] || 'pageant') === 'pageant';
+      return isPageant
+        ? window.renderCandidatesPageant()
+        : window.renderCandidatesPerformance();
+    };
+    
+    window.renderCandidatesPageant = function() {
       const activeCrit = window.criteria.find(c => c.id === window.currentSegment); const cCont = document.getElementById('candidates-container'); if(!activeCrit || !cCont) return;
       const fallbackImg = "https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=800&q=80";
       cCont.innerHTML = window.candidates.map((c, i) => {
@@ -994,6 +1023,126 @@
           </div>
         </div>`;
       }).join('');
+    };
+
+    // New function — performance mode (all criteria per contestant)
+    window.renderCandidatesPerformance = function() {
+      const cCont = document.getElementById('candidates-container');
+      if (!cCont || window.criteria.length === 0) return;
+      const fallbackImg = "https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=800&q=80";
+    
+      cCont.innerHTML = window.candidates.map((c, i) => {
+        const allLocked = window.criteria.every(cr => window.lockedScores[c.id]?.[cr.id]);
+    
+        const sliders = window.criteria.map(cr => {
+          const isLocked = window.lockedScores[c.id]?.[cr.id];
+          const dScore = isLocked
+            ? window.scoresData[c.id][cr.id]
+            : (window.scoresData[c.id][cr.id] || cr.max / 2);
+          const fillPct = ((dScore - 1) / (cr.max - 1)) * 100;
+          return `
+            <div class="mb-5 theme-bg-soft p-4 rounded-2xl border border-black/5">
+              <div class="flex justify-between items-center mb-3">
+                <div>
+                  <p class="text-[9px] theme-text font-black uppercase-tracking tracking-widest mb-0.5">${cr.label}</p>
+                  <p class="text-[10px] theme-text-muted font-bold">Max: ${cr.max} pts</p>
+                </div>
+                <div class="theme-surface px-4 py-2 rounded-xl border border-black/10 min-w-[70px] text-center shadow-sm">
+                  <span class="font-black theme-text text-xl tracking-tighter score-number"
+                        id="score-val-${c.id}-${cr.id}">${dScore.toFixed(1)}</span>
+                </div>
+              </div>
+              <input type="range" id="slider-${c.id}-${cr.id}"
+                min="1" max="${cr.max}" step="0.5" value="${dScore}"
+                style="--fill:${fillPct}%"
+                oninput="
+                  const v=parseFloat(this.value);
+                  const el=document.getElementById('score-val-${c.id}-${cr.id}');
+                  el.innerText=v.toFixed(1);
+                  el.classList.remove('score-pop'); void el.offsetWidth; el.classList.add('score-pop');
+                  window.scoresData['${c.id}']['${cr.id}']=v;
+                  this.style.setProperty('--fill',(((v-1)/(${cr.max}-1))*100)+'%');
+                "
+                class="w-full" ${isLocked ? 'disabled' : ''}>
+            </div>`;
+        }).join('');
+    
+        const btnClass = allLocked
+          ? 'bg-black/10 text-slate-500 cursor-not-allowed border border-black/5'
+          : 'theme-btn active:scale-95';
+    
+        return `
+          <div class="card-panel mb-10 overflow-hidden border-none shadow-2xl rounded-[2rem] bg-[var(--t-surface)] animate-fade-in-up"
+               style="animation-delay:${i * 0.1}s" id="card-${c.id}">
+            <div class="parallax-container relative w-full h-[20rem] cursor-crosshair"
+                 onmousemove="window.handleParallax(event,this)" onmouseleave="window.resetParallax(this)"
+                 ontouchmove="window.handleParallax(event,this)" ontouchend="window.resetParallax(this)">
+              <div class="parallax-inner w-full h-full">
+                <img src="${(c.img && c.img.length > 5) ? c.img : fallbackImg}"
+                     loading="lazy" onerror="this.src='${fallbackImg}'"
+                     class="parallax-img absolute inset-0 w-full h-full object-cover object-top">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-90 parallax-front"></div>
+                <div class="absolute bottom-4 inset-x-4 z-10 parallax-front">
+                  <div class="glass-panel p-4 rounded-[1.5rem] text-center">
+                    <p class="text-[10px] font-black uppercase-tracking tracking-[0.3em] mb-1 text-white/70">
+                      Contestant #${String(c.candidateNumber || c.id).padStart(2,'0')}
+                    </p>
+                    <h2 class="text-2xl font-black tracking-tight leading-none text-white drop-shadow-md">${c.name}</h2>
+                    ${c.loc ? `<p class="text-[10px] font-bold text-white/90 mt-1.5 uppercase-tracking tracking-widest flex items-center justify-center gap-1.5">
+                      <i class="fas fa-map-marker-alt" style="color:var(--t-primary)"></i> ${c.loc}</p>` : ''}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="p-6 relative z-20 theme-surface rounded-b-[2rem]">
+              ${sliders}
+              <button onclick="window.submitAllScores('${c.id}')"
+                      id="btn-all-${c.id}"
+                      class="w-full py-4 rounded-xl font-black transition-all uppercase-tracking text-xs shadow-md ${btnClass}"
+                      ${allLocked ? 'disabled' : ''}>
+                ${allLocked ? '✓ All Scores Locked' : 'Submit All Scores'}
+              </button>
+            </div>
+          </div>`;
+      }).join('');
+    };
+    
+    // Called by performance mode submit button
+    window.submitAllScores = async function(candidateId) {
+      const c = window.candidates.find(can => String(can.id) === String(candidateId));
+      if (!c) return window.alert("Candidate not found.");
+      const btn = document.getElementById(`btn-all-${candidateId}`);
+      const cardPanel = document.getElementById(`card-${candidateId}`);
+      btn.innerText = "Transmitting..."; btn.disabled = true;
+    
+      const payload = { judge: window.activeUser.name, candidate: c.name, timestamp: Date.now() };
+      window.criteria.forEach(cr => {
+        payload[cr.id] = window.scoresData[candidateId][cr.id]
+          || parseFloat(document.getElementById(`slider-${candidateId}-${cr.id}`)?.value)
+          || cr.max / 2;
+      });
+    
+      const finalize = () => {
+        window.lockedScores[candidateId] = window.lockedScores[candidateId] || {};
+        window.criteria.forEach(cr => { window.lockedScores[candidateId][cr.id] = true; });
+        if (navigator.vibrate) navigator.vibrate([15, 20, 60]);
+        cardPanel.classList.add('score-locked-flash');
+        setTimeout(() => window.renderCandidates(), 520);
+      };
+    
+      if (!navigator.onLine) {
+        offlineQueue.push(payload);
+        localStorage.setItem('pageant_offline_queue', JSON.stringify(offlineQueue));
+        finalize(); window.showOfflineToast(); return;
+      }
+      try {
+        await setDoc(doc(db, "Scores", `${window.activeUser.name}_${c.name}`), payload, { merge: true });
+        finalize();
+      } catch (error) {
+        offlineQueue.push(payload);
+        localStorage.setItem('pageant_offline_queue', JSON.stringify(offlineQueue));
+        finalize(); window.showOfflineToast();
+      }
     };
 
     window.onload = async function() {
@@ -1089,6 +1238,11 @@
             }
             
             if (typeof window.renderAdminDashboard === 'function') window.renderAdminDashboard();
+            // Re-render judging view if open, so scoring mode switches instantly
+            if (!document.getElementById('view-judging').classList.contains('hidden')) {
+              window.renderTabs();
+              window.renderCandidates();
+            }
         });
 
         if(document.getElementById('status-text')) document.getElementById('status-text').classList.add('hidden');
@@ -1319,7 +1473,7 @@
     };
 
     window.renderAdminDashboard = function() {
-      if (document.getElementById('admin-setting-title')) { document.getElementById('admin-setting-title').value = window.settings['app_title'] || ''; document.getElementById('admin-setting-subtitle').value = window.settings['app_subtitle'] || ''; document.getElementById('admin-setting-location').value = window.settings['location_text'] || ''; document.getElementById('admin-setting-theme').value = window.settings['theme_color'] || 'red'; document.getElementById('admin-setting-voting').checked = String(window.settings['public_voting']).toLowerCase() === 'true'; document.getElementById('admin-setting-deadline').value = window.settings['voting_deadline'] || ''; }
+      if (document.getElementById('admin-setting-title')) { document.getElementById('admin-setting-title').value = window.settings['app_title'] || ''; document.getElementById('admin-setting-subtitle').value = window.settings['app_subtitle'] || ''; document.getElementById('admin-setting-location').value = window.settings['location_text'] || ''; document.getElementById('admin-setting-theme').value = window.settings['theme_color'] || 'red'; document.getElementById('admin-setting-voting').checked = String(window.settings['public_voting']).toLowerCase() === 'true'; document.getElementById('admin-setting-deadline').value = window.settings['voting_deadline'] || ''; const etEl = document.getElementById('admin-setting-event-type'); if (etEl) etEl.value = window.settings['event_type'] || 'pageant'; }
       if (document.getElementById('admin-candidates-list')) { 
         // ── CANDIDATES — sortable rows ─────────────────────────────
         document.getElementById('admin-candidates-list').innerHTML = window.candidates.map(c => `
@@ -1367,7 +1521,7 @@
       window.initSortableLists();
     };
 
-    window.saveSettings = async function() { try { const btn = document.querySelector('#view-admin .theme-btn'); btn.innerText = "Deploying..."; btn.disabled = true; const updates = { 'app_title': document.getElementById('admin-setting-title').value, 'app_subtitle': document.getElementById('admin-setting-subtitle').value, 'location_text': document.getElementById('admin-setting-location').value, 'theme_color': document.getElementById('admin-setting-theme').value, 'public_voting': document.getElementById('admin-setting-voting').checked, 'voting_deadline': document.getElementById('admin-setting-deadline').value }; for (const [key, value] of Object.entries(updates)) { await setDoc(doc(db, "Settings", key), { value: value }); } window.alert("Configuration successfully deployed to all devices."); btn.innerText = "Deploy Configuration"; btn.disabled = false; } catch (err) { window.alert("Error deploying: " + err.message); } };
+    window.saveSettings = async function() { try { const btn = document.querySelector('#view-admin .theme-btn'); btn.innerText = "Deploying..."; btn.disabled = true; const updates = { 'app_title': document.getElementById('admin-setting-title').value, 'app_subtitle': document.getElementById('admin-setting-subtitle').value, 'location_text': document.getElementById('admin-setting-location').value, 'theme_color': document.getElementById('admin-setting-theme').value, 'public_voting': document.getElementById('admin-setting-voting').checked, 'voting_deadline': document.getElementById('admin-setting-deadline').value. 'event_type': document.getElementById('admin-setting-event-type').value }; for (const [key, value] of Object.entries(updates)) { await setDoc(doc(db, "Settings", key), { value: value }); } window.alert("Configuration successfully deployed to all devices."); btn.innerText = "Deploy Configuration"; btn.disabled = false; } catch (err) { window.alert("Error deploying: " + err.message); } };
 
     // CANDIDATE EDIT LOGIC
     window.editCandidate = function(id) { const c = window.candidates.find(cand => String(cand.id) === String(id)); if (!c) return; window.editState.candidate = c.id; document.getElementById('new-cand-id').value = c.candidateNumber || c.id; document.getElementById('new-cand-id').readOnly = false; document.getElementById('new-cand-name').value = c.name || ''; document.getElementById('new-cand-loc').value = c.loc || ''; document.getElementById('new-cand-img').value = c.img || ''; document.getElementById('btn-add-cand').innerText = "Update Candidate"; document.getElementById('btn-cancel-cand').classList.remove('hidden'); };
