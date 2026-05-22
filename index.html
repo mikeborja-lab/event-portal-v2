@@ -483,6 +483,10 @@
                 <option value="performance">🎤 Performance Contest</option>
               </select>
             </div>
+           <div>
+            <label class="text-xs font-bold uppercase-tracking theme-text-muted">Header Silhouette Image (Optional)</label>
+            <input type="text" id="admin-setting-silhouette" placeholder="Paste image URL..." class="w-full p-2 border rounded-lg mt-1 text-black">
+          </div>
          </div>
          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-black/5 rounded-xl border border-black/10">
             <div class="flex items-center justify-between">
@@ -1401,6 +1405,22 @@
             document.getElementById('display-subtitle').innerText = window.settings['app_subtitle'] || "Core Operations";
           if (document.getElementById('display-location'))
             document.getElementById('display-location').innerText = window.settings['location_text'] || "Location Undefined";
+          // Apply header silhouette — only when a URL is provided
+          const silhouette = document.getElementById('header-silhouette');
+          const silUrl = (window.settings['header_silhouette'] || '').trim();
+          if (silhouette) {
+            if (silUrl) {
+              silhouette.style.backgroundImage = `url('${silUrl}')`;
+              silhouette.style.backgroundSize = '50% auto';
+              silhouette.style.backgroundPosition = 'center';
+              silhouette.style.backgroundRepeat = 'no-repeat';
+              silhouette.style.opacity = '0.12';
+            } else {
+              // No URL set — clear completely so nothing shows
+              silhouette.style.backgroundImage = 'none';
+              silhouette.style.opacity = '0';
+            }
+          }
     
           window.applyTheme(window.settings['theme_color'] || 'red');
           document.title = (window.settings['app_title'] || "Event Portal") + " - Secure Access";
@@ -1665,7 +1685,18 @@
     };
 
     window.renderAdminDashboard = function() {
-      if (document.getElementById('admin-setting-title')) { document.getElementById('admin-setting-title').value = window.settings['app_title'] || ''; document.getElementById('admin-setting-subtitle').value = window.settings['app_subtitle'] || ''; document.getElementById('admin-setting-location').value = window.settings['location_text'] || ''; document.getElementById('admin-setting-theme').value = window.settings['theme_color'] || 'red'; document.getElementById('admin-setting-voting').checked = String(window.settings['public_voting']).toLowerCase() === 'true'; document.getElementById('admin-setting-deadline').value = window.settings['voting_deadline'] || ''; const etEl = document.getElementById('admin-setting-event-type'); if (etEl) etEl.value = window.settings['event_type'] || 'pageant'; }
+      if (document.getElementById('admin-setting-title')) {
+        document.getElementById('admin-setting-title').value = window.settings['app_title'] || '';
+        document.getElementById('admin-setting-subtitle').value = window.settings['app_subtitle'] || '';
+        document.getElementById('admin-setting-location').value = window.settings['location_text'] || '';
+        document.getElementById('admin-setting-theme').value = window.settings['theme_color'] || 'red';
+        document.getElementById('admin-setting-voting').checked = String(window.settings['public_voting']).toLowerCase() === 'true';
+        document.getElementById('admin-setting-deadline').value = window.settings['voting_deadline'] || '';
+        const etEl = document.getElementById('admin-setting-event-type');
+          if (etEl) etEl.value = window.settings['event_type'] || 'pageant';
+        const silEl = document.getElementById('admin-setting-silhouette');
+        if (silEl) silEl.value = window.settings['header_silhouette'] || '';        
+      }
       if (document.getElementById('admin-candidates-list')) { 
         // ── CANDIDATES — sortable rows ─────────────────────────────
         document.getElementById('admin-candidates-list').innerHTML = window.candidates.map(c => `
@@ -1713,7 +1744,7 @@
       window.initSortableLists();
     };
 
-    window.saveSettings = async function() { try { const btn = document.querySelector('#view-admin .theme-btn'); btn.innerText = "Deploying..."; btn.disabled = true; const updates = { 'app_title': document.getElementById('admin-setting-title').value, 'app_subtitle': document.getElementById('admin-setting-subtitle').value, 'location_text': document.getElementById('admin-setting-location').value, 'theme_color': document.getElementById('admin-setting-theme').value, 'public_voting': document.getElementById('admin-setting-voting').checked, 'voting_deadline': document.getElementById('admin-setting-deadline').value, 'event_type': document.getElementById('admin-setting-event-type').value }; for (const [key, value] of Object.entries(updates)) { await setDoc(doc(db, "Settings", key), { value: value }); } window.alert("Configuration successfully deployed to all devices."); btn.innerText = "Deploy Configuration"; btn.disabled = false; } catch (err) { window.alert("Error deploying: " + err.message); } };
+    window.saveSettings = async function() { try { const btn = document.querySelector('#view-admin .theme-btn'); btn.innerText = "Deploying..."; btn.disabled = true; const updates = { 'app_title': document.getElementById('admin-setting-title').value, 'app_subtitle': document.getElementById('admin-setting-subtitle').value, 'location_text': document.getElementById('admin-setting-location').value, 'theme_color': document.getElementById('admin-setting-theme').value, 'public_voting': document.getElementById('admin-setting-voting').checked, 'voting_deadline': document.getElementById('admin-setting-deadline').value, 'event_type': document.getElementById('admin-setting-event-type').value,'header_silhouette': document.getElementById('admin-setting-silhouette').value }; for (const [key, value] of Object.entries(updates)) { await setDoc(doc(db, "Settings", key), { value: value }); } window.alert("Configuration successfully deployed to all devices."); btn.innerText = "Deploy Configuration"; btn.disabled = false; } catch (err) { window.alert("Error deploying: " + err.message); } };
 
     // CANDIDATE EDIT LOGIC
     window.editCandidate = function(id) { const c = window.candidates.find(cand => String(cand.id) === String(id)); if (!c) return; window.editState.candidate = c.id; document.getElementById('new-cand-id').value = c.candidateNumber || c.id; document.getElementById('new-cand-id').readOnly = false; document.getElementById('new-cand-name').value = c.name || ''; document.getElementById('new-cand-loc').value = c.loc || ''; document.getElementById('new-cand-img').value = c.img || ''; document.getElementById('btn-add-cand').innerText = "Update Candidate"; document.getElementById('btn-cancel-cand').classList.remove('hidden'); };
