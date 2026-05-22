@@ -259,28 +259,6 @@
       45%,55% { opacity: 0.9; transform: scale(1) rotate(15deg); }
     }
     
-    /* Logo ring */
-    .splash-logo-ring {
-      width: 96px; height: 96px; border-radius: 50%;
-      border: 1.5px solid rgba(255,255,255,0.18);
-      display: flex; align-items: center; justify-content: center;
-      position: relative; margin-bottom: 28px; z-index: 1;
-      animation: ring-breathe 3s ease-in-out infinite;
-    }
-    .splash-logo-ring::before {
-      content: ''; position: absolute; inset: -8px; border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-    .splash-logo-ring::after {
-      content: ''; position: absolute; inset: -16px; border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.04);
-    }
-    @keyframes ring-breathe {
-      0%,100% { box-shadow: 0 0 0 0 rgba(244,63,94,0); }
-      50%      { box-shadow: 0 0 28px 8px rgba(244,63,94,0.25); }
-    }
-    #splash-icon { font-size: 44px; line-height: 1; filter: drop-shadow(0 0 16px rgba(244,63,94,0.6)); }
-    
     /* Text */
     #splash-title {
       font-family: 'Montserrat', sans-serif;
@@ -316,13 +294,20 @@
       transition: width 0.4s ease;
     }
     #splash-status {
-      font-size: 10px; color: rgba(255,255,255,0.30);
-      letter-spacing: 0.15em; text-transform: uppercase;
-      z-index: 1; animation: status-pulse 2s ease-in-out infinite;
-      min-height: 16px; text-align: center;
+      font-size: 11px;
+      color: rgba(255,255,255,0.85);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 600;
+      z-index: 1;
+      min-height: 18px;
+      text-align: center;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+      animation: status-pulse 2s ease-in-out infinite;
     }
     @keyframes status-pulse {
-      0%,100% { opacity: 0.30; } 50% { opacity: 0.65; }
+      0%,100% { opacity: 0.75; }
+      50%      { opacity: 1; }
     }
   </style>
 </head>
@@ -669,14 +654,6 @@
         el.classList.add('fade-out');
         setTimeout(() => el.remove(), 750);
       }, 400);
-    }
-    
-    // Update splash icon + title as soon as settings arrive from Firebase
-    function splashApplySettings() {
-      const icon = document.getElementById('splash-icon');
-      const title = document.getElementById('splash-title');
-      if (icon && window.settings['event_icon']) icon.innerText = window.settings['event_icon'];
-      if (title && window.settings['app_title'])  title.innerText = window.settings['app_title'];
     }
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -1417,9 +1394,6 @@
     
         onSnapshot(collection(db, "Settings"), (snapshot) => {
           snapshot.forEach(doc => { window.settings[doc.id] = doc.data().value; });
-    
-          // Update splash with real event name & icon as soon as it arrives
-          splashApplySettings();
     
           if (document.getElementById('display-title'))
             document.getElementById('display-title').innerText = window.settings['app_title'] || "Event System";
