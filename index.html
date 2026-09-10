@@ -1,2587 +1,395 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Event Portal v2</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@400;500;700&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-  
-  <style>
-    :root {
-      --t-base-bg: #fcfcfc; --t-surface: rgba(255, 255, 255, 0.92); --t-text-main: #111827; --t-text-muted: #6b7280;
-      --t-primary: #e11d48; --t-grad: linear-gradient(135deg, #f43f5e, #be123c);
-      --t-shadow: rgba(225, 29, 72, 0.15); --t-border: rgba(255, 255, 255, 0.6);
-      --t-mesh-1: rgba(244, 63, 94, 0.15); --t-mesh-2: rgba(225, 29, 72, 0.12); --t-mesh-3: rgba(253, 164, 175, 0.18);
-    }
-    body { background-color: var(--t-base-bg); color: var(--t-text-main); font-family: 'Inter', sans-serif; transition: background-color 0.4s ease, color 0.4s ease; overflow-x: hidden; }
-    h1, h2, h3, h4, h5, h6, .nav-btn label, .theme-table-header th, .uppercase-tracking { font-family: 'Montserrat', sans-serif; }
-    .score-number, .rolling-number { font-family: 'Roboto Mono', monospace; }
-
-    .mesh-bg { position: fixed; inset: -20%; z-index: -1; background-color: var(--t-base-bg); background-image: radial-gradient(circle at 15% 30%, var(--t-mesh-1), transparent 50%), radial-gradient(circle at 85% 20%, var(--t-mesh-2), transparent 50%), radial-gradient(circle at 50% 80%, var(--t-mesh-3), transparent 60%); background-size: 100% 100%; filter: blur(80px); animation: aurora-breathe 20s ease-in-out infinite alternate; pointer-events: none; }
-    @keyframes aurora-breathe { 0% { transform: translate(0, 0) scale(1) rotate(0deg); } 50% { transform: translate(3%, 4%) scale(1.05) rotate(2deg); } 100% { transform: translate(-3%, -2%) scale(0.95) rotate(-2deg); } }
-
-    .card-panel, .theme-surface { background-color: var(--t-surface); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
-    .card-panel { border: 1px solid var(--t-border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.05); border-radius: 1.5rem; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-    .theme-text { color: var(--t-primary); } .theme-text-muted { color: var(--t-text-muted); } .theme-bg-soft { background-color: var(--t-base-bg); }
-    .theme-btn { background: var(--t-grad); color: #ffffff; box-shadow: 0 4px 15px var(--t-shadow); border: none; }
-    .theme-btn:hover { opacity: 0.95; transform: translateY(-2px); box-shadow: 0 8px 25px var(--t-shadow); }
-    .glass-panel { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.3); }
-
-    .theme-table-header { background-color: rgba(128, 128, 128, 0.06); border-bottom: 1px solid rgba(128, 128, 128, 0.15); }
-    .theme-table-row { border-bottom: 1px solid rgba(128, 128, 128, 0.08); transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease; }
-    #table-averages, #table-peoples-choice, #table-detailed { display: table; width: 100%; border-collapse: separate; border-spacing: 0 0.5rem; }
-
-    input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
-    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 32px; width: 32px; border-radius: 50%; background: var(--t-surface); cursor: pointer; margin-top: -12px; box-shadow: 0 4px 15px var(--t-shadow); border: 4px solid var(--t-primary); transition: transform 0.1s; }
-    input[type=range]::-webkit-slider-thumb:active { transform: scale(1.1); }
-    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; border-radius: 4px; border: 1px solid var(--t-border); background: linear-gradient(to right, var(--t-primary) 0%, var(--t-primary) var(--fill, 50%), var(--t-base-bg) var(--fill, 50%), var(--t-base-bg) 100%); box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); }
-    
-    @keyframes score-pop { 0% { transform: scale(1); } 50% { transform: scale(1.3); color: var(--t-primary); } 100% { transform: scale(1); } }
-    .score-pop { animation: score-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); display: inline-block; }
-    @keyframes view-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-    .view-animate { animation: view-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
-    
-    /* NEW CSS KEYFRAME FIX FOR CANDIDATE CARDS */
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-    .animate-fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
-    
-    @keyframes slide-in-right { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
-    .animate-slide-right { animation: slide-in-right 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
-    @keyframes lock-burst { 0% { transform: scale(1); } 40% { transform: scale(1.03); box-shadow: 0 0 0 6px var(--t-shadow); } 100% { transform: scale(1); box-shadow: none; } }
-    .score-locked-flash { animation: lock-burst 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
-
-    /* ── NEON CRYSTAL HEADER PANEL ─────────────────────────────── */
-    .neon-crystal-panel {
-      /* Crystal base: translucent theme surface tinted by the primary color */
-      background:
-        linear-gradient(135deg,
-          rgba(255,255,255,0.12) 0%,
-          rgba(255,255,255,0.06) 40%,
-          rgba(255,255,255,0.10) 100%
-        ),
-        var(--t-grad);
-      background-size: 300% 300%;
-      animation: neon-panel-breathe 6s ease infinite;
-    
-      /* Neon edge glow — primary color, layered for depth */
-      border: 1.5px solid rgba(255,255,255,0.35);
-      box-shadow:
-        0 0 0 1px var(--t-primary),
-        0 0 18px 2px var(--t-shadow),
-        0 0 40px 6px var(--t-shadow),
-        inset 0 0 24px rgba(255,255,255,0.08),
-        inset 0 1px 0 rgba(255,255,255,0.4);
-    
-      border-radius: 2rem;
-      padding: 1.75rem 2rem;
-      backdrop-filter: blur(28px);
-      -webkit-backdrop-filter: blur(28px);
-      position: relative;
-      overflow: hidden;
-      display: inline-block;
-      width: 100%;
-      max-width: 64rem;
-      margin: 0 auto;
-      z-index: 10;
-      transition: box-shadow 0.5s ease, background 0.5s ease;
-    }
-    
-    /* Panning gradient animation so the panel itself feels alive */
-    @keyframes neon-panel-breathe {
-      0%   { background-position: 0% 50%; }
-      50%  { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    
-    /* Prismatic light sweep — simulates crystal refraction */
-    .neon-crystal-panel::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        115deg,
-        transparent 30%,
-        rgba(255,255,255,0.22) 45%,
-        rgba(255,255,255,0.40) 50%,
-        rgba(255,255,255,0.22) 55%,
-        transparent 70%
-      );
-      background-size: 250% 250%;
-      animation: crystal-sweep 4s ease-in-out infinite;
-      pointer-events: none;
-      z-index: 1;
-    }
-    @keyframes crystal-sweep {
-      0%   { background-position: 200% 50%; opacity: 0; }
-      30%  { opacity: 1; }
-      70%  { opacity: 1; }
-      100% { background-position: -50% 50%; opacity: 0; }
-    }
-    
-    /* Inner edge highlight — gives a glass-rim feel */
-    .neon-crystal-panel::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background: linear-gradient(
-        to bottom,
-        rgba(255,255,255,0.30) 0%,
-        transparent 40%,
-        transparent 60%,
-        rgba(255,255,255,0.08) 100%
-      );
-      pointer-events: none;
-      z-index: 2;
-    }
-    @keyframes glass-shine { 0% { transform: translateX(-100%) translateY(-100%); } 100% { transform: translateX(100%) translateY(100%); } }
-
-    /* Dynamic Text Gradient linked to Theme Primary */
-    .header-crystal-text {
-      /* Crystal white shimmer — five-stop gradient cycling between
-         pure white, ice blue, and a warm pearl so it never looks flat */
-      background: linear-gradient(
-        110deg,
-        #e0f2fe  0%,    /* ice blue tint */
-        #ffffff  18%,   /* pure white peak */
-        #f0f9ff  32%,   /* almost-white cool */
-        #ffffff  50%,   /* pure white peak */
-        #fef9ec  64%,   /* warm pearl */
-        #ffffff  78%,   /* pure white peak */
-        #e0f2fe 100%    /* ice blue tint */
-      );
-      background-size: 300% auto;
-      color: transparent;
-      -webkit-background-clip: text;
-      background-clip: text;
-    
-      /* Layered glow: hard shadow for legibility, soft white halo for crystal effect */
-      filter:
-        drop-shadow(0 1px 4px rgba(0,0,0,0.40))
-        drop-shadow(0 0 12px rgba(255,255,255,0.75))
-        drop-shadow(0 0 28px rgba(255,255,255,0.35));
-    
-      animation: crystal-white-shine 3.5s linear infinite;
-    }
-    
-    @keyframes crystal-white-shine {
-      0%   { background-position:  0%  center; }
-      100% { background-position: -300% center; }
-    }
-    @keyframes shine-text { 0% { background-position: 0% center; } 100% { background-position: -200% center; } }
-
-    .diamond-sparkle {
-      position: absolute; width: 26px; height: 26px;
-      background: radial-gradient(circle, #ffffff 5%, transparent 15%), 
-                  linear-gradient(45deg, transparent 46%, #ffffff 48%, #ffffff 52%, transparent 54%), 
-                  linear-gradient(-45deg, transparent 46%, #ffffff 48%, #ffffff 52%, transparent 54%),
-                  linear-gradient(0deg, transparent 48%, #ffffff 49%, #ffffff 51%, transparent 52%),
-                  linear-gradient(90deg, transparent 48%, #ffffff 49%, #ffffff 51%, transparent 52%);
-      opacity: 0; pointer-events: none;
-      animation: diamond-glint 3s infinite ease-in-out;
-      filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9));
-    }
-    @keyframes diamond-glint {
-      0%   { transform: scale(0)   rotate(0deg);  opacity: 0; }
-      35%  { transform: scale(1.1) rotate(30deg); opacity: 0.7;
-             filter: drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 14px #e0f2fe); }
-      50%  { transform: scale(1.4) rotate(45deg); opacity: 1;
-             filter: drop-shadow(0 0 10px #ffffff) drop-shadow(0 0 22px #bfdbfe)
-                     drop-shadow(0 0 40px rgba(255,255,255,0.5)); }
-      65%  { transform: scale(1.1) rotate(60deg); opacity: 0.7;
-             filter: drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 14px #e0f2fe); }
-      100% { transform: scale(0)   rotate(90deg); opacity: 0; }
-    }
-
-    /* --- PARALLAX CLASSES --- */
-    .parallax-container { perspective: 1000px; }
-    .parallax-inner { transform-style: preserve-3d; transition: transform 0.15s ease-out; will-change: transform; }
-    .parallax-img { transform: translateZ(-30px) scale(1.15); }
-    .parallax-front { transform: translateZ(45px); }
-
-    /* --- FIXED TILE GRID CAROUSEL CLASSES --- */
-    .tile-stage { position: relative; width: 100%; max-width: 340px; height: 30rem; margin: 0 auto; border-radius: 2rem; overflow: hidden; box-shadow: 0 15px 35px var(--t-shadow); }
-    .tile-grid { position: absolute; inset: 0; border-radius: 2rem; overflow: hidden; }
-    .tile { position: absolute; overflow: hidden; background-size: 400% 300%; will-change: transform, opacity; transition: transform 0.32s cubic-bezier(0.55, 0, 1, 0.45), opacity 0.28s ease-in; -webkit-backface-visibility: hidden; backface-visibility: hidden; transform: translateZ(0); }
-    .tile.scatter { opacity: 0; }
-    .tile.assemble { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1.001) !important; transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease-out; }
-
-    /* ── SPLASH SCREEN ───────────────────────────────────────── */
-    #splash-screen {
-      position: fixed; inset: 0; z-index: 9999;
-      background: linear-gradient(160deg, #1a0010 0%, #3d0030 40%, #6b0050 100%);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      transition: opacity 0.7s ease, transform 0.7s ease;
-    }
-    #splash-screen.fade-out {
-      opacity: 0; transform: scale(1.03); pointer-events: none;
-    }
-    
-    /* Ambient orbs */
-    .splash-orb {
-      position: absolute; border-radius: 50%;
-      filter: blur(60px); pointer-events: none;
-    }
-    .splash-orb-1 { width: 340px; height: 340px; background: rgba(225,29,72,0.30); top: -100px; left: -80px; }
-    .splash-orb-2 { width: 280px; height: 280px; background: rgba(190,18,60,0.22); bottom: -80px; right: -60px; }
-    .splash-orb-3 { width: 200px; height: 200px; background: rgba(244,63,94,0.18); top: 50%; left: 50%; transform: translate(-50%,-50%); animation: orb-pulse 4s ease-in-out infinite; }
-    @keyframes orb-pulse {
-      0%,100% { transform: translate(-50%,-50%) scale(1); opacity: 0.18; }
-      50%      { transform: translate(-50%,-50%) scale(1.3); opacity: 0.30; }
-    }
-    
-    /* Sparkle crosses */
-    .splash-sparkle {
-      position: absolute; width: 5px; height: 5px;
-      pointer-events: none;
-    }
-    .splash-sparkle::before,
-    .splash-sparkle::after {
-      content: ''; position: absolute; background: #ffffff; border-radius: 1px;
-      box-shadow: 0 0 6px 1px rgba(255,255,255,0.6);
-    }
-    .splash-sparkle::before { width: 1.5px; height: 28px; top: -12px; left: 1.75px; }
-    .splash-sparkle::after  { width: 28px; height: 1.5px; left: -12px; top: 1.75px; }
-    .ss1 { top: 14%; left: 16%;  animation: splash-glint 3.0s 0.0s ease-in-out infinite; }
-    .ss2 { top: 12%; right: 18%; animation: splash-glint 3.0s 1.1s ease-in-out infinite; }
-    .ss3 { bottom: 28%; left: 12%; animation: splash-glint 3.0s 0.55s ease-in-out infinite; }
-    .ss4 { bottom: 22%; right: 14%; animation: splash-glint 3.0s 1.7s ease-in-out infinite; }
-    .ss5 { top: 48%; left: 8%;  animation: splash-glint 3.0s 0.85s ease-in-out infinite; }
-    @keyframes splash-glint {
-      0%,100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
-      45%,55% { opacity: 0.9; transform: scale(1) rotate(15deg); }
-    }
-    
-    /* Text */
-    #splash-title {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 26px; font-weight: 900;
-      color: #fff; letter-spacing: -0.02em;
-      text-align: center; margin-bottom: 6px; z-index: 1;
-      text-shadow: 0 0 40px rgba(244,63,94,0.7), 0 2px 8px rgba(0,0,0,0.4);
-      animation: title-shimmer 3s ease-in-out infinite;
-    }
-    @keyframes title-shimmer {
-      0%,100% { text-shadow: 0 0 40px rgba(244,63,94,0.7), 0 2px 8px rgba(0,0,0,0.4); }
-      50%      { text-shadow: 0 0 60px rgba(244,63,94,1.0), 0 2px 8px rgba(0,0,0,0.4); }
-    }
-    .splash-sub {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 10px; font-weight: 700;
-      color: rgba(255,255,255,0.45); letter-spacing: 0.28em;
-      text-transform: uppercase; text-align: center;
-      margin-bottom: 40px; z-index: 1;
-    }
-    
-    /* Progress bar */
-    .splash-progress-wrap {
-      width: 180px; height: 3px;
-      background: rgba(255,255,255,0.08);
-      border-radius: 2px; overflow: hidden;
-      z-index: 1; margin-bottom: 16px;
-    }
-    .splash-progress-bar {
-      height: 100%; width: 0%; border-radius: 2px;
-      background: linear-gradient(90deg, #f43f5e, #fb7185);
-      box-shadow: 0 0 10px rgba(244,63,94,0.6);
-      transition: width 0.4s ease;
-    }
-    #splash-status {
-      font-size: 11px;
-      color: rgba(255,255,255,0.85);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      font-weight: 600;
-      z-index: 1;
-      min-height: 18px;
-      text-align: center;
-      text-shadow: 0 1px 6px rgba(0,0,0,0.5);
-      animation: status-pulse 2s ease-in-out infinite;
-    }
-    @keyframes status-pulse {
-      0%,100% { opacity: 0.75; }
-      50%      { opacity: 1; }
-    }
-  </style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Michael Borja — Operations, Reporting &amp; Data Analyst</title>
+<meta content="Michael Borja is an operations, reporting and data professional specializing in dashboards, spreadsheet automation, workflow improvement and practical business tools." name="description"/>
+<meta content="website" property="og:type"/>
+<meta content="Michael Borja — Operations, Reporting &amp; Data Analyst" property="og:title"/>
+<meta content="Operational data, dashboards, reporting automation and practical business tools backed by enterprise and freelance experience." property="og:description"/>
+<meta content="assets/images/og-cover.svg" property="og:image"/>
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="Michael Borja — Operations, Reporting &amp; Data Analyst" name="twitter:title"/>
+<meta content="Operational data, dashboards, reporting automation and practical business tools." name="twitter:description"/>
+<link href="assets/images/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="assets/css/style.css" rel="stylesheet"/>
 </head>
-<body class="min-h-screen pb-24">
-  <!-- ── SPLASH SCREEN ──────────────────────────────────────── -->
-  <div id="splash-screen">
-    <!-- Ambient orbs -->
-    <div class="splash-orb splash-orb-1"></div>
-    <div class="splash-orb splash-orb-2"></div>
-    <div class="splash-orb splash-orb-3"></div>
-  
-    <!-- Sparkle crosses -->
-    <div class="splash-sparkle ss1"></div>
-    <div class="splash-sparkle ss2"></div>
-    <div class="splash-sparkle ss3"></div>
-    <div class="splash-sparkle ss4"></div>
-    <div class="splash-sparkle ss5"></div>
-  
-    <!-- Text -->
-    <h1 id="splash-title">Event Portal</h1>
-    <p class="splash-sub">Automated Tabulation System</p>
-  
-    <!-- Progress -->
-    <div class="splash-progress-wrap">
-      <div class="splash-progress-bar" id="splash-bar"></div>
-    </div>
-    <p id="splash-status">Connecting to database</p>
-  </div>
-
-  <div class="mesh-bg"></div>
-
-  <div id="loader" class="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
-      <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center">
-          <svg class="animate-spin h-10 w-10 text-emerald-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          <span id="loader-text" class="text-sm font-black text-slate-800 tracking-widest uppercase-tracking">Connecting...</span>
-      </div>
-  </div>
-
-  <div id="app-container" class="p-4 md:p-8">
-    <div class="mb-8 text-center mt-4 w-full max-w-5xl mx-auto">
-      <div class="neon-crystal-panel relative overflow-hidden">
-        <div id="header-silhouette" class="absolute inset-0 z-0 bg-no-repeat bg-center opacity-10 pointer-events-none transition-all duration-1000 bg-contain"></div>
-        <div class="inline-block relative z-10">
-          <div class="diamond-sparkle top-0 -left-6" style="animation-delay: 0s; width: 32px; height: 32px;"></div>
-          <div class="diamond-sparkle bottom-4 -right-4" style="animation-delay: 1.2s; width: 36px; height: 36px;"></div>
-          
-          <div class="diamond-sparkle top-2 right-1/4" style="animation-delay: 0.6s; width: 22px; height: 22px;"></div>
-          <div class="diamond-sparkle -bottom-2 left-1/4" style="animation-delay: 2.5s; width: 26px; height: 26px;"></div>
-          
-          <div class="diamond-sparkle -top-4 left-1/3" style="animation-delay: 2.1s; width: 14px; height: 14px;"></div>
-          <div class="diamond-sparkle bottom-1 right-1/3" style="animation-delay: 1.8s; width: 16px; height: 16px;"></div>
-          <div class="diamond-sparkle top-1/2 -left-10" style="animation-delay: 0.9s; width: 12px; height: 12px;"></div>
-          <div class="diamond-sparkle top-6 -right-8" style="animation-delay: 0.3s; width: 18px; height: 18px;"></div>
-          
-          <h1 class="text-4xl md:text-5xl font-black py-2 header-crystal-text" id="display-title">System Connecting...</h1>
-          <p id="display-subtitle" class="text-lg opacity-80 mt-2 font-medium">Core Operations</p>
-          <p id="display-location" class="text-sm opacity-80 font-bold mt-1">Location Undefined</p>
-        </div>
-      </div>
-    </div>
-    
-    <p id="status-text" class="text-center text-slate-400 mb-8 font-bold">Initializing database...</p>
-
-    <div id="view-home" class="hidden">
-      <div id="carousel-track" class="mb-8"></div>
-      <div id="vote-prompt-section" class="hidden text-center mb-8 px-2 max-w-5xl mx-auto">
-        <div class="card-panel p-6 border border-[var(--t-primary)]/20 bg-black/5 relative overflow-hidden">
-           <div class="relative z-10">
-             <h3 class="text-lg font-black uppercase-tracking theme-text mb-1">Support your favorite candidate!</h3>
-             <p class="text-[10px] font-bold theme-text-muted mb-4 opacity-80 uppercase-tracking tracking-widest">Help them win the People's Choice Award</p>
-             
-             <button id="btn-cast-vote" onclick="window.showVotingGallery()" class="theme-btn px-8 py-3 rounded-xl font-black uppercase-tracking text-xs mb-4 shadow-lg active:scale-95 transition-all">
-               <i class="fas fa-check-circle mr-1.5"></i> Cast Vote
-             </button>
-             <button id="btn-cancel-vote" onclick="window.hideVotingGallery()" class="theme-btn px-8 py-3 rounded-xl font-black uppercase-tracking text-xs mb-4 shadow-lg active:scale-95 transition-all">
-                <i class="fas fa-arrow-left mr-1.5"></i> Back
-              </button>
-             
-             <div id="vote-countdown" class="mt-2 hidden">
-               <span class="text-[10px] uppercase-tracking theme-text-muted font-bold tracking-widest">Voting Closes In</span>
-               <h4 id="countdown-timer" class="text-2xl font-black score-number theme-text mt-1">--:--:--</h4>
-             </div>
-             <p id="vote-closed-msg" class="hidden text-red-500 font-bold uppercase-tracking text-sm mt-2">Voting is Closed</p>
-           </div>
-        </div>
-      </div>
-      <div id="voting-gallery" class="max-w-md mx-auto mb-10"></div>
-      
-      <footer class="mt-12 text-center border-t border-black/5 pt-6 pb-2 opacity-60 hover:opacity-100 transition-opacity duration-300">
-        <p class="text-[9px] font-black theme-text-muted uppercase-tracking tracking-[0.2em] mb-1">Architecture & Design</p>
-        <p class="text-sm font-black tracking-widest mb-2">MICHAEL BORJA</p>
-        <p class="text-[10px] font-black theme-text-muted tracking-[0.2em] mb-3 italic">Rent this automated tabulation system on your next event!</p>
-        <div class="flex justify-center items-center gap-4">
-          <a href="tel:09568490159" class="theme-text-muted hover:text-[var(--t-primary)] transition-colors flex items-center gap-1.5 text-xs font-black"><span>📞</span> 0956 849 0159</a>
-          <span class="opacity-30 text-xs font-bold theme-text-muted">|</span>
-          <a href="https://www.facebook.com/mikeVborja" target="_blank" class="theme-text-muted hover:text-[#1877F2] transition-colors flex items-center gap-1.5 text-xs font-black">
-            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-            Facebook
-          </a>
-        </div>
-      </footer>
-    </div>
-    
-    <div id="view-login" class="hidden max-w-sm mx-auto card-panel p-8">
-      <h2 class="text-2xl font-black mb-6 text-center">Secure Access</h2>
-      <input type="text" id="login-username" placeholder="Username" class="w-full p-3 rounded-xl mb-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-400 text-black" onkeydown="if(event.key === 'Enter') document.getElementById('login-password').focus();">
-      <div class="relative w-full mb-6">
-        <input type="password" id="login-password" placeholder="Passkey" class="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-400 pr-12 text-black" onkeydown="if(event.key === 'Enter') window.processLogin();">
-        <button type="button" onclick="const p=document.getElementById('login-password'); const i=document.getElementById('eye-icon'); if(p.type==='password'){p.type='text'; i.className='fas fa-eye-slash';}else{p.type='password'; i.className='fas fa-eye';}" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-800 transition-colors">
-          <i id="eye-icon" class="fas fa-eye text-lg"></i>
-        </button>
-      </div>
-      <p id="login-error" class="text-red-500 text-sm font-bold mb-4 hidden text-center"></p>
-      <button id="login-btn" onclick="window.processLogin()" class="theme-btn w-full py-3 rounded-xl font-black uppercase-tracking text-sm">Authenticate</button>
-    </div>
-
-    <div id="view-judging" class="hidden max-w-md mx-auto">
-      <div id="segment-tabs" class="flex overflow-x-auto mb-6 p-2 bg-black/5 rounded-2xl gap-2"></div>
-      <div id="candidates-container"></div>
-    </div>
-
-    <div id="view-scores" class="hidden max-w-5xl mx-auto">
-      <div class="flex justify-between items-center mb-6 px-2">
-        <h2 class="text-2xl font-black theme-text uppercase-tracking drop-shadow-sm">Official Tabulation</h2>
-        <button id="btn-export-pdf" onclick="window.exportScoresPDF()" class="theme-btn px-6 py-2.5 rounded-xl font-black uppercase-tracking text-[10px] shadow-lg flex items-center gap-2 active:scale-95 transition-transform">
-          <i class="fas fa-file-pdf text-sm"></i> Export to PDF
-        </button>
-      </div>
-      <div id="peoples-choice-card" class="card-panel p-6 mb-8 hidden">
-        <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2">People's Choice (Public Votes)</h3>
-        <div class="overflow-x-auto"><table class="w-full" id="table-peoples-choice"></table></div>
-      </div>
-      <div class="card-panel p-6 mb-8">
-        <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2">Ranking Overview</h3>
-        <div class="overflow-x-auto"><table class="w-full" id="table-averages"></table></div>
-      </div>
-      <div class="card-panel p-6 mb-8">
-        <h3 class="text-xl font-black mb-4 theme-text uppercase-tracking border-b border-black/10 pb-2">Detailed Judge Matrix</h3>
-        <div class="overflow-x-auto"><table class="w-full" id="table-detailed"></table></div>
-      </div>
-    </div>
-
-    <div id="view-admin" class="hidden max-w-5xl mx-auto space-y-6 pb-20">
-       <div class="card-panel p-6">
-         <h2 class="text-2xl font-black mb-6 border-b pb-2">Event Architecture</h2>
-         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-           <div><label class="text-xs font-bold uppercase-tracking theme-text-muted">Event Title</label><input type="text" id="admin-setting-title" class="w-full p-2 border rounded-lg mt-1 text-black"></div>
-           <div><label class="text-xs font-bold uppercase-tracking theme-text-muted">Sub Title</label><input type="text" id="admin-setting-subtitle" class="w-full p-2 border rounded-lg mt-1 text-black"></div>
-           <div><label class="text-xs font-bold uppercase-tracking theme-text-muted">Location</label><input type="text" id="admin-setting-location" class="w-full p-2 border rounded-lg mt-1 text-black"></div>
-           <div><label class="text-xs font-bold uppercase-tracking theme-text-muted">Theme Color</label>
-              <select id="admin-setting-theme" class="w-full p-2 border rounded-lg mt-1 text-black">
-                <option value="red">Velvet (Red)</option>
-                <option value="blue">Sapphire (Blue)</option>
-                <option value="amber">Gold (Amber)</option>
-                <option value="emerald">Forest (Emerald)</option>
-                <option value="indigo">Royal (Indigo)</option>
-                <option value="dark">Midnight (Dark)</option>
-                <option value="velvet">Emerald Velvet (Dark Green)</option>
-                <option value="neon_purple">Neon Ultraviolet (Dark)</option>
-                <option value="cyber_teal">Cyber Teal (Dark)</option>
-                <option value="magenta_fury">Magenta Fury (Dark)</option>
-                <option value="neon_green">Matrix Green (Dark)</option>
-                <option value="solar_gold">Solar Gold (Dark)</option>
-                <option value="ice_crystal">Ice Crystal (Dark)</option>
-                <option value="galaxy_rose">Galaxy Rose (Dark)</option>
-                <option value="ember_orange">Ember Orange (Dark)</option>
-              </select>
-           </div>
-           <div>
-              <label class="text-xs font-bold uppercase-tracking theme-text-muted">Event Type</label>
-              <select id="admin-setting-event-type" class="w-full p-2 border rounded-lg mt-1 text-black">
-                <option value="pageant">👑 Pageant</option>
-                <option value="performance">🎤 Performance Contest</option>
-              </select>
-            </div>
-           <div>
-            <label class="text-xs font-bold uppercase-tracking theme-text-muted">Header Silhouette Image (Optional)</label>
-            <input type="text" id="admin-setting-silhouette" placeholder="Paste image URL..." class="w-full p-2 border rounded-lg mt-1 text-black">
-          </div>
-         </div>
-         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-black/5 rounded-xl border border-black/10">
-            <div class="flex items-center justify-between">
-              <label class="font-bold uppercase-tracking">Enable Public Voting</label>
-              <input type="checkbox" id="admin-setting-voting" class="w-6 h-6 rounded cursor-pointer">
-            </div>
-            <div>
-              <label class="text-xs font-bold uppercase-tracking theme-text-muted">Voting Deadline (Optional)</label>
-              <input type="datetime-local" id="admin-setting-deadline" class="w-full p-2 border rounded-lg mt-1 text-black">
-            </div>
-         </div>
-         <button onclick="window.saveSettings()" class="theme-btn px-6 py-3 rounded-lg font-bold w-full uppercase-tracking tracking-wider text-sm">Deploy Configuration</button>
-       </div>
-       
-       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <div class="card-panel p-5 relative">
-            <h3 class="font-black uppercase-tracking border-b pb-2 mb-4 text-sm flex justify-between items-center">
-              <span>Candidates</span>
-              <button id="btn-cancel-cand" onclick="window.resetCandForm()" class="hidden text-[10px] uppercase-tracking tracking-wider text-red-500 font-bold hover:underline">Cancel Edit</button>
-            </h3>
-            <div id="admin-candidates-list" class="space-y-2">
-              <div class="candidate-sort-item p-3 theme-surface rounded flex items-center border theme-border mb-2" data-id="${c.firebaseDocId}">
-                 <div class="drag-handle touch-none cursor-grab active:cursor-grabbing px-2 py-1 -ml-2 mr-2 opacity-50 hover:opacity-100 flex items-center justify-center">
-                     <i class="fas fa-grip-lines text-lg"></i> 
-                 </div>
-                 <span class="font-bold theme-text">#${c.candidateNumber} - ${c.name}</span>
-              </div>
-            </div>
-            <div class="space-y-2 mt-6 pt-5 border-t border-dashed theme-border">
-              <input type="number" id="new-cand-id" placeholder="Candidate #" class="w-full p-2 border rounded text-sm bg-black/5">
-              <input type="text" id="new-cand-name" placeholder="Full Name" class="w-full p-2 border rounded text-sm bg-black/5">
-              <input type="text" id="new-cand-loc" placeholder="Location Data" class="w-full p-2 border rounded text-sm bg-black/5">
-              <input type="text" id="new-cand-img" placeholder="Image URL" class="w-full p-2 border rounded text-sm bg-black/5">
-              <button id="btn-add-cand" onclick="window.addCandidate()" class="w-full theme-btn rounded p-2 text-xs font-bold uppercase-tracking tracking-wider mt-2 transition-all active:scale-95 shadow-md">Add Candidate</button>
-            </div>
-         </div>
-
-         <div class="card-panel p-5 relative">
-            <h3 class="font-black uppercase-tracking border-b pb-2 mb-4 text-sm flex justify-between items-center">
-              <span>Criteria</span>
-              <button id="btn-cancel-crit" onclick="window.resetCritForm()" class="hidden text-[10px] uppercase-tracking tracking-wider text-red-500 font-bold hover:underline">Cancel Edit</button>
-            </h3>
-            <div id="admin-criteria-list" class="space-y-2">
-              <div class="criteria-sort-item p-3 theme-surface rounded flex items-center border theme-border mb-2" data-id="${crit.firebaseDocId}">
-                 <div class="drag-handle touch-none cursor-grab active:cursor-grabbing px-2 py-1 -ml-2 mr-2 opacity-50 hover:opacity-100 flex items-center justify-center">
-                     <i class="fas fa-grip-lines text-lg"></i> 
-                 </div>
-                 <span class="font-bold theme-text">${crit.short}</span>
-              </div>
-            </div>
-            <div class="space-y-2 mt-6 pt-5 border-t border-dashed theme-border">
-              <input type="text" id="new-crit-id" placeholder="System ID (e.g. gown)" class="w-full p-2 border rounded text-sm bg-black/5">
-              <input type="text" id="new-crit-label" placeholder="Full Label" class="w-full p-2 border rounded text-sm bg-black/5">
-              <input type="text" id="new-crit-short" placeholder="Short Name" class="w-full p-2 border rounded text-sm bg-black/5">
-              <input type="number" id="new-crit-max" placeholder="Max Score (e.g. 10)" class="w-full p-2 border rounded text-sm bg-black/5">
-              <button id="btn-add-crit" onclick="window.addCriteria()" class="w-full theme-btn rounded p-2 text-xs font-bold uppercase-tracking tracking-wider mt-2 transition-all active:scale-95 shadow-md">Add Criteria</button>
-            </div>
-         </div>
-
-         <div class="card-panel p-5 relative">
-            <h3 class="font-black uppercase-tracking border-b pb-2 mb-4 text-sm flex justify-between items-center">
-              <span>System Users</span>
-              <button id="btn-cancel-user" onclick="window.resetUserForm()" class="hidden text-[10px] uppercase-tracking tracking-wider text-red-500 font-bold hover:underline">Cancel Edit</button>
-            </h3>
-            <div id="admin-users-list" class="space-y-2 mb-4 max-h-48 overflow-y-auto text-sm"></div>
-            <div class="space-y-2 mt-6 pt-5 border-t border-dashed theme-border">
-              <input type="text" id="new-user-username" placeholder="Username" class="w-full p-2 border rounded text-sm bg-black/5">
-              <input type="text" id="new-user-name" placeholder="Full Name" class="w-full p-2 border rounded text-sm bg-black/5">
-              <input type="email" id="new-user-email" placeholder="Email Address (Optional)" class="w-full p-2 border rounded text-sm bg-black/5">
-              
-              <input type="text" id="new-user-pass" placeholder="Password (blank to keep)" class="w-full p-2 border rounded text-sm bg-black/5">
-              <select id="new-user-role" class="w-full p-2 border rounded text-sm bg-black/5">
-                <option value="Judge"class="text-black bg-white">Judge</option>
-                <option value="Tabulator"class="text-black bg-white">Tabulator</option>
-                <option value="Admin"class="text-black bg-white">Admin</option>
-              </select>
-              <button id="btn-add-user" onclick="window.addUser()" class="w-full theme-btn rounded p-2 text-xs font-bold uppercase-tracking tracking-wider mt-2 transition-all active:scale-95 shadow-md">Add User</button>
-            </div>
-         </div>
-       </div>
-      <div class="card-panel p-6 border-2 border-red-100 bg-red-50/30 mt-8">
-         <h3 class="font-black uppercase-tracking text-red-600 mb-2">Danger Zone</h3>
-         <p class="text-xs theme-text-muted mb-4 opacity-80 font-bold">Wipe submitted data to start a fresh session. This action is permanent.</p>
-         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-           <button onclick="window.resetJudgeScores()" class="w-full bg-red-600 text-white py-3 rounded-xl font-black uppercase-tracking text-xs hover:bg-red-700 transition-colors shadow-lg shadow-red-200">
-             <i class="fas fa-gavel mr-2"></i> Reset Judge Scores
-           </button>
-           <button onclick="window.resetPublicVotes()" class="w-full bg-orange-600 text-white py-3 rounded-xl font-black uppercase-tracking text-xs hover:bg-orange-700 transition-colors shadow-lg shadow-orange-200">
-             <i class="fas fa-users mr-2"></i> Reset Public Votes
-           </button>
-         </div>
-       </div>
-      <div class="card-panel p-6 border-t-4 border-[#b45309]">
-        <h3 class="text-xs font-black uppercase-tracking tracking-widest theme-text mb-4 flex items-center"><i class="fas fa-edit mr-2 text-[#b45309]"></i> Manual Score Override</h3>
-        <p class="text-[10px] theme-text-muted mb-4 leading-relaxed">Forcefully adjust a judge's submitted score. Changes will reflect on all dashboards instantly.</p>
-        
-        <div class="space-y-3">
-          <select id="override-candidate" class="w-full p-2 border theme-border rounded text-sm theme-bg-soft theme-text" onchange="window.loadOverrideJudges()">
-            <option value="" class="text-black bg-white">-- Select Candidate --</option>
-          </select>
-          
-          <select id="override-judge" class="w-full p-2 border theme-border rounded text-sm theme-bg-soft theme-text hidden" onchange="window.loadOverrideScores()">
-            <option value="" class="text-black bg-white">-- Select Judge --</option>
-          </select>
-          
-          <div id="override-scores-container" class="hidden space-y-2 theme-surface p-3 rounded-lg border theme-border">
-            </div>
-          
-          <button id="btn-override-save" onclick="window.saveOverrideScore()" class="hidden w-full bg-[#b45309] text-white rounded p-3 text-xs font-bold hover:bg-[#92400e] uppercase-tracking tracking-wider mt-2 transition-colors shadow-md">
-            Force Update Score
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <nav class="fixed bottom-0 inset-x-0 theme-surface border-t border-black/10 shadow-2xl z-[100] pb-safe hide-on-print">
-    <div class="flex justify-around items-center h-16 max-w-md mx-auto px-4" id="main-nav">
-      <button onclick="window.switchView('home')" id="nav-home" class="nav-btn flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all theme-text opacity-100 theme-bg-soft -translate-y-2 shadow-md"><i class="fas fa-home text-lg mb-1"></i><span class="text-[9px] font-black uppercase-tracking tracking-wider">Home</span></button>
-      <button onclick="window.switchView('judging')" id="nav-judging" class="nav-btn flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all theme-text-muted opacity-60 hidden"><i class="fas fa-gavel text-lg mb-1"></i><span class="text-[9px] font-black uppercase-tracking tracking-wider">Judge</span></button>
-      <button onclick="window.switchView('scores')" id="nav-scores" class="nav-btn flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all theme-text-muted opacity-60 hidden"><i class="fas fa-chart-bar text-lg mb-1"></i><span class="text-[9px] font-black uppercase-tracking tracking-wider">Data</span></button>
-      <button onclick="window.switchView('admin')" id="nav-admin" class="nav-btn flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all theme-text-muted opacity-60 hidden"><i class="fas fa-cog text-lg mb-1"></i><span class="text-[9px] font-black uppercase-tracking tracking-wider">Admin</span></button>
-      <button onclick="window.switchView('login')" id="nav-login" class="nav-btn flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all theme-text-muted opacity-60"><i class="fas fa-user-shield text-lg mb-1"></i><span class="text-[9px] font-black uppercase-tracking tracking-wider">Login</span></button>
-    </div>
-  </nav>
-
-  <div id="offline-toast" style="position:fixed;bottom:6rem;left:50%;transform:translateX(-50%) translateY(20px);background:#1f2937;color:#f9fafb;padding:.6rem 1.4rem;border-radius:999px;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:0;transition:all .4s ease;pointer-events:none;z-index:9999;white-space:nowrap">⚡ Offline — score queued locally</div>
-  <div id="custom-modal" class="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
-    <div id="custom-modal-content" class="theme-surface p-8 rounded-3xl shadow-2xl max-w-sm w-full mx-4 transform scale-95 transition-transform duration-300 border theme-border">
-      <div class="text-center mb-6">
-        <h3 id="modal-title" class="text-2xl font-black theme-text tracking-tight"></h3>
-      </div>
-      <p id="modal-message" class="text-center theme-text-muted mb-8 font-medium leading-relaxed text-sm"></p>
-      <div id="modal-actions" class="flex justify-center gap-3"></div>
-    </div>
-  </div>
-
-  <script type="module">
-    window.onerror = function(msg, url, line) { alert("System Error: " + msg + "\nLine: " + line); };
-
-    // ── SPLASH CONTROLLER ─────────────────────────────────────
-    const splashSteps = [
-      { pct: 15, msg: "Connecting to database" },
-      { pct: 35, msg: "Loading criteria" },
-      { pct: 55, msg: "Loading candidates" },
-      { pct: 70, msg: "Loading users" },
-      { pct: 85, msg: "Starting live listeners" },
-      { pct: 98, msg: "Launching system" },
-    ];
-    let splashStep = 0;
-    
-    function splashProgress(stepIndex) {
-      const step = splashSteps[Math.min(stepIndex, splashSteps.length - 1)];
-      const bar = document.getElementById('splash-bar');
-      const status = document.getElementById('splash-status');
-      if (bar) bar.style.width = step.pct + '%';
-      if (status) status.innerText = step.msg;
-    }
-    
-    function splashDone() {
-      const el = document.getElementById('splash-screen');
-      if (!el) return;
-      // Fill to 100% then fade
-      const bar = document.getElementById('splash-bar');
-      const status = document.getElementById('splash-status');
-      if (bar) bar.style.width = '100%';
-      if (status) status.innerText = 'Ready';
-      setTimeout(() => {
-        el.classList.add('fade-out');
-        setTimeout(() => el.remove(), 750);
-      }, 400);
-    }
-
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, doc, getDoc, setDoc, getDocs, onSnapshot, query, where, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCVTCaxujL7Q0UmBqr-d5ev3CAZB5t3oxQ", authDomain: "dynamic-event-system.firebaseapp.com",
-      projectId: "dynamic-event-system", storageBucket: "dynamic-event-system.firebasestorage.app",
-      messagingSenderId: "588923118511", appId: "1:588923118511:web:1dba0b6be0c253d8bec55a"
-    };
-
-    const app = initializeApp(firebaseConfig); 
-    const db = getFirestore(app); 
-    const auth = getAuth(app); 
-    window.db = db;
-    
-    // Secondary App (Specifically so Admins can create users without getting logged out)
-    const secondaryApp = initializeApp(firebaseConfig, "Secondary");
-    const secondaryAuth = getAuth(secondaryApp);
-
-    window.settings = {}; window.criteria = []; window.candidates = []; window.users = []; 
-    window.scoresData = {}; window.lockedScores = {}; window.currentSegment = ''; 
-    window.activeUser = { name: "", role: "" }; window.currentCarouselIndex = 0; 
-    window.activeListeners = []; window.latestScores = []; window.latestVotes = {}; window.votingTimerInterval = null;
-    window.editState = { candidate: null, criteria: null, user: null };
-    let offlineQueue = JSON.parse(localStorage.getItem('pageant_offline_queue')) || [];
-
-    window.sha256 = async function(msg) { const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg)); return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join(''); };
-    window.showOfflineToast = function() { const t = document.getElementById('offline-toast'); if(!t) return; t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)'; setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(20px)'; }, 3500); };
-    window.animateRowSwap = function(containerId) { const container = document.getElementById(containerId); if (!container) return null; const positions = new Map(); container.querySelectorAll('.theme-table-row').forEach(row => positions.set(row.dataset.id, row.getBoundingClientRect().top)); return { play: () => { container.querySelectorAll('.theme-table-row').forEach(row => { const firstTop = positions.get(row.dataset.id); const lastTop = row.getBoundingClientRect().top; if (firstTop && firstTop !== lastTop) { const deltaY = firstTop - lastTop; row.style.transition = 'none'; row.style.transform = `translateY(${deltaY}px)`; requestAnimationFrame(() => { row.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease'; row.style.transform = ''; }); } }); } }; };
-
-    // --- FIX: ABSOLUTE GRID TILE LOGIC ---
-    window.COLS = 4; window.ROWS = 3; window.TOTAL = window.COLS * window.ROWS;
-    window.tileStage = null; window.tileGrid = null; window.breakInterval = null;
-
-    window.buildTileStage = function() {
-      const container = document.getElementById('carousel-track');
-      if (!container || window.candidates.length === 0) return;
-      container.innerHTML = '';
-      window.currentCarouselIndex = 0;
-      container.style.cssText = 'display:flex;justify-content:center;align-items:center;height:34rem;cursor:pointer;';
-      window.tileStage = document.createElement('div');
-      window.tileStage.className = 'tile-stage';
-      window.tileGrid = document.createElement('div');
-      window.tileGrid.className = 'tile-grid';
-      
-      const overlay = document.createElement('div');
-      overlay.id = 'tile-overlay';
-      overlay.style.cssText = `position:absolute;bottom:0;inset-x:0;padding:1.25rem;text-align:center;z-index:10;background:linear-gradient(to top, rgba(0,0,0,0.88) 0%, transparent 100%);border-radius:0 0 2rem 2rem;pointer-events:none;`;
-      overlay.innerHTML = `<p id="tile-num" style="font-size:.6rem;font-weight:900;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:.2rem"></p><h3 id="tile-name" style="font-size:1.4rem;font-weight:900;color:#fff;line-height:1.1;letter-spacing:-.02em"></h3><p id="tile-loc" style="font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.8);margin-top:.4rem;display:flex;justify-content:center;align-items:center;gap:.3rem;"></p>`;
-      
-      for (let row = 0; row < window.ROWS; row++) {
-        for (let col = 0; col < window.COLS; col++) {
-          const tile = document.createElement('div');
-          tile.className = 'tile';
-          // Fix: Absolutely position with +1px overlap to eliminate browser rendering lines completely
-          tile.style.width = 'calc(25% + 1px)';
-          tile.style.height = 'calc(33.333% + 1px)';
-          tile.style.left = `${col * 25}%`;
-          tile.style.top = `${row * 33.333}%`;
-          tile.style.backgroundPositionX = (col / (window.COLS - 1) * 100) + '%';
-          tile.style.backgroundPositionY = (row / (window.ROWS - 1) * 100) + '%';
-          tile.dataset.col = col;
-          tile.dataset.row = row;
-          window.tileGrid.appendChild(tile);
-        }
-      }
-      window.tileStage.appendChild(window.tileGrid);
-      window.tileStage.appendChild(overlay);
-      container.appendChild(window.tileStage);
-      
-      container.onclick = () => window.goToCarousel((window.currentCarouselIndex + 1) % window.candidates.length);
-      
-      window.setTileImage(window.currentCarouselIndex);
-      window.startBreakCycle();
-    };
-
-    window.setTileImage = function(idx) {
-      const c = window.candidates[idx];
-      const img = (c.img && c.img.length > 5) ? c.img : 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=800&q=80';
-      document.querySelectorAll('.tile').forEach(t => { t.style.backgroundImage = `url('${img}')`; });
-      const numEl = document.getElementById('tile-num');
-      const nameEl = document.getElementById('tile-name');
-      const locEl = document.getElementById('tile-loc');
-      if (numEl) numEl.innerText = 'No. ' + String(c.candidateNumber || c.id).padStart(2, '0');
-      if (nameEl) nameEl.innerText = c.name;
-      if (locEl) {
-        if (c.loc) {
-          locEl.innerHTML = `<i class="fas fa-map-marker-alt" style="color: var(--t-primary)"></i> ${c.loc}`;
-          locEl.style.display = 'flex';
-        } else {
-          locEl.style.display = 'none'; // Hide completely if the candidate has no location data
-        }
-      }
-    };
-
-    window.scatterTiles = function() {
-      return new Promise(resolve => {
-        document.querySelectorAll('.tile').forEach(tile => {
-          const col = parseInt(tile.dataset.col);
-          const row = parseInt(tile.dataset.row);
-          const edgeX = col < window.COLS / 2 ? -1 : 1;
-          const edgeY = row < window.ROWS / 2 ? -1 : 1;
-          const distX = (Math.abs(col - (window.COLS - 1) / 2) / ((window.COLS - 1) / 2));
-          const distY = (Math.abs(row - (window.ROWS - 1) / 2) / ((window.ROWS - 1) / 2));
-          const tx = edgeX * (60 + distX * 80) + (Math.random() * 20 - 10);
-          const ty = edgeY * (50 + distY * 60) + (Math.random() * 20 - 10);
-          const rot = edgeX * (15 + Math.random() * 20);
-          const scale = 0.7 + Math.random() * 0.2;
-          tile.style.transform = `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(${scale})`;
-          tile.classList.add('scatter');
-        });
-        setTimeout(resolve, 340);
-      });
-    };
-
-    window.assembleTiles = function(idx) {
-      return new Promise(resolve => {
-        window.setTileImage(idx);
-        document.querySelectorAll('.tile').forEach(tile => {
-          tile.style.transition = 'none';
-          tile.style.opacity = '0';
-          tile.style.transform = tile.style.transform;
-        });
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            document.querySelectorAll('.tile').forEach((tile, i) => {
-              setTimeout(() => {
-                tile.classList.remove('scatter');
-                tile.classList.add('assemble');
-                setTimeout(() => {
-                  tile.classList.remove('assemble');
-                  tile.style.transition = '';
-                  tile.style.opacity = '';
-                  tile.style.transform = '';
-                }, 400);
-              }, i * 18); 
-            });
-            setTimeout(resolve, window.TOTAL * 18 + 380);
-          });
-        });
-      });
-    };
-
-    window.runBreakCycle = async function() {
-      if (window.candidates.length <= 1) return;
-      await window.scatterTiles();
-      window.currentCarouselIndex = (window.currentCarouselIndex + 1) % window.candidates.length;
-      await window.assembleTiles(window.currentCarouselIndex);
-    };
-
-    window.startBreakCycle = function() {
-      if (window.breakInterval) clearInterval(window.breakInterval);
-      if (window.candidates.length > 1) {
-        window.breakInterval = setInterval(window.runBreakCycle, 4000);
-      }
-    };
-
-    window.goToCarousel = function(idx) {
-      if (idx === window.currentCarouselIndex) return;
-      clearInterval(window.breakInterval);
-      window.scatterTiles().then(() => {
-        window.currentCarouselIndex = idx;
-        window.assembleTiles(idx).then(window.startBreakCycle);
-      });
-    };
-
-    window.scrambleScore = function(el, target, decimals = 2, duration = 800) {
-      const targetStr = parseFloat(target).toFixed(decimals);
-      if (el.dataset.current === targetStr) return; 
-      const chars = '0123456789!@#$%^&*';
-      let startTime = null;
-      (function step(ts) {
-        if (!startTime) startTime = ts;
-        const progress = Math.min((ts - startTime) / duration, 1);
-        if (progress < 1) {
-          let scrambled = '';
-          for(let i=0; i<targetStr.length; i++) {
-            if (targetStr[i] === '.') scrambled += '.';
-            else scrambled += chars[Math.floor(Math.random() * chars.length)];
-          }
-          el.innerText = scrambled;
-          requestAnimationFrame(step);
-        } else {
-          el.innerText = targetStr;
-          el.dataset.current = targetStr;
-        }
-      })(performance.now());
-    };
-
-    window.handleParallax = function(e, el) {
-      const rect = el.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      const x = clientX - rect.left;
-      const y = clientY - rect.top;
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      const rotateX = ((y - centerY) / centerY) * -12; 
-      const rotateY = ((x - centerX) / centerX) * 12;
-      const inner = el.querySelector('.parallax-inner');
-      if(inner) inner.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-    };
-    window.resetParallax = function(el) {
-      const inner = el.querySelector('.parallax-inner');
-      if(inner) inner.style.transform = `rotateX(0deg) rotateY(0deg)`;
-    };
-
-    // ── MODAL UI ENGINE ───────────────────────────────────────
-    window.modalTimeout = null;
-
-    window.alert = function(msg) { 
-      window.showModal("System Notice", msg, "alert"); 
-    };
-
-    window.showModal = function(title, msg, type = 'alert', callback = null) { 
-      // FIX: If a previous modal is still fading out, cancel its hide timer!
-      if (window.modalTimeout) clearTimeout(window.modalTimeout);
-      
-      const m = document.getElementById('custom-modal'); 
-      const c = document.getElementById('custom-modal-content'); 
-      document.getElementById('modal-title').innerText = title; 
-      document.getElementById('modal-message').innerHTML = msg; 
-      window.activeConfirmCallback = callback; 
-      
-      const actions = document.getElementById('modal-actions'); 
-      if (type === 'confirm') { 
-        actions.innerHTML = `<button onclick="window.closeModal()" class="px-5 py-2.5 text-xs font-black theme-text-muted uppercase-tracking">Abort</button><button onclick="window.executeModalAction()" class="theme-btn px-6 py-2.5 text-xs font-black rounded-xl uppercase-tracking">Confirm</button>`; 
-      } else { 
-        actions.innerHTML = `<button onclick="window.executeModalAction()" class="theme-btn px-8 py-3 rounded-xl font-black uppercase-tracking text-xs">Acknowledge</button>`; 
-      } 
-      
-      m.classList.remove('hidden'); 
-      setTimeout(() => { 
-        m.classList.remove('opacity-0'); 
-        c.classList.remove('scale-95'); 
-      }, 10); 
-    };
-
-    window.executeModalAction = async function() { 
-      // Save the callback in a temporary variable
-      const callback = window.activeConfirmCallback;
-      window.activeConfirmCallback = null;
-      
-      // FIX: Trigger the UI to close FIRST
-      window.closeModal(); 
-      
-      // Then execute the database action. If the action succeeds and triggers 
-      // a new window.alert, it will cleanly override the close timer!
-      if (callback) {
-        try {
-          await callback();
-        } catch(e) {
-          console.error(e);
-        }
-      }
-    };
-
-    window.closeModal = function() { 
-      const m = document.getElementById('custom-modal'); 
-      const c = document.getElementById('custom-modal-content'); 
-      c.classList.add('scale-95'); 
-      m.classList.add('opacity-0'); 
-      
-      if (window.modalTimeout) clearTimeout(window.modalTimeout);
-      
-      // Save the timer so we can abort it if a new modal pops up instantly
-      window.modalTimeout = setTimeout(() => {
-        m.classList.add('hidden');
-      }, 300); 
-    };
-
-    window.switchView = function(targetView) {
-      if ((targetView === 'judging' || targetView === 'scores' || targetView === 'admin') && !window.activeUser.name) targetView = 'login';
-      
-      // Trigger data renders immediately when routing
-      if (targetView === 'scores') window.fetchScoresData();
-      if (targetView === 'admin') { 
-        if (window.fetchScoresData) window.fetchScoresData();
-        if (typeof window.renderAdminDashboard === 'function') window.renderAdminDashboard(); 
-      }
-      if (targetView === 'judging') {
-        if (window.criteria && window.criteria.length > 0) {
-              window.currentSegment = window.criteria[0].id;
-          }
-        window.renderTabs(); window.renderCandidates();
-      }
-      if (targetView === 'home') { window.renderHomeGallery(); }
-      
-      ['home', 'login', 'judging', 'scores', 'admin'].forEach(v => { const el = document.getElementById(`view-${v}`); if(el) el.classList.add('hidden'); });
-      const targetEl = document.getElementById(`view-${targetView}`); 
-      if (targetEl) { targetEl.classList.remove('hidden'); targetEl.classList.add('view-animate'); setTimeout(() => targetEl.classList.remove('view-animate'), 450); }
-      ['home', 'judging', 'scores', 'admin', 'login'].forEach(nav => { const el = document.getElementById(`nav-${nav}`); if(el) { el.classList.remove('theme-text', 'opacity-100', 'theme-bg-soft', '-translate-y-2', 'shadow-md'); el.classList.add('theme-text-muted', 'opacity-60'); } });
-      const activeNav = document.getElementById(`nav-${targetView}`);
-      if(activeNav) { activeNav.classList.remove('theme-text-muted', 'opacity-60'); activeNav.classList.add('theme-text', 'opacity-100', 'theme-bg-soft', '-translate-y-2', 'shadow-md'); }
-      window.scrollTo(0,0);
-    };
-
-    window.updateNavForRole = function() {
-      const r = window.activeUser.role ? window.activeUser.role.toLowerCase() : "";
-      document.getElementById('nav-judging').classList.toggle('hidden', !(r === 'judge' || r === 'super user' || r === 'admin'));
-      document.getElementById('nav-scores').classList.toggle('hidden', !(r === 'tabulator' || r === 'super user' || r === 'admin'));
-      document.getElementById('nav-admin').classList.toggle('hidden', !(r === 'super user' || r === 'admin'));
-      const loginBtn = document.getElementById('nav-login');
-      if (r) { loginBtn.innerHTML = '<i class="fas fa-sign-out-alt text-lg mb-1"></i><span class="text-[9px] font-black uppercase-tracking tracking-wider">Out</span>'; loginBtn.onclick = () => { localStorage.clear(); location.reload(); }; }
-    };
-
-    window.showVotingGallery = function() {
-      // FIX: Force inline display to 'none' to override the carousel's flex style
-      document.getElementById('carousel-track').style.display = 'none'; 
-      document.getElementById('btn-cast-vote').classList.add('hidden');  
-      document.getElementById('btn-cancel-vote').classList.remove('hidden'); 
-      document.getElementById('voting-gallery').classList.remove('hidden'); 
-    };
-
-    window.hideVotingGallery = function() {
-      document.getElementById('voting-gallery').classList.add('hidden'); 
-      // FIX: Restore the flex layout so the carousel centers perfectly again
-      document.getElementById('carousel-track').style.display = 'flex'; 
-      document.getElementById('btn-cancel-vote').classList.add('hidden'); 
-      window.checkVoteStatus(); 
-    };
-
-    window.checkVoteStatus = function() {
-      const voteBtn = document.getElementById('btn-cast-vote');
-      if (!voteBtn) return;
-
-      // Include the global reset token in the lock key
-      const sessionToken = window.settings['voting_reset_token'] || '1';
-      const voteKey = `voted_${window.settings['app_title']}_${sessionToken}`;
-      
-      if (localStorage.getItem(voteKey)) {
-        // User has already voted in this session
-        voteBtn.innerHTML = `<i class="fas fa-check-double mr-1.5"></i> Vote Recorded`;
-        voteBtn.className = "px-8 py-3 rounded-xl font-black uppercase-tracking text-xs mb-4 shadow-sm bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-not-allowed";
-        voteBtn.onclick = null; 
-        voteBtn.classList.remove('hidden'); 
-        document.getElementById('btn-cancel-vote').classList.add('hidden');
-      } else {
-        // User has NOT voted in this session
-        voteBtn.innerHTML = `<i class="fas fa-check-circle mr-1.5"></i> Cast Vote`;
-        voteBtn.className = "theme-btn px-8 py-3 rounded-xl font-black uppercase-tracking text-xs mb-4 shadow-lg active:scale-95 transition-all";
-        voteBtn.onclick = window.showVotingGallery;
-        voteBtn.classList.remove('hidden');
-        
-        // FIX: Explicitly hide the Back button if the user has not voted yet!
-        document.getElementById('btn-cancel-vote').classList.add('hidden');
-      }
-    };
-
-    window.renderHomeGallery = function() {
-      const cTrack = document.getElementById('carousel-track'); 
-      const isVotingEnabled = String(window.settings['public_voting']).toLowerCase() === 'true';
-      if (cTrack) {
-        window.buildTileStage();
-      }
-      if (isVotingEnabled) {
-        if(document.getElementById('vote-prompt-section')) document.getElementById('vote-prompt-section').classList.remove('hidden');
-        if(document.getElementById('voting-gallery')) {
-          const fallbackImg = "https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=800&q=80";
-          document.getElementById('voting-gallery').innerHTML = window.candidates.map((c, index) => {
-            const imgSrc = (c.img && c.img.length > 5) ? c.img : fallbackImg;
-            return `<div class="card-panel flex items-center p-4 gap-4 mb-4 shadow-md bg-[var(--t-surface)] animate-slide-right" style="animation-delay: ${index * 0.1}s;">
-              <img src="${imgSrc}" loading="lazy" onerror="this.src='${fallbackImg}'" class="w-16 h-16 rounded-[1rem] object-cover shadow-sm border border-black/5">
-              <div class="flex-1">
-                <h4 class="font-black text-lg tracking-tight leading-none" style="color: var(--t-text-main);">${c.name}</h4>
-                <p class="text-[9px] theme-text-muted font-bold uppercase-tracking tracking-widest mt-1">
-                  #${String(c.candidateNumber).padStart(2, '0')} 
-                  ${c.loc ? `<span class="opacity-50 mx-1">•</span> <i class="fas fa-map-marker-alt opacity-70"></i> ${c.loc}` : ''}
-                </p>
-              </div>
-              <button onclick="window.submitPublicVote('${c.id}', '${c.name.replace(/'/g, "\\'")}')" class="theme-btn px-5 py-3 rounded-xl font-black text-xs uppercase-tracking shadow-md active:scale-95 transition-all tracking-wider">Vote</button>
-            </div>`;
-          }).join('');
-          
-          // CRITICAL: Ensure gallery starts hidden on page load
-          document.getElementById('voting-gallery').classList.add('hidden');
-        }
-        window.setupVotingDeadline();
-        window.checkVoteStatus(); // Check storage and update the button immediately
-      } else {
-        if(document.getElementById('vote-prompt-section')) document.getElementById('vote-prompt-section').classList.add('hidden');
-        if(document.getElementById('voting-gallery')) document.getElementById('voting-gallery').innerHTML = '';
-        if(window.votingTimerInterval) clearInterval(window.votingTimerInterval);
-      }
-    };
-
-    window.submitPublicVote = async function(candidateId, candidateName) {
-      const sessionToken = window.settings['voting_reset_token'] || '1';
-      const voteKey = `voted_${window.settings['app_title']}_${sessionToken}`;
-      
-      if (localStorage.getItem(voteKey)) { window.alert("You have already cast your vote."); return; }
-      
-      window.showModal("Confirm Vote", `Cast your official public vote for <b>${candidateName}</b>? This cannot be undone.`, "confirm", async () => {
-        try { 
-          await setDoc(doc(collection(db, "PublicVotes")), { candidateId: candidateId, candidateName: candidateName, timestamp: Date.now(), userAgent: navigator.userAgent }); 
-          
-          localStorage.setItem(voteKey, "true"); 
-          window.alert(`Success! Your vote for ${candidateName} has been recorded.`); 
-          window.hideVotingGallery();
-        } catch (err) { 
-          window.alert("Error submitting vote: " + err.message); 
-        }
-      });
-    };
-
-    window.setupVotingDeadline = function() {
-      if(window.votingTimerInterval) clearInterval(window.votingTimerInterval);
-      
-      let deadlineStr = window.settings['voting_deadline']; 
-      const timerEl = document.getElementById('countdown-timer');
-      const countdownContainer = document.getElementById('vote-countdown');
-      const closedMsg = document.getElementById('vote-closed-msg');
-      
-      // Reset the closed states just in case the Admin extended the deadline
-      if (closedMsg) closedMsg.classList.add('hidden');
-      document.getElementById('voting-gallery')?.classList.remove('opacity-50', 'pointer-events-none', 'grayscale');
-
-      // If no deadline is set in Admin, hide the timer completely and stop.
-      if(!deadlineStr || !timerEl) {
-        if(countdownContainer) countdownContainer.classList.add('hidden');
-        return;
-      }
-      
-      // Fix Timezone: Ensure accurate local time execution 
-      if (!deadlineStr.includes('+') && !deadlineStr.includes('Z')) {
-        deadlineStr += '+08:00';
-      }
-      
-      // Show the timer container
-      if(countdownContainer) countdownContainer.classList.remove('hidden');
-      
-      const deadline = new Date(deadlineStr).getTime();
-      
-      // Execute the math immediately so it appears instantly, rather than waiting 1 second
-      const runTimer = () => {
-        const distance = deadline - new Date().getTime();
-        
-        // When the timer hits zero
-        if (distance < 0) { 
-          clearInterval(window.votingTimerInterval); 
-          countdownContainer.classList.add('hidden'); 
-          if(closedMsg) closedMsg.classList.remove('hidden'); 
-          document.getElementById('voting-gallery')?.classList.add('opacity-50', 'pointer-events-none', 'grayscale'); 
-          return; 
-        }
-        
-        // Math for formatting
-        const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const s = Math.floor((distance % (1000 * 60)) / 1000);
-        timerEl.innerText = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-      };
-
-      runTimer(); // Call immediately 
-      window.votingTimerInterval = setInterval(runTimer, 1000); // Then cycle every second
-    };
-
-    window.switchJudgingSegment = function(critId) { window.currentSegment = critId; window.renderTabs(); window.renderCandidates(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-    window.renderTabs = function() {
-      const tabs = document.getElementById('segment-tabs');
-      if (!tabs) return;
-      const isPageant = (window.settings['event_type'] || 'pageant') === 'pageant';
-      if (!isPageant) {
-        tabs.style.display = 'none';
-        return;
-      }
-      tabs.style.display = 'flex';
-      tabs.innerHTML = window.criteria.map(c =>
-        `<button onclick="window.switchJudgingSegment('${c.id}')"
-          class="px-5 py-2.5 rounded-xl font-bold text-xs uppercase-tracking whitespace-nowrap transition-all
-                 ${window.currentSegment === c.id ? 'theme-btn shadow-md' : 'text-gray-500 hover:bg-black/5'}">
-          ${c.short}
-        </button>`
-      ).join('');
-    };
-    
-    window.renderCandidates = function() {
-      const isPageant = (window.settings['event_type'] || 'pageant') === 'pageant';
-      return isPageant
-        ? window.renderCandidatesPageant()
-        : window.renderCandidatesPerformance();
-    };
-    
-    window.renderCandidatesPageant = function() {
-      const activeCrit = window.criteria.find(c => c.id === window.currentSegment); const cCont = document.getElementById('candidates-container'); if(!activeCrit || !cCont) return;
-      const fallbackImg = "https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=800&q=80";
-      cCont.innerHTML = window.candidates.map((c, i) => {
-        const isLocked = window.lockedScores[c.id] && window.lockedScores[c.id][window.currentSegment]; 
-        const dScore = isLocked ? window.scoresData[c.id][window.currentSegment] : (window.scoresData[c.id][window.currentSegment] || activeCrit.max/2); 
-        const btnClass = isLocked ? 'bg-black/10 text-slate-500 cursor-not-allowed border border-black/5' : 'theme-btn active:scale-95';
-        const fillPct = ((dScore - 1) / (activeCrit.max - 1)) * 100;
-        
-        return `<div class="card-panel mb-10 overflow-hidden border-none shadow-2xl rounded-[2rem] bg-[var(--t-surface)] animate-fade-in-up" style="animation-delay: ${i * 0.1}s">
-          <div class="parallax-container relative w-full h-[28rem] cursor-crosshair" onmousemove="window.handleParallax(event, this)" onmouseleave="window.resetParallax(this)" ontouchmove="window.handleParallax(event, this)" ontouchend="window.resetParallax(this)">
-            <div class="parallax-inner w-full h-full">
-              <img src="${(c.img && c.img.length > 5) ? c.img : fallbackImg}" loading="lazy" onerror="this.src='${fallbackImg}'" class="parallax-img absolute inset-0 w-full h-full object-cover object-top">
-              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-90 parallax-front"></div>
-              <div class="absolute bottom-4 inset-x-4 z-10 parallax-front">
-                <div class="glass-panel p-5 rounded-[1.5rem] text-center">
-                  <p class="text-[10px] font-black uppercase-tracking tracking-[0.3em] mb-1 text-white/70">Candidate #${String(c.candidateNumber).padStart(2, '0')}</p>
-                  <h2 class="text-3xl font-black tracking-tight leading-none text-white drop-shadow-md">${c.name}</h2>
-                  ${c.loc ? `<p class="text-[10px] font-bold text-white/90 mt-2 uppercase-tracking tracking-widest flex items-center justify-center gap-1.5"><i class="fas fa-map-marker-alt" style="color: var(--t-primary)"></i> ${c.loc}</p>` : ''}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="p-6 relative z-20 theme-surface rounded-b-[2rem]">
-            <div class="flex justify-between items-center mb-8 theme-bg-soft p-5 rounded-2xl border border-black/5 shadow-inner">
-              <div class="flex flex-col">
-                <span class="text-[9px] theme-text font-black uppercase-tracking tracking-widest mb-1.5">Evaluation Parameter</span>
-                <label class="font-black text-sm tracking-wide uppercase-tracking leading-tight">${activeCrit.label}</label>
-              </div>
-              <div class="theme-surface px-5 py-3 rounded-xl border border-black/10 min-w-[80px] text-center shadow-sm">
-                <span class="font-black theme-text text-2xl tracking-tighter score-number" id="score-val-${c.id}">${dScore.toFixed(1)}</span>
-              </div>
-            </div>
-            <div class="px-2 mb-8 relative">
-              <input type="range" id="slider-${c.id}" min="1" max="${activeCrit.max}" step="0.5" value="${dScore}" style="--fill: ${fillPct}%" oninput="const v = parseFloat(this.value); const el = document.getElementById('score-val-${c.id}'); el.innerText = v.toFixed(1); el.classList.remove('score-pop'); void el.offsetWidth; el.classList.add('score-pop'); window.scoresData['${c.id}']['${window.currentSegment}'] = v; this.style.setProperty('--fill', (((v - 1) / (${activeCrit.max} - 1)) * 100) + '%');" class="w-full relative z-10" ${isLocked ? 'disabled' : ''}>
-            </div>
-            <button onclick="window.submitScore('${c.id}')" id="btn-${c.id}" class="w-full py-4 rounded-xl font-black transition-all uppercase-tracking text-xs shadow-md ${btnClass}" ${isLocked ? 'disabled' : ''}>${isLocked ? 'Score Locked' : 'Submit Evaluation'}</button>
-          </div>
-        </div>`;
-      }).join('');
-    };
-
-    // New function — performance mode (all criteria per contestant)
-    window.renderCandidatesPerformance = function() {
-      const cCont = document.getElementById('candidates-container');
-      if (!cCont || window.criteria.length === 0) return;
-      const fallbackImg = "https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=800&q=80";
-    
-      cCont.innerHTML = window.candidates.map((c, i) => {
-        const allLocked = window.criteria.every(cr => window.lockedScores[c.id]?.[cr.id]);
-    
-        const sliders = window.criteria.map(cr => {
-          const isLocked = window.lockedScores[c.id]?.[cr.id];
-          const dScore = isLocked
-            ? window.scoresData[c.id][cr.id]
-            : (window.scoresData[c.id][cr.id] || cr.max / 2);
-          const fillPct = ((dScore - 1) / (cr.max - 1)) * 100;
-          return `
-            <div class="mb-5 theme-bg-soft p-4 rounded-2xl border border-black/5">
-              <div class="flex justify-between items-center mb-3">
-                <div>
-                  <p class="text-[9px] theme-text font-black uppercase-tracking tracking-widest mb-0.5">${cr.label}</p>
-                  <p class="text-[10px] theme-text-muted font-bold">Max: ${cr.max} pts</p>
-                </div>
-                <div class="theme-surface px-4 py-2 rounded-xl border border-black/10 min-w-[70px] text-center shadow-sm">
-                  <span class="font-black theme-text text-xl tracking-tighter score-number"
-                        id="score-val-${c.id}-${cr.id}">${dScore.toFixed(1)}</span>
-                </div>
-              </div>
-              <input type="range" id="slider-${c.id}-${cr.id}"
-                min="1" max="${cr.max}" step="0.5" value="${dScore}"
-                style="--fill:${fillPct}%"
-                oninput="
-                  const v=parseFloat(this.value);
-                  const el=document.getElementById('score-val-${c.id}-${cr.id}');
-                  el.innerText=v.toFixed(1);
-                  el.classList.remove('score-pop'); void el.offsetWidth; el.classList.add('score-pop');
-                  window.scoresData['${c.id}']['${cr.id}']=v;
-                  this.style.setProperty('--fill',(((v-1)/(${cr.max}-1))*100)+'%');
-                "
-                class="w-full" ${isLocked ? 'disabled' : ''}>
-            </div>`;
-        }).join('');
-    
-        const btnClass = allLocked
-          ? 'bg-black/10 text-slate-500 cursor-not-allowed border border-black/5'
-          : 'theme-btn active:scale-95';
-    
-        return `
-          <div class="card-panel mb-10 overflow-hidden border-none shadow-2xl rounded-[2rem] bg-[var(--t-surface)] animate-fade-in-up"
-               style="animation-delay:${i * 0.1}s" id="card-${c.id}">
-            <div class="parallax-container relative w-full h-[20rem] cursor-crosshair"
-                 onmousemove="window.handleParallax(event,this)" onmouseleave="window.resetParallax(this)"
-                 ontouchmove="window.handleParallax(event,this)" ontouchend="window.resetParallax(this)">
-              <div class="parallax-inner w-full h-full">
-                <img src="${(c.img && c.img.length > 5) ? c.img : fallbackImg}"
-                     loading="lazy" onerror="this.src='${fallbackImg}'"
-                     class="parallax-img absolute inset-0 w-full h-full object-cover object-top">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-90 parallax-front"></div>
-                <div class="absolute bottom-4 inset-x-4 z-10 parallax-front">
-                  <div class="glass-panel p-4 rounded-[1.5rem] text-center">
-                    <p class="text-[10px] font-black uppercase-tracking tracking-[0.3em] mb-1 text-white/70">
-                      Contestant #${String(c.candidateNumber || c.id).padStart(2,'0')}
-                    </p>
-                    <h2 class="text-2xl font-black tracking-tight leading-none text-white drop-shadow-md">${c.name}</h2>
-                    ${c.loc ? `<p class="text-[10px] font-bold text-white/90 mt-1.5 uppercase-tracking tracking-widest flex items-center justify-center gap-1.5">
-                      <i class="fas fa-map-marker-alt" style="color:var(--t-primary)"></i> ${c.loc}</p>` : ''}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="p-6 relative z-20 theme-surface rounded-b-[2rem]">
-              ${sliders}
-              <button onclick="window.submitAllScores('${c.id}')"
-                      id="btn-all-${c.id}"
-                      class="w-full py-4 rounded-xl font-black transition-all uppercase-tracking text-xs shadow-md ${btnClass}"
-                      ${allLocked ? 'disabled' : ''}>
-                ${allLocked ? '✓ All Scores Locked' : 'Submit All Scores'}
-              </button>
-            </div>
-          </div>`;
-      }).join('');
-    };
-    
-    // Called by performance mode submit button
-    window.submitAllScores = async function(candidateId) {
-      const c = window.candidates.find(can => String(can.id) === String(candidateId));
-      if (!c) return window.alert("Candidate not found.");
-      const btn = document.getElementById(`btn-all-${candidateId}`);
-      const cardPanel = document.getElementById(`card-${candidateId}`);
-      btn.innerText = "Transmitting..."; btn.disabled = true;
-    
-      const payload = { judge: window.activeUser.name, candidate: c.name, timestamp: Date.now() };
-      window.criteria.forEach(cr => {
-        payload[cr.id] = window.scoresData[candidateId][cr.id]
-          || parseFloat(document.getElementById(`slider-${candidateId}-${cr.id}`)?.value)
-          || cr.max / 2;
-      });
-    
-      const finalize = () => {
-        window.lockedScores[candidateId] = window.lockedScores[candidateId] || {};
-        window.criteria.forEach(cr => { window.lockedScores[candidateId][cr.id] = true; });
-        if (navigator.vibrate) navigator.vibrate([15, 20, 60]);
-        cardPanel.classList.add('score-locked-flash');
-        setTimeout(() => window.renderCandidates(), 520);
-      };
-    
-      if (!navigator.onLine) {
-        offlineQueue.push(payload);
-        localStorage.setItem('pageant_offline_queue', JSON.stringify(offlineQueue));
-        finalize(); window.showOfflineToast(); return;
-      }
-      try {
-        await setDoc(doc(db, "Scores", `${window.activeUser.name}_${c.name}`), payload, { merge: true });
-        finalize();
-      } catch (error) {
-        offlineQueue.push(payload);
-        localStorage.setItem('pageant_offline_queue', JSON.stringify(offlineQueue));
-        finalize(); window.showOfflineToast();
-      }
-    };
-
-    window.onload = async function() {
-      try {
-        const savedName = localStorage.getItem('msval27_name');
-        const savedRole = localStorage.getItem('msval27_role');
-        if (savedRole === "undefined" || !savedRole) localStorage.clear();
-    
-        // ── Step 1 — Criteria ──────────────────────────────────
-        splashProgress(1);
-        const [criteriaSnap, candSnap, usersSnap] = await Promise.all([
-          getDocs(collection(db, "Criteria")),
-          getDocs(collection(db, "Candidates")),
-          getDocs(collection(db, "Users"))
-        ]);
-    
-        // ── Step 2 — Load data ─────────────────────────────────
-        splashProgress(2);
-        criteriaSnap.forEach(doc => { window.criteria.push({ id: doc.id, ...doc.data() }); });
-    
-        splashProgress(3);
-        candSnap.forEach(doc => { window.candidates.push({ id: doc.id, ...doc.data() }); });
-    
-        splashProgress(4);
-        usersSnap.forEach(doc => { window.users.push({ id: doc.id, ...doc.data() }); });
-    
-        if (window.criteria.length > 0) window.currentSegment = window.criteria[0].id;
-        window.candidates.forEach(c => {
-          window.scoresData[c.id] = {};
-          window.criteria.forEach(crit => {
-            window.scoresData[c.id][crit.id] = parseFloat(crit.max) / 2 || 5;
-          });
-        });
-    
-        // ── Step 3 — Real-time listeners ───────────────────────
-        splashProgress(5);
-    
-        onSnapshot(collection(db, "Criteria"), (snapshot) => {
-          window.criteria = [];
-          snapshot.forEach(doc => {
-            window.criteria.push({ firebaseDocId: doc.id, id: doc.id, ...doc.data() });
-          });
-          window.criteria.sort((a, b) => (a.order || 0) - (b.order || 0));
-          if (!window.currentSegment && window.criteria.length > 0)
-            window.currentSegment = window.criteria[0].id;
-          window.candidates.forEach(c => {
-            window.scoresData[c.id] = window.scoresData[c.id] || {};
-            window.criteria.forEach(crit => {
-              if (window.scoresData[c.id][crit.id] === undefined)
-                window.scoresData[c.id][crit.id] = parseFloat(crit.max) / 2 || 5;
-            });
-          });
-          const avgTable = document.getElementById('table-averages');
-          const detailTable = document.getElementById('table-detailed');
-          if (avgTable) avgTable.innerHTML = '';
-          if (detailTable) detailTable.innerHTML = '';
-          if (!document.getElementById('view-judging').classList.contains('hidden')) {
-            window.renderTabs(); window.renderCandidates();
-          }
-          if (!document.getElementById('view-admin').classList.contains('hidden'))
-            window.renderAdminDashboard();
-          if (!document.getElementById('view-scores').classList.contains('hidden'))
-            window.processAndRenderScores(window.latestScores, window.latestVotes);
-        });
-    
-        onSnapshot(collection(db, "Candidates"), (snapshot) => {
-          window.candidates = [];
-          snapshot.forEach(doc => {
-            window.candidates.push({ firebaseDocId: doc.id, id: doc.id, ...doc.data() });
-          });
-          window.candidates.sort((a, b) => (a.candidateNumber || 0) - (b.candidateNumber || 0));
-          window.candidates.forEach(c => {
-            window.scoresData[c.id] = window.scoresData[c.id] || {};
-            window.criteria.forEach(crit => {
-              if (window.scoresData[c.id][crit.id] === undefined)
-                window.scoresData[c.id][crit.id] = parseFloat(crit.max) / 2 || 5;
-            });
-          });
-          if (!document.getElementById('view-home').classList.contains('hidden'))
-            window.renderHomeGallery();
-          if (!document.getElementById('view-judging').classList.contains('hidden'))
-            window.renderCandidates();
-          if (!document.getElementById('view-admin').classList.contains('hidden'))
-            window.renderAdminDashboard();
-        });
-    
-        onSnapshot(collection(db, "Users"), (snapshot) => {
-          window.users = [];
-          snapshot.forEach(doc => { window.users.push({ id: doc.id, ...doc.data() }); });
-          if (!document.getElementById('view-admin').classList.contains('hidden'))
-            window.renderAdminDashboard();
-        });
-    
-        onSnapshot(collection(db, "Settings"), (snapshot) => {
-          snapshot.forEach(doc => { window.settings[doc.id] = doc.data().value; });
-    
-          if (document.getElementById('display-title'))
-            document.getElementById('display-title').innerText = window.settings['app_title'] || "Event System";
-          if (document.getElementById('display-subtitle'))
-            document.getElementById('display-subtitle').innerText = window.settings['app_subtitle'] || "Core Operations";
-          if (document.getElementById('display-location'))
-            document.getElementById('display-location').innerText = window.settings['location_text'] || "Location Undefined";
-          // Apply header silhouette — only when a URL is provided
-          const silhouette = document.getElementById('header-silhouette');
-          const silUrl = (window.settings['header_silhouette'] || '').trim();
-          if (silhouette) {
-            if (silUrl) {
-              silhouette.style.backgroundImage = `url('${silUrl}')`;
-              silhouette.style.backgroundSize = 'contain';
-              silhouette.style.backgroundPosition = 'center';
-              silhouette.style.backgroundRepeat = 'no-repeat';
-              silhouette.style.opacity = '0.20';
-            } else {
-              // No URL set — clear completely so nothing shows
-              silhouette.style.backgroundImage = 'none';
-              silhouette.style.opacity = '0';
-            }
-          }
-    
-          window.applyTheme(window.settings['theme_color'] || 'red');
-          document.title = (window.settings['app_title'] || "Event Portal") + " - Secure Access";
-    
-          if (String(window.settings['public_voting']).toLowerCase() === 'true') {
-            document.getElementById('vote-prompt-section')?.classList.remove('hidden');
-            window.setupVotingDeadline();
-            window.checkVoteStatus();
-          } else {
-            document.getElementById('vote-prompt-section')?.classList.add('hidden');
-            if (window.votingTimerInterval) clearInterval(window.votingTimerInterval);
-          }
-          if (typeof window.renderAdminDashboard === 'function') window.renderAdminDashboard();
-        });
-    
-        if (document.getElementById('status-text'))
-          document.getElementById('status-text').classList.add('hidden');
-    
-        // ── Step 4 — Hide old loader, render views ─────────────
-        const loader = document.getElementById('loader');
-        if (loader) loader.classList.add('hidden');
-    
-        window.renderHomeGallery();
-        window.renderTabs();
-        window.renderCandidates();
-        window.renderAdminDashboard();
-    
-        if (savedName && savedRole && savedRole !== "undefined") {
-          window.activeUser = { name: savedName, role: savedRole };
-          window.updateNavForRole();
-          const r = savedRole.toLowerCase().trim();
-          if (r === 'tabulator') window.switchView('scores');
-          else if (r === 'super user' || r === 'admin') window.switchView('admin');
-          else { window.switchView('judging'); window.syncJudgeScores(); }
-        } else {
-          window.switchView('home');
-        }
-    
-        // ── Done — dismiss splash ──────────────────────────────
-        splashDone();
-    
-      } catch (err) {
-        const loader = document.getElementById('loader');
-        if (loader) loader.classList.add('hidden');
-        splashDone(); // dismiss even on error so the app isn't stuck
-        window.showModal("Boot Error", err.message, "alert");
-      }
-    };
-
-    window.processLogin = async function() {
-      const rawUsername = document.getElementById('login-username').value.trim(); 
-      const pass = document.getElementById('login-password').value; 
-      const btn = document.getElementById('login-btn'); 
-      const err = document.getElementById('login-error');
-      
-      if (!rawUsername || !pass) { err.innerText = "Credentials required."; err.classList.remove('hidden'); return; }
-      btn.innerText = "Authenticating..."; btn.disabled = true; err.classList.add('hidden');
-      
-      // THE TRICK: Convert username to a dummy email format for Firebase Auth
-      const safeUsername = rawUsername.toLowerCase().replace(/\s+/g, '');
-      const authEmail = `${safeUsername}@eventportal.local`;
-      
-      try {
-        // 1. Authenticate with Firebase securely using the dummy email
-        const userCredential = await signInWithEmailAndPassword(auth, authEmail, pass);
-        const fbUser = userCredential.user;
-        
-        // 2. Fetch their role from your database using their secure Auth UID
-        const userDoc = await getDoc(doc(db, "Users", fbUser.uid));
-        
-        if (!userDoc.exists()) throw new Error("Account verified, but role not found in database.");
-        
-        const validUser = userDoc.data();
-        
-        window.activeUser = { name: validUser.name, role: validUser.role };
-        localStorage.setItem('msval27_name', validUser.name); 
-        localStorage.setItem('msval27_role', validUser.role);
-
-        window.updateNavForRole();
-        
-        const r = validUser.role.toLowerCase().trim();
-        if (r === 'admin' || r === 'super user') window.switchView('admin');
-        else if (r === 'tabulator') window.switchView('scores');
-        else { window.switchView('judging'); window.syncJudgeScores(); }
-        
-        document.getElementById('login-username').value = ''; 
-        document.getElementById('login-password').value = '';
-      } catch (error) {
-        err.innerText = error.message.includes("auth/") ? "Invalid Username or Password." : error.message;
-        err.classList.remove('hidden');
-      } finally {
-        btn.innerText = "Authenticate"; btn.disabled = false;
-      }
-    };
-
-    window.syncJudgeScores = function() {
-      if (!window.activeUser.name || (window.activeUser.role !== 'Judge' && window.activeUser.role !== 'Admin')) return;
-      try {
-        const q = query(collection(db, "Scores"), where("judge", "==", window.activeUser.name)); 
-        
-        // Clear existing listener if it exists to prevent duplicates
-        if (window.judgeScoresListener) window.judgeScoresListener(); 
-        
-        // Start real-time listening instead of a one-time fetch
-        window.judgeScoresListener = onSnapshot(q, (querySnapshot) => {
-          // 1. Instantly unlock all scores locally
-          window.lockedScores = {};
-          
-          // 2. Re-lock only what currently exists in the database
-          querySnapshot.forEach((doc) => { 
-            const data = doc.data(); 
-            const cand = window.candidates.find(c => c.name === data.candidate); 
-            if (cand) { 
-              window.lockedScores[cand.id] = window.lockedScores[cand.id] || {}; 
-              window.criteria.forEach(crit => { 
-                if (data[crit.id] !== undefined) { 
-                  window.scoresData[cand.id][crit.id] = data[crit.id]; 
-                  window.lockedScores[cand.id][crit.id] = true; 
-                } 
-              }); 
-            } 
-          });
-          
-          // 3. Re-render the UI instantly if they are on the judging page
-          if(document.getElementById('view-judging') && !document.getElementById('view-judging').classList.contains('hidden')) {
-              window.renderCandidates();
-          }
-        });
-      } catch (error) { 
-        console.error("Sync Error:", error); 
-      }
-    };
-
-    window.submitScore = async function(candidateId) {
-      const c = window.candidates.find(can => String(can.id) === String(candidateId)); if (!c) return alert("System Error: Candidate mismatch.");
-      const score = window.scoresData[candidateId][window.currentSegment] || parseFloat(document.getElementById(`slider-${candidateId}`).value); 
-      const btn = document.getElementById(`btn-${candidateId}`); const cardPanel = btn.closest('.card-panel'); btn.innerText = "Transmitting..."; btn.disabled = true;
-      const payload = { judge: window.activeUser.name, candidate: c.name, [window.currentSegment]: score, timestamp: Date.now() };
-      if (!navigator.onLine) { offlineQueue.push(payload); localStorage.setItem('pageant_offline_queue', JSON.stringify(offlineQueue)); finalizeSubmitUI(); window.showOfflineToast(); return; }
-      try { await setDoc(doc(db, "Scores", `${window.activeUser.name}_${c.name}`), payload, { merge: true }); finalizeSubmitUI(); } catch (error) { offlineQueue.push(payload); localStorage.setItem('pageant_offline_queue', JSON.stringify(offlineQueue)); finalizeSubmitUI(); window.showOfflineToast(); }
-      function finalizeSubmitUI() { if (navigator.vibrate) navigator.vibrate([15, 20, 60]); window.lockedScores[candidateId] = window.lockedScores[candidateId] || {}; window.lockedScores[candidateId][window.currentSegment] = true; cardPanel.classList.add('score-locked-flash'); setTimeout(() => window.renderCandidates(), 500); }
-    };
-
-    window.fetchScoresData = async function() { 
-      document.getElementById('loader-text').innerText = "Initializing Live Matrix..."; 
-      document.getElementById('loader').classList.remove('hidden'); 
-      
-      // Clear any old listeners to prevent memory leaks when switching tabs
-      window.activeListeners.forEach(unsub => unsub()); 
-      window.activeListeners = [];
-      
-      try {
-        // 1. Real-time listener for Judge Scores
-        const unsubScores = onSnapshot(collection(db, "Scores"), (snapshot) => { 
-          window.latestScores = snapshot.docs.map(d => d.data()); 
-          window.processAndRenderScores(window.latestScores, window.latestVotes); 
-          document.getElementById('loader').classList.add('hidden'); 
-        }); 
-        window.activeListeners.push(unsubScores);
-        
-        // 2. NEW: Real-time listener for Public Votes
-        const unsubVotes = onSnapshot(collection(db, "PublicVotes"), (snapshot) => {
-          window.latestVotes = {};
-          // Tally the votes instantly as they come in
-          snapshot.forEach(doc => { 
-            const cName = doc.data().candidateName; 
-            window.latestVotes[cName] = (window.latestVotes[cName] || 0) + 1; 
-          });
-          // Re-render the matrix with the fresh vote count
-          window.processAndRenderScores(window.latestScores, window.latestVotes);
-        });
-        window.activeListeners.push(unsubVotes);
-
-      } catch (error) { 
-        document.getElementById('loader').classList.add('hidden'); 
-        alert("Matrix Error: " + error.message); 
-      }
-    };
-
-    window.processAndRenderScores = function(rawScores, rawVotes) {
-      const avgFlipper = window.animateRowSwap('table-averages');
-      const normalizedScores = (rawScores || []).map(s => { let normalized = {}; for (let key in s) { normalized[key.toLowerCase().replace(/\s+/g, '')] = s[key]; } normalized.judge = (s.judge || "").toString().trim(); normalized.candidate = (s.candidate || "").toString().trim(); return normalized; });
-      let aggregated = window.candidates.map(c => { let cleanCandidateName = c.name.toString().trim().toLowerCase(); let sc = normalizedScores.filter(s => s.candidate.toLowerCase() === cleanCandidateName); let count = sc.length; let candData = { name: c.name, count: count, total: 0 }; window.criteria.forEach(crit => { let safeCritId = crit.id.toString().toLowerCase().replace(/\s+/g, ''); let avg = count ? sc.reduce((sum, s) => sum + (parseFloat(s[safeCritId]) || parseFloat(s[crit.id]) || 0), 0) / count : 0; candData[crit.id] = avg; candData.total += avg; }); return candData; });
-      aggregated.sort((a, b) => b.total - a.total); 
-
-      // People's Choice Logic
-      const pcCard = document.getElementById('peoples-choice-card');
-      const isVotingEnabled = String(window.settings['public_voting']).toLowerCase() === 'true';
-      if (pcCard) {
-        if (isVotingEnabled) {
-          pcCard.classList.remove('hidden');
-          const pcTable = document.getElementById('table-peoples-choice');
-          if (pcTable) {
-            let pcCandidates = window.candidates.map(c => ({ name: c.name, votes: window.latestVotes[c.name] || 0 }));
-            pcCandidates.sort((a, b) => b.votes - a.votes);
-            let pcHTML = `<tr class="theme-table-header text-[10px] uppercase-tracking tracking-widest"><th class="p-5 font-black text-center w-24 theme-text-muted">Rank</th><th class="p-5 font-black theme-text-muted text-left">Identity</th><th class="p-5 font-black theme-text text-right">Votes</th></tr>`;
-            pcCandidates.forEach((c, index) => {
-              let rankBadge = `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 theme-text-muted font-bold text-xs mx-auto">${index + 1}</div>`;
-              pcHTML += `<tr class="theme-table-row"><td class="p-4 align-middle">${rankBadge}</td><td class="p-5 font-black uppercase-tracking text-sm align-middle">${c.name}</td><td class="p-5 font-black theme-text text-xl text-right align-middle">${c.votes}</td></tr>`;
-            });
-            pcTable.innerHTML = pcHTML;
-          }
-        } else {
-          pcCard.classList.add('hidden');
-        }
-      }
-
-      // Aggregated Matrix Logic
-      let maxScores = {}; window.criteria.forEach(crit => { maxScores[crit.id] = Math.max(...aggregated.map(c => c[crit.id] || 0)); });
-      const avgTable = document.getElementById('table-averages'); 
-      if (avgTable) {
-        if (avgTable.innerHTML.trim() === "") {
-          let avgHTML = `<tr class="theme-table-header text-[10px] uppercase-tracking tracking-widest"><th class="p-5 font-black text-center w-24 theme-text-muted">Rank</th><th class="p-5 font-black theme-text-muted text-left">Identity</th>`;
-          window.criteria.forEach(crit => { avgHTML += `<th class="p-5 font-black theme-text-muted text-center">${crit.short} (${crit.max})</th>`; }); avgHTML += `<th class="p-5 font-black theme-text text-right">Average</th></tr>`;
-          aggregated.forEach((c, index) => {
-            let rankBadge = `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 theme-text-muted font-bold text-xs mx-auto">${index + 1}</div>`;
-            if (index === 0) rankBadge = `<div class="flex items-center justify-center w-12 h-10 rounded-full bg-yellow-100 text-yellow-600 font-black text-sm mx-auto shadow-md border border-yellow-300">🥇 1st</div>`;
-            if (index === 1) rankBadge = `<div class="flex items-center justify-center w-12 h-9 rounded-full bg-slate-100 text-slate-500 font-black text-sm mx-auto shadow-md border border-slate-300">🥈 2nd</div>`;
-            if (index === 2) rankBadge = `<div class="flex items-center justify-center w-12 h-9 rounded-full bg-orange-100 text-orange-700 font-black text-sm mx-auto shadow-md border border-orange-300">🥉 3rd</div>`;
-            avgHTML += `<tr class="theme-table-row" data-id="${c.name.replace(/\s+/g, '')}"><td class="p-4 align-middle text-center">${rankBadge}</td><td class="p-5 font-black uppercase-tracking text-sm align-middle">${c.name}</td>`;
-            window.criteria.forEach(crit => { let val = c[crit.id] || 0; let isMax = (val > 0 && val === maxScores[crit.id]); let highlightClass = isMax ? 'text-emerald-600 font-black bg-emerald-50 rounded-lg px-2 py-1 border border-emerald-200 shadow-sm' : 'font-bold'; avgHTML += `<td class="p-4 text-center align-middle"><span id="avg-${c.name.replace(/\s+/g, '')}-${crit.id}" class="score-number text-sm ${highlightClass}" data-current="${val}">${val.toFixed(2)}</span></td>`; });
-            avgHTML += `<td class="p-5 font-black theme-text text-xl text-right align-middle"><span id="total-${c.name.replace(/\s+/g, '')}" class="score-number" data-current="${c.total}">${c.total.toFixed(2)}</span></td></tr>`;
-          }); avgTable.innerHTML = avgHTML;
-        } else {
-          if (avgFlipper) avgFlipper.play();
-          aggregated.forEach((c, index) => { const row = avgTable.querySelector(`tr[data-id="${c.name.replace(/\s+/g, '')}"]`); if(row) { let rankCell = row.querySelector('td:first-child'); let rankBadge = `<div class="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 theme-text-muted font-bold text-xs mx-auto">${index + 1}</div>`; if (index === 0) rankBadge = `<div class="flex items-center justify-center w-12 h-10 rounded-full bg-yellow-100 text-yellow-600 font-black text-sm mx-auto shadow-md border border-yellow-300">🥇 1st</div>`; if (index === 1) rankBadge = `<div class="flex items-center justify-center w-12 h-9 rounded-full bg-slate-100 text-slate-500 font-black text-sm mx-auto shadow-md border border-slate-300">🥈 2nd</div>`; if (index === 2) rankBadge = `<div class="flex items-center justify-center w-12 h-9 rounded-full bg-orange-100 text-orange-700 font-black text-sm mx-auto shadow-md border border-orange-300">🥉 3rd</div>`; rankCell.innerHTML = rankBadge; avgTable.appendChild(row); } });
-          aggregated.forEach(c => { 
-            const candSlug = c.name.replace(/\s+/g, ''); 
-            window.criteria.forEach(crit => { 
-              const el = document.getElementById(`avg-${candSlug}-${crit.id}`); 
-              if(el) { 
-                window.scrambleScore(el, c[crit.id] || 0); 
-                let val = c[crit.id] || 0; 
-                let isMax = (val > 0 && val === maxScores[crit.id]); 
-                el.className = isMax ? 'score-number text-sm text-emerald-600 font-black bg-emerald-50 rounded-lg px-2 py-1 border border-emerald-200 shadow-sm transition-all' : 'score-number text-sm font-bold transition-all'; 
-              } 
-            }); 
-            const totalEl = document.getElementById(`total-${candSlug}`); 
-            if(totalEl) window.scrambleScore(totalEl, c.total); 
-          });
-        }
-      }
-
-      // Detailed Judge Matrix Logic
-      const detailTable = document.getElementById('table-detailed');
-      if (detailTable) {
-        let detailHTML = `<tr class="theme-table-header text-[10px] uppercase-tracking tracking-widest"><th class="p-5 font-black theme-text-muted text-left">Assessor</th><th class="p-5 font-black theme-text-muted text-left">Identity</th>`;
-        window.criteria.forEach(crit => { detailHTML += `<th class="p-5 font-black theme-text-muted text-center">${crit.short} (${crit.max})</th>`; });
-        detailHTML += `</tr>`;
-        
-        normalizedScores.forEach(s => {
-          detailHTML += `<tr class="theme-table-row"><td class="p-4 align-middle text-sm font-bold theme-text">${s.judge}</td><td class="p-4 align-middle text-sm font-black uppercase-tracking">${s.candidate}</td>`;
-          window.criteria.forEach(crit => {
-            let val = s[crit.id.toLowerCase().replace(/\s+/g, '')] || 0;
-            let highlight = val === 0 ? 'text-red-500 bg-red-50 border border-red-200 shadow-sm rounded-lg px-2 py-1' : '';
-            detailHTML += `<td class="p-4 align-middle text-center"><span class="score-number font-bold text-sm ${highlight}">${val.toFixed(1)}</span></td>`;
-          });
-          detailHTML += `</tr>`;
-        });
-        detailTable.innerHTML = detailHTML;
-      }
-    };
-
-    window.renderAdminDashboard = function() {
-      if (document.getElementById('admin-setting-title')) {
-        document.getElementById('admin-setting-title').value = window.settings['app_title'] || '';
-        document.getElementById('admin-setting-subtitle').value = window.settings['app_subtitle'] || '';
-        document.getElementById('admin-setting-location').value = window.settings['location_text'] || '';
-        document.getElementById('admin-setting-theme').value = window.settings['theme_color'] || 'red';
-        document.getElementById('admin-setting-voting').checked = String(window.settings['public_voting']).toLowerCase() === 'true';
-        document.getElementById('admin-setting-deadline').value = window.settings['voting_deadline'] || '';
-        const etEl = document.getElementById('admin-setting-event-type');
-          if (etEl) etEl.value = window.settings['event_type'] || 'pageant';
-        const silEl = document.getElementById('admin-setting-silhouette');
-        if (silEl) silEl.value = window.settings['header_silhouette'] || '';        
-      }
-      if (document.getElementById('admin-candidates-list')) { 
-        // ── CANDIDATES — sortable rows ─────────────────────────────
-        document.getElementById('admin-candidates-list').innerHTML = window.candidates.map(c => `
-          <div class="candidate-sort-item flex justify-between items-center p-3 theme-surface rounded-xl border theme-border select-none mb-2 shadow-sm"
-               data-id="${c.firebaseDocId || c.id}">
-            <div class="flex items-center gap-3 flex-1 min-w-0">
-              <div class="drag-handle touch-none cursor-grab active:cursor-grabbing px-2 py-1 -ml-2 opacity-50 hover:opacity-100 flex items-center justify-center flex-shrink-0">
-                  <i class="fas fa-grip-lines text-slate-400 text-lg"></i>
-              </div>
-              <span class="font-bold truncate theme-text"><b>#${c.candidateNumber || c.id}</b>: ${c.name}</span>
-            </div>
-            <div class="flex gap-3 flex-shrink-0 ml-2">
-              <button onclick="window.editCandidate('${c.id}')" class="text-blue-500 hover:text-blue-700 transition-colors"><i class="fas fa-edit"></i></button>
-              <button onclick="window.deleteDocEntry('Candidates', '${c.id}')" class="text-red-500 hover:text-red-700 transition-colors"><i class="fas fa-trash"></i></button>
-            </div>
-          </div>`).join('');
-        
-        // ── CRITERIA — sortable rows ───────────────────────────────
-        document.getElementById('admin-criteria-list').innerHTML = window.criteria.map(c => `
-          <div class="criteria-sort-item flex justify-between items-center p-3 theme-surface rounded-xl border theme-border select-none mb-2 shadow-sm"
-               data-id="${c.firebaseDocId || c.id}">
-            <div class="flex items-center gap-3 flex-1 min-w-0">
-              <div class="drag-handle touch-none cursor-grab active:cursor-grabbing px-2 py-1 -ml-2 opacity-50 hover:opacity-100 flex items-center justify-center flex-shrink-0">
-                  <i class="fas fa-grip-lines text-slate-400 text-lg"></i>
-              </div>
-              <span class="font-bold truncate theme-text">${c.label} <span class="font-normal text-xs opacity-60">(${c.max}pt)</span></span>
-            </div>
-            <div class="flex gap-3 flex-shrink-0 ml-2">
-              <button onclick="window.editCriteria('${c.id}')" class="text-blue-500 hover:text-blue-700 transition-colors"><i class="fas fa-edit"></i></button>
-              <button onclick="window.deleteDocEntry('Criteria', '${c.id}')" class="text-red-500 hover:text-red-700 transition-colors"><i class="fas fa-trash"></i></button>
-            </div>
-          </div>`).join('');
-
-        // ── SYSTEM USERS (RESTORED) ───────────────────────────────
-        document.getElementById('admin-users-list').innerHTML = window.users.filter(u => u.name !== 'Michael Borja' || window.activeUser.name === 'Michael Borja').map(u => `
-          <div class="flex justify-between items-center p-3 theme-surface rounded-xl border theme-border mb-2 shadow-sm">
-            <span class="truncate pr-2 font-bold theme-text">${u.username} <span class="font-normal text-xs opacity-60">(${u.role})</span></span>
-            <div class="flex gap-3 flex-shrink-0 ml-2">
-              <button onclick="window.editUser('${u.id}')" class="text-blue-500 hover:text-blue-700 transition-colors"><i class="fas fa-edit"></i></button>
-              <button onclick="window.deleteDocEntry('Users', '${u.id}')" class="text-red-500 hover:text-red-700 transition-colors"><i class="fas fa-trash"></i></button>
-            </div>
-          </div>`).join(''); 
-      }
-      window.initOverridePanel();
-      window.initSortableLists();
-    };
-
-    window.saveSettings = async function() { try { const btn = document.querySelector('#view-admin .theme-btn'); btn.innerText = "Deploying..."; btn.disabled = true; const updates = { 'app_title': document.getElementById('admin-setting-title').value, 'app_subtitle': document.getElementById('admin-setting-subtitle').value, 'location_text': document.getElementById('admin-setting-location').value, 'theme_color': document.getElementById('admin-setting-theme').value, 'public_voting': document.getElementById('admin-setting-voting').checked, 'voting_deadline': document.getElementById('admin-setting-deadline').value, 'event_type': document.getElementById('admin-setting-event-type').value,'header_silhouette': document.getElementById('admin-setting-silhouette').value }; for (const [key, value] of Object.entries(updates)) { await setDoc(doc(db, "Settings", key), { value: value }); } window.alert("Configuration successfully deployed to all devices."); btn.innerText = "Deploy Configuration"; btn.disabled = false; } catch (err) { window.alert("Error deploying: " + err.message); } };
-
-    // CANDIDATE EDIT LOGIC
-    window.editCandidate = function(id) { const c = window.candidates.find(cand => String(cand.id) === String(id)); if (!c) return; window.editState.candidate = c.id; document.getElementById('new-cand-id').value = c.candidateNumber || c.id; document.getElementById('new-cand-id').readOnly = false; document.getElementById('new-cand-name').value = c.name || ''; document.getElementById('new-cand-loc').value = c.loc || ''; document.getElementById('new-cand-img').value = c.img || ''; document.getElementById('btn-add-cand').innerText = "Update Candidate"; document.getElementById('btn-cancel-cand').classList.remove('hidden'); };
-    window.resetCandForm = function() { window.editState.candidate = null; document.getElementById('new-cand-id').value = ''; document.getElementById('new-cand-id').readOnly = false; document.getElementById('new-cand-name').value = ''; document.getElementById('new-cand-loc').value = ''; document.getElementById('new-cand-img').value = ''; document.getElementById('btn-add-cand').innerText = "Add Candidate"; document.getElementById('btn-cancel-cand').classList.add('hidden'); };
-    
-    window.addCandidate = async function() { 
-      const id = document.getElementById('new-cand-id').value; const name = document.getElementById('new-cand-name').value; const loc = document.getElementById('new-cand-loc').value; const img = document.getElementById('new-cand-img').value; 
-      if(!id || !name) return window.alert("ID and Name are required."); 
-      const payload = { id: parseInt(id), candidateNumber: parseInt(id), name: name, loc: loc, img: img };
-      const firestoreDocId = window.editState.candidate 
-        ? String(window.editState.candidate) 
-        : String(id);
-      await setDoc(doc(db, "Candidates", firestoreDocId), payload, { merge: true }); 
-      
-      // Update local array & UI automatically
-      const idx = window.candidates.findIndex(c => String(c.id) === String(id));
-      if (idx >= 0) window.candidates[idx] = payload; else window.candidates.push(payload);
-      
-      window.alert(window.editState.candidate ? "Candidate updated." : "Candidate added."); 
-      window.resetCandForm(); 
-      window.renderAdminDashboard(); 
-    };
-
-    // CRITERIA EDIT LOGIC
-    window.editCriteria = function(id) { const c = window.criteria.find(crit => crit.id === id); if (!c) return; window.editState.criteria = c.id; document.getElementById('new-crit-id').value = c.id; document.getElementById('new-crit-id').readOnly = true; document.getElementById('new-crit-label').value = c.label || ''; document.getElementById('new-crit-short').value = c.short || ''; document.getElementById('new-crit-max').value = c.max || ''; document.getElementById('btn-add-crit').innerText = "Update Criteria"; document.getElementById('btn-cancel-crit').classList.remove('hidden'); };
-    window.resetCritForm = function() { window.editState.criteria = null; document.getElementById('new-crit-id').value = ''; document.getElementById('new-crit-id').readOnly = false; document.getElementById('new-crit-label').value = ''; document.getElementById('new-crit-short').value = ''; document.getElementById('new-crit-max').value = ''; document.getElementById('btn-add-crit').innerText = "Add Criteria"; document.getElementById('btn-cancel-crit').classList.add('hidden'); };
-    
-    window.addCriteria = async function() { 
-      const id = document.getElementById('new-crit-id').value; const label = document.getElementById('new-crit-label').value; const short = document.getElementById('new-crit-short').value; const max = document.getElementById('new-crit-max').value; 
-      if(!id || !label || !max || !short) return window.alert("All fields are required."); 
-      // Determine the next order so the new criterion lands at the bottom
-      const maxOrder = window.criteria.reduce((m, c) => Math.max(m, c.order ?? -1), -1);
-      const payload = { id: id, label: label, short: short, max: parseFloat(max), order: maxOrder + 1 };
-      await setDoc(doc(db, "Criteria", id), payload, { merge: true }); 
-      
-      // Update local array & UI automatically
-      const idx = window.criteria.findIndex(c => c.id === id);
-      if (idx >= 0) window.criteria[idx] = payload; else window.criteria.push(payload);
-      
-      window.alert(window.editState.criteria ? "Criteria updated." : "Criteria added."); 
-      window.resetCritForm(); 
-      window.renderAdminDashboard(); 
-    };
-
-    // USER EDIT LOGIC
-    window.editUser = function(id) { 
-      const u = window.users.find(usr => usr.id === id); if (!u) return; 
-      window.editState.user = u.id; // Store original document ID
-      document.getElementById('new-user-username').value = u.username || ''; 
-      document.getElementById('new-user-username').readOnly = false; // FIX: Username is now editable
-      document.getElementById('new-user-name').value = u.name || ''; 
-      document.getElementById('new-user-email').value = u.email || ''; 
-      document.getElementById('new-user-pass').value = ''; 
-      document.getElementById('new-user-role').value = u.role || 'Judge'; 
-      document.getElementById('btn-add-user').innerText = "Update User"; 
-      document.getElementById('btn-cancel-user').classList.remove('hidden'); 
-    };
-    window.resetUserForm = function() { window.editState.user = null; document.getElementById('new-user-username').value = ''; document.getElementById('new-user-username').readOnly = false; document.getElementById('new-user-name').value = ''; document.getElementById('new-user-email').value = ''; document.getElementById('new-user-pass').value = ''; document.getElementById('new-user-role').value = 'Judge'; document.getElementById('btn-add-user').innerText = "Add User"; document.getElementById('btn-cancel-user').classList.add('hidden'); };
-    
-    window.addUser = async function() { 
-      const username = document.getElementById('new-user-username').value.trim(); 
-      const name = document.getElementById('new-user-name').value; 
-      const pass = document.getElementById('new-user-pass').value; 
-      const role = document.getElementById('new-user-role').value; 
-      
-      if(!username || !name) return window.alert("Username and Name are required."); 
-      
-      // THE TRICK: Convert username to a dummy email format
-      const safeUsername = username.toLowerCase().replace(/\s+/g, '');
-      const authEmail = `${safeUsername}@eventportal.local`;
-      
-      let payload = { username: safeUsername, name: name, role: role }; 
-      
-      try {
-        if (!window.editState.user) { 
-          // NEW USER: Create in Firebase Auth
-          if (!pass) return window.alert("Password is required for new users."); 
-          document.getElementById('btn-add-user').innerText = "Creating...";
-          
-          const userCredential = await createUserWithEmailAndPassword(secondaryAuth, authEmail, pass);
-          const newUid = userCredential.user.uid;
-          
-          // Save role document using the secure UID as the document ID
-          await setDoc(doc(db, "Users", newUid), payload); 
-          payload.id = newUid;
-        } else {
-          // EDITING EXISTING
-          if (pass) window.alert("Note: To change a password, recreate the account.");
-          await setDoc(doc(db, "Users", window.editState.user), payload, { merge: true }); 
-          payload.id = window.editState.user;
-        }
-        
-        const idx = window.users.findIndex(u => u.id === payload.id);
-        if (idx >= 0) window.users[idx] = payload; else window.users.push(payload);
-        
-        window.alert(window.editState.user ? "User updated." : "Secure user account created."); 
-        window.resetUserForm(); 
-        window.renderAdminDashboard(); 
-      } catch (error) {
-        window.alert("Error adding user: " + error.message);
-      } finally {
-        document.getElementById('btn-add-user').innerText = window.editState.user ? "Update User Role" : "Add User";
-      }
-    };
-    
-    // FIX: Automating Delete list updates
-    window.deleteDocEntry = function(collectionName, docId) { 
-      window.showModal(
-        "Confirm Deletion", 
-        `Are you sure you want to permanently delete <b>${docId}</b> from <b>${collectionName}</b>? This action cannot be undone.`, 
-        "confirm", 
-        async () => { 
-          // This block only executes if the user clicks the "Confirm" button on your custom modal
-          await deleteDoc(doc(db, collectionName, docId)); 
-          
-          if(collectionName === 'Candidates') window.candidates = window.candidates.filter(c => String(c.id) !== String(docId));
-          if(collectionName === 'Criteria') window.criteria = window.criteria.filter(c => c.id !== docId);
-          if(collectionName === 'Users') window.users = window.users.filter(u => u.id !== docId);
-          
-          window.alert(`Deleted successfully.`); 
-          window.renderAdminDashboard(); // Refresh lists immediately
-        }
-      );
-    };
-    window.applyTheme = function(themeName) {
-      const palettes = {
-        red: {
-          baseBg:'#fcfcfc', surface:'rgba(255,255,255,0.92)', textMain:'#111827', textMuted:'#6b7280',
-          primary:'#e11d48', grad:'linear-gradient(135deg,#f43f5e,#be123c)',
-          shadow:'rgba(225,29,72,0.15)', border:'rgba(255,255,255,0.6)',
-          "mesh-1":'rgba(244,63,94,0.15)', "mesh-2":'rgba(225,29,72,0.12)', "mesh-3":'rgba(253,164,175,0.18)',
-          cryStart:'#fecdd3', cryMid:'#ffffff', cryEnd:'#fda4af'
-        },
-        blue: {
-          baseBg:'#f8fafc', surface:'rgba(255,255,255,0.92)', textMain:'#0f172a', textMuted:'#64748b',
-          primary:'#2563eb', grad:'linear-gradient(135deg,#60a5fa,#1d4ed8)',
-          shadow:'rgba(37,99,235,0.15)', border:'rgba(255,255,255,0.6)',
-          "mesh-1":'rgba(96,165,250,0.15)', "mesh-2":'rgba(59,130,246,0.12)', "mesh-3":'rgba(191,219,254,0.18)',
-          cryStart:'#bfdbfe', cryMid:'#ffffff', cryEnd:'#93c5fd'
-        },
-        dark: {
-          baseBg:'#0f172a', surface:'rgba(30,41,59,0.92)', textMain:'#f8fafc', textMuted:'#94a3b8',
-          primary:'#38bdf8', grad:'linear-gradient(135deg,#7dd3fc,#0284c7)',
-          shadow:'rgba(56,189,248,0.15)', border:'rgba(255,255,255,0.1)',
-          "mesh-1":'rgba(56,189,248,0.15)', "mesh-2":'rgba(14,165,233,0.12)', "mesh-3":'rgba(125,211,252,0.18)',
-          cryStart:'#bae6fd', cryMid:'#e0f2fe', cryEnd:'#7dd3fc'
-        },
-        amber: {
-          baseBg:'#fffbeb', surface:'rgba(255,255,255,0.92)', textMain:'#451a03', textMuted:'#78350f',
-          primary:'#d97706', grad:'linear-gradient(135deg,#fbbf24,#b45309)',
-          shadow:'rgba(217,119,6,0.15)', border:'rgba(255,255,255,0.6)',
-          "mesh-1":'rgba(251,191,36,0.15)', "mesh-2":'rgba(217,119,6,0.12)', "mesh-3":'rgba(252,211,77,0.18)',
-          cryStart:'#fde68a', cryMid:'#ffffff', cryEnd:'#fcd34d'
-        },
-        emerald: {
-          baseBg:'#f0fdf4', surface:'rgba(255,255,255,0.92)', textMain:'#064e3b', textMuted:'#047857',
-          primary:'#10b981', grad:'linear-gradient(135deg,#34d399,#059669)',
-          shadow:'rgba(16,185,129,0.15)', border:'rgba(255,255,255,0.6)',
-          "mesh-1":'rgba(52,211,153,0.15)', "mesh-2":'rgba(16,185,129,0.12)', "mesh-3":'rgba(110,231,183,0.18)',
-          cryStart:'#a7f3d0', cryMid:'#ffffff', cryEnd:'#6ee7b7'
-        },
-        indigo: {
-          baseBg:'#eef2ff', surface:'rgba(255,255,255,0.92)', textMain:'#312e81', textMuted:'#4338ca',
-          primary:'#4f46e5', grad:'linear-gradient(135deg,#818cf8,#3730a3)',
-          shadow:'rgba(79,70,229,0.15)', border:'rgba(255,255,255,0.6)',
-          "mesh-1":'rgba(129,140,248,0.15)', "mesh-2":'rgba(79,70,229,0.12)', "mesh-3":'rgba(165,180,252,0.18)',
-          cryStart:'#c7d2fe', cryMid:'#ffffff', cryEnd:'#a5b4fc'
-        },
-        velvet: {
-          baseBg:'#022c22', surface:'rgba(6,78,59,0.92)', textMain:'#ecfdf5', textMuted:'#6ee7b7',
-          primary:'#10b981', grad:'linear-gradient(135deg,#34d399,#047857)',
-          shadow:'rgba(16,185,129,0.15)', border:'rgba(255,255,255,0.1)',
-          "mesh-1":'rgba(52,211,153,0.15)', "mesh-2":'rgba(16,185,129,0.12)', "mesh-3":'rgba(4,120,87,0.15)',
-          cryStart:'#a7f3d0', cryMid:'#d1fae5', cryEnd:'#6ee7b7'
-        },
-        neon_purple: {
-          baseBg:'#0d0a1a', surface:'rgba(30,18,60,0.92)',
-          textMain:'#f0e8ff', textMuted:'#9b7fd4',
-          primary:'#b57bff', grad:'linear-gradient(135deg,#c084fc,#7c3aed)',
-          shadow:'rgba(181,123,255,0.25)', border:'rgba(181,123,255,0.25)',
-          "mesh-1":'rgba(167,139,250,0.18)',
-          "mesh-2":'rgba(124,58,237,0.14)',
-          "mesh-3":'rgba(192,132,252,0.12)',
-          cryStart:'#e9d5ff', cryMid:'#f5f3ff', cryEnd:'#c4b5fd'
-        },
-        cyber_teal: {
-          baseBg:'#020f18', surface:'rgba(4,30,44,0.92)',
-          textMain:'#e0f7ff', textMuted:'#5cb8d4',
-          primary:'#00d4e8', grad:'linear-gradient(135deg,#00e5ff,#0077b6)',
-          shadow:'rgba(0,212,232,0.22)', border:'rgba(0,212,232,0.22)',
-          "mesh-1":'rgba(0,229,255,0.15)',
-          "mesh-2":'rgba(0,119,182,0.13)',
-          "mesh-3":'rgba(0,180,216,0.12)',
-          cryStart:'#b2f0ff', cryMid:'#e0faff', cryEnd:'#7de8f7'
-        },
-        magenta_fury: {
-          baseBg:'#160010', surface:'rgba(38,0,30,0.92)',
-          textMain:'#ffe0f6', textMuted:'#d46ba8',
-          primary:'#f72585', grad:'linear-gradient(135deg,#ff4db8,#b5179e)',
-          shadow:'rgba(247,37,133,0.25)', border:'rgba(247,37,133,0.25)',
-          "mesh-1":'rgba(255,77,184,0.18)',
-          "mesh-2":'rgba(181,23,158,0.15)',
-          "mesh-3":'rgba(247,37,133,0.12)',
-          cryStart:'#ffd6f0', cryMid:'#fff0fb', cryEnd:'#ffb3e0'
-        },
-        neon_green: {
-          baseBg:'#010d05', surface:'rgba(3,24,12,0.92)',
-          textMain:'#dcfce7', textMuted:'#4ade80',
-          primary:'#00ff88', grad:'linear-gradient(135deg,#00ff88,#00b760)',
-          shadow:'rgba(0,255,136,0.2)', border:'rgba(0,255,136,0.2)',
-          "mesh-1":'rgba(0,255,136,0.14)',
-          "mesh-2":'rgba(0,183,96,0.12)',
-          "mesh-3":'rgba(74,222,128,0.1)',
-          cryStart:'#bbffd5', cryMid:'#e0fff0', cryEnd:'#86efb5'
-        },
-        solar_gold: {
-          baseBg:'#100800', surface:'rgba(30,18,0,0.92)',
-          textMain:'#fff8e1', textMuted:'#fbbf24',
-          primary:'#ffcc00', grad:'linear-gradient(135deg,#ffe44d,#ff9500)',
-          shadow:'rgba(255,204,0,0.22)', border:'rgba(255,204,0,0.22)',
-          "mesh-1":'rgba(255,228,77,0.16)',
-          "mesh-2":'rgba(255,149,0,0.14)',
-          "mesh-3":'rgba(255,204,0,0.12)',
-          cryStart:'#fff3b0', cryMid:'#fffde7', cryEnd:'#ffd54f'
-        },
-        ice_crystal: {
-          baseBg:'#020916', surface:'rgba(4,18,40,0.92)',
-          textMain:'#e8f4ff', textMuted:'#60a5fa',
-          primary:'#38b6ff', grad:'linear-gradient(135deg,#60cfff,#0066cc)',
-          shadow:'rgba(56,182,255,0.22)', border:'rgba(56,182,255,0.22)',
-          "mesh-1":'rgba(96,207,255,0.16)',
-          "mesh-2":'rgba(0,102,204,0.13)',
-          "mesh-3":'rgba(56,182,255,0.11)',
-          cryStart:'#bae6fd', cryMid:'#f0f9ff', cryEnd:'#7dd3fc'
-        },
-        galaxy_rose: {
-          baseBg:'#0e050f', surface:'rgba(25,8,30,0.92)',
-          textMain:'#fce7ff', textMuted:'#e879f9',
-          primary:'#d946ef', grad:'linear-gradient(135deg,#e879f9,#a21caf)',
-          shadow:'rgba(217,70,239,0.22)', border:'rgba(217,70,239,0.22)',
-          "mesh-1":'rgba(232,121,249,0.16)',
-          "mesh-2":'rgba(162,28,175,0.14)',
-          "mesh-3":'rgba(217,70,239,0.12)',
-          cryStart:'#f5d0fe', cryMid:'#fdf4ff', cryEnd:'#e879f9'
-        },
-        ember_orange: {
-          baseBg:'#100500', surface:'rgba(28,10,2,0.92)',
-          textMain:'#fff1e6', textMuted:'#fb923c',
-          primary:'#ff6b1a', grad:'linear-gradient(135deg,#ff8533,#cc3300)',
-          shadow:'rgba(255,107,26,0.22)', border:'rgba(255,107,26,0.22)',
-          "mesh-1":'rgba(255,133,51,0.16)',
-          "mesh-2":'rgba(204,51,0,0.14)',
-          "mesh-3":'rgba(255,107,26,0.12)',
-          cryStart:'#fed7aa', cryMid:'#fff7ed', cryEnd:'#fdba74'
-        }
-      };
-    
-      const t = palettes[themeName] || palettes['red'];
-      const r = document.documentElement;
-    
-      // Set all CSS vars — mesh-1/2/3 keys now work correctly
-      for (const [key, value] of Object.entries(t)) {
-        r.style.setProperty(`--t-${key.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}`, value);
-      }
-    
-      // Crystal gradient vars for the header shimmer
-      r.style.setProperty('--t-crystal-grad-start', t.cryStart);
-      r.style.setProperty('--t-crystal-grad-mid',   t.cryMid);
-      r.style.setProperty('--t-crystal-grad-end',    t.cryEnd);
-    };
-
-    // --- PDF EXPORT ENGINE ---
-    window.exportScoresPDF = function() {
-      const btn = document.getElementById('btn-export-pdf');
-      if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generating...'; btn.disabled = true; }
-      document.getElementById('loader-text').innerText = "Building Report...";
-      document.getElementById('loader').classList.remove('hidden');
-    
-      // ── Pull live data ─────────────────────────────────────────
-      const eventName     = window.settings['app_title']    || 'Event';
-      const eventSubtitle = window.settings['app_subtitle'] || '';
-      const eventLocation = window.settings['location_text']|| '';
-      const now           = new Date().toLocaleString('en-PH', { dateStyle: 'long', timeStyle: 'short' });
-    
-      const rawScores  = window.latestScores  || [];
-      const rawVotes   = window.latestVotes   || {};
-      const isVoting   = String(window.settings['public_voting']).toLowerCase() === 'true';
-    
-      // ── Normalize & aggregate (mirrors your existing logic) ────
-      const norm = rawScores.map(s => {
-        const n = {};
-        for (const k in s) n[k.toLowerCase().replace(/\s+/g, '')] = s[k];
-        n.judge     = (s.judge     || '').toString().trim();
-        n.candidate = (s.candidate || '').toString().trim();
-        return n;
-      });
-    
-      const agg = window.candidates.map(c => {
-        const sc    = norm.filter(s => s.candidate.toLowerCase() === c.name.toLowerCase().trim());
-        const count = sc.length;
-        const out   = { name: c.name, count, total: 0 };
-        window.criteria.forEach(cr => {
-          const safe = cr.id.toLowerCase().replace(/\s+/g, '');
-          const avg  = count ? sc.reduce((sum, s) => sum + (parseFloat(s[safe]) || 0), 0) / count : 0;
-          out[cr.id] = avg;
-          out.total += avg;
-        });
-        return out;
-      }).sort((a, b) => b.total - a.total);
-    
-      // ── Color palette (print-safe, no alpha) ──────────────────
-      const PRIMARY  = '#b91c1c';   // deep red — readable on white
-      const ACCENT   = '#1e3a5f';   // navy for headers
-      const GOLD     = '#b45309';
-      const SILVER   = '#475569';
-      const BRONZE   = '#92400e';
-      const STRIPE   = '#f8fafc';
-      const BORDER   = '#e2e8f0';
-      const TEXT_MED = '#374151';
-      const TEXT_DIM = '#6b7280';
-    
-      // ── Medal helper ──────────────────────────────────────────
-      const medal = i =>
-        i === 0 ? `<span style="color:${GOLD};font-weight:900;font-size:1rem;">🥇 1st</span>`
-      : i === 1 ? `<span style="color:${SILVER};font-weight:900;font-size:.95rem;">🥈 2nd</span>`
-      : i === 2 ? `<span style="color:${BRONZE};font-weight:900;font-size:.95rem;">🥉 3rd</span>`
-                : `<span style="color:${TEXT_DIM};font-weight:700;font-size:.9rem;">${i + 1}</span>`;
-    
-      // ── Shared table cell style ───────────────────────────────
-      const th = `style="padding:10px 14px;text-align:center;font-size:11px;font-weight:800;
-                  text-transform:uppercase;letter-spacing:.06em;color:#fff;background:${ACCENT};
-                  border:1px solid ${ACCENT};"`;
-      const thL = `style="padding:10px 14px;text-align:left;font-size:11px;font-weight:800;
-                   text-transform:uppercase;letter-spacing:.06em;color:#fff;background:${ACCENT};
-                   border:1px solid ${ACCENT};"`;
-      const td  = (extra = '') =>
-        `style="padding:9px 14px;text-align:center;font-size:12px;border:1px solid ${BORDER};
-         vertical-align:middle;${extra}"`;
-      const tdL = (extra = '') =>
-        `style="padding:9px 14px;text-align:left;font-size:12px;border:1px solid ${BORDER};
-         vertical-align:middle;${extra}"`;
-    
-      // ── Section heading ───────────────────────────────────────
-      const sectionHead = (title, sub = '') => `
-        <div style="margin:28px 0 10px;border-left:4px solid ${PRIMARY};padding-left:10px;">
-          <div style="font-size:14px;font-weight:900;color:${ACCENT};text-transform:uppercase;
-                      letter-spacing:.08em;">${title}</div>
-          ${sub ? `<div style="font-size:11px;color:${TEXT_DIM};margin-top:2px;">${sub}</div>` : ''}
-        </div>`;
-    
-      // ── People's Choice table ─────────────────────────────────
-      let pcSection = '';
-      if (isVoting) {
-        const pcArr = window.candidates
-          .map(c => ({ name: c.name, votes: rawVotes[c.name] || 0 }))
-          .sort((a, b) => b.votes - a.votes);
-        const pcRows = pcArr.map((c, i) => `
-          <tr style="background:${i % 2 === 0 ? '#fff' : STRIPE};">
-            <td ${td()}>${medal(i)}</td>
-            <td ${tdL('font-weight:700;')}>${c.name}</td>
-            <td ${td(`color:${PRIMARY};font-weight:900;font-size:15px;`)}>${c.votes.toLocaleString()}</td>
-          </tr>`).join('');
-        pcSection = sectionHead("People's Choice", "Public vote count per candidate") + `
-          <table style="width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;">
-            <thead><tr>
-              <th ${th} style="width:80px;">Rank</th>
-              <th ${thL}>Candidate</th>
-              <th ${th} style="width:100px;">Votes</th>
-            </tr></thead>
-            <tbody>${pcRows}</tbody>
-          </table>`;
-      }
-    
-      // ── Aggregated rankings table ─────────────────────────────
-      const maxS = {};
-      window.criteria.forEach(cr => { maxS[cr.id] = Math.max(...agg.map(c => c[cr.id] || 0)); });
-    
-      const critHeaders = window.criteria.map(cr =>
-        `<th ${th} style="width:70px;">${cr.short}<br><span style="font-size:9px;font-weight:600;
-         opacity:.75;">(max ${cr.max})</span></th>`).join('');
-    
-      const aggRows = agg.map((c, i) => {
-        const critCells = window.criteria.map(cr => {
-          const val   = c[cr.id] || 0;
-          const isMax = val > 0 && val === maxS[cr.id];
-          return `<td ${td(isMax
-            ? `color:#065f46;font-weight:900;background:#d1fae5;`
-            : `color:${TEXT_MED};font-weight:600;`)}>${val.toFixed(2)}</td>`;
-        }).join('');
-        return `
-          <tr style="background:${i % 2 === 0 ? '#fff' : STRIPE};">
-            <td ${td()}>${medal(i)}</td>
-            <td ${tdL('font-weight:800;font-size:13px;')}>${c.name}</td>
-            ${critCells}
-            <td ${td(`color:${PRIMARY};font-weight:900;font-size:15px;`)}>${c.total.toFixed(2)}</td>
-          </tr>`;
-      }).join('');
-    
-      const aggSection = sectionHead("Official Rankings", "Aggregated average scores across all judges") + `
-        <table style="width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;">
-          <thead><tr>
-            <th ${th} style="width:80px;">Rank</th>
-            <th ${thL}>Candidate</th>
-            ${critHeaders}
-            <th ${th} style="width:90px;">Total</th>
-          </tr></thead>
-          <tbody>${aggRows}</tbody>
-        </table>`;
-    
-      // ── Judge detail table ────────────────────────────────────
-      const detailCritH = window.criteria.map(cr =>
-        `<th ${th} style="width:65px;">${cr.short}</th>`).join('');
-    
-      const detailRows = norm.map((s, i) => {
-        let rowSum = 0;
-        const cells = window.criteria.map(cr => {
-          const safe = cr.id.toLowerCase().replace(/\s+/g, '');
-          const val  = parseFloat(s[safe]) || 0;
-          rowSum += val;
-          return `<td ${td(val === 0
-            ? 'color:#dc2626;font-weight:700;background:#fee2e2;'
-            : `color:${TEXT_MED};`)}>${val.toFixed(1)}</td>`;
-        }).join('');
-        return `
-          <tr style="background:${i % 2 === 0 ? '#fff' : STRIPE};">
-            <td ${tdL(`color:${PRIMARY};font-weight:700;`)}>${s.judge}</td>
-            <td ${tdL('font-weight:700;')}>${s.candidate}</td>
-            ${cells}
-            <td ${td(`color:${ACCENT};font-weight:900;`)}>${rowSum.toFixed(2)}</td>
-          </tr>`;
-      }).join('');
-    
-      const detailSection = sectionHead("Judge Matrix", "Individual scores submitted by each judge") + `
-        <table style="width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;">
-          <thead><tr>
-            <th ${thL} style="width:130px;">Judge</th>
-            <th ${thL}>Candidate</th>
-            ${detailCritH}
-            <th ${th} style="width:80px;">Total</th>
-          </tr></thead>
-          <tbody>${detailRows}</tbody>
-        </table>`;
-    
-      // ── Criteria legend ───────────────────────────────────────
-      const legendItems = window.criteria.map(cr =>
-        `<div style="display:flex;justify-content:space-between;padding:5px 0;
-                     border-bottom:1px solid ${BORDER};font-size:11px;">
-           <span style="font-weight:700;color:${ACCENT};">${cr.short}</span>
-           <span style="color:${TEXT_MED};flex:1;margin:0 12px;">${cr.label}</span>
-           <span style="color:${PRIMARY};font-weight:700;">Max: ${cr.max} pts</span>
-         </div>`).join('');
-    
-      const legendSection = sectionHead("Scoring Criteria") + `
-        <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;
-                    padding:14px 18px;">${legendItems}</div>`;
-    
-      // ── Signature / attestation block ─────────────────────────
-      const sigLine = `<div style="border-top:2px solid #1e3a5f;margin-top:60px;padding-top:6px;
-                                   text-align:center;font-size:11px;color:${TEXT_DIM};">
-                         Authorized Signature &amp; Date
-                       </div>`;
-      const attestation = `
-        <div style="margin-top:36px;border:1px solid ${BORDER};border-radius:8px;padding:20px 24px;
-                    background:${STRIPE};">
-          <div style="font-size:11px;font-weight:800;color:${ACCENT};text-transform:uppercase;
-                      letter-spacing:.07em;margin-bottom:16px;">Official Attestation</div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;">
-            ${sigLine.replace('Authorized Signature', 'Head Judge')}
-            ${sigLine.replace('Authorized Signature', 'Event Coordinator')}
-            ${sigLine.replace('Authorized Signature', 'Admin Officer')}
-          </div>
-        </div>`;
-    
-      // ── Build the full print document ─────────────────────────
-      // Wrap everything in a string. No need to use document.createElement or append to body!
-      const printHtml = `
-        <div style="width:1050px; background:#fff; color:#111; padding:48px 52px; font-family:'Inter','Helvetica Neue',Arial,sans-serif; font-size:13px; line-height:1.5; box-sizing:border-box;">
-          <div style="border-bottom:3px solid ${PRIMARY};padding-bottom:20px;margin-bottom:4px;
-                      display:flex;justify-content:space-between;align-items:flex-end;">
-            <div>
-              <div style="font-size:24px;font-weight:900;color:${ACCENT};line-height:1.15;
-                          letter-spacing:-.02em;">${eventName}</div>
-              ${eventSubtitle
-                ? `<div style="font-size:14px;font-weight:600;color:${TEXT_MED};margin-top:3px;">
-                     ${eventSubtitle}</div>` : ''}
-              ${eventLocation
-                ? `<div style="font-size:12px;color:${TEXT_DIM};margin-top:4px;">
-                     📍 ${eventLocation}</div>` : ''}
-            </div>
-            <div style="text-align:right;">
-              <div style="font-size:11px;font-weight:700;color:${PRIMARY};text-transform:uppercase;
-                          letter-spacing:.07em;">Official Results</div>
-              <div style="font-size:11px;color:${TEXT_DIM};margin-top:3px;">Generated: ${now}</div>
-              <div style="font-size:10px;color:${TEXT_DIM};margin-top:2px;">
-                ${norm.length} score entries &nbsp;·&nbsp;
-                ${window.candidates.length} candidates &nbsp;·&nbsp;
-                ${window.criteria.length} criteria
-              </div>
-            </div>
-          </div>
-    
-          <div style="display:grid;grid-template-columns:repeat(${window.candidates.length > 0 ? 4 : 3},1fr);
-                      gap:12px;margin:16px 0 4px;">
-            ${agg.length > 0 ? `
-              <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;
-                          padding:12px 14px;border-top:3px solid ${GOLD};">
-                <div style="font-size:10px;font-weight:700;color:${TEXT_DIM};text-transform:uppercase;
-                            letter-spacing:.06em;">🥇 Top Candidate</div>
-                <div style="font-size:15px;font-weight:900;color:${ACCENT};margin-top:4px;
-                            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${agg[0].name}</div>
-                <div style="font-size:12px;color:${GOLD};font-weight:700;">${agg[0].total.toFixed(2)} pts</div>
-              </div>` : ''}
-            <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;padding:12px 14px;
-                        border-top:3px solid ${PRIMARY};">
-              <div style="font-size:10px;font-weight:700;color:${TEXT_DIM};text-transform:uppercase;
-                          letter-spacing:.06em;">Candidates</div>
-              <div style="font-size:22px;font-weight:900;color:${ACCENT};margin-top:4px;">${window.candidates.length}</div>
-            </div>
-            <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;padding:12px 14px;
-                        border-top:3px solid ${ACCENT};">
-              <div style="font-size:10px;font-weight:700;color:${TEXT_DIM};text-transform:uppercase;
-                          letter-spacing:.06em;">Judges</div>
-              <div style="font-size:22px;font-weight:900;color:${ACCENT};margin-top:4px;">
-                ${[...new Set(norm.map(s => s.judge))].length}
-              </div>
-            </div>
-            <div style="background:${STRIPE};border:1px solid ${BORDER};border-radius:8px;padding:12px 14px;
-                        border-top:3px solid #059669;">
-              <div style="font-size:10px;font-weight:700;color:${TEXT_DIM};text-transform:uppercase;
-                          letter-spacing:.06em;">Score Entries</div>
-              <div style="font-size:22px;font-weight:900;color:${ACCENT};margin-top:4px;">${norm.length}</div>
-            </div>
-          </div>
-    
-          ${legendSection}
-          ${pcSection}
-          ${aggSection}
-          ${detailSection}
-          ${attestation}
-    
-          <div style="margin-top:36px;padding-top:12px;border-top:1px solid ${BORDER};
-                      display:flex;justify-content:space-between;font-size:10px;color:${TEXT_DIM};">
-            <span>Generated by Pageant Engine &nbsp;·&nbsp; Authorized Export</span>
-            <span>${now}</span>
-          </div>
-        </div>
-      `;
-    
-      const opt = {
-        margin:      [0.4, 0.4, 0.45, 0.4],
-        filename:    `${eventName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_official_results.pdf`,
-        image:       { type: 'jpeg', quality: 0.98 },
-        // scale: 2 ensures high DPI printing without blur
-        html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
-        jsPDF:       { unit: 'in', format: 'legal', orientation: 'landscape' }
-      };
-    
-      // Pass the raw HTML string directly into the engine
-      html2pdf().set(opt).from(printHtml).save()
-        .then(() => {
-          document.getElementById('loader').classList.add('hidden');
-          if (btn) { btn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i> Export to PDF'; btn.disabled = false; }
-        })
-        .catch(err => {
-          document.getElementById('loader').classList.add('hidden');
-          if (btn) { btn.innerHTML = '<i class="fas fa-file-pdf mr-2"></i> Export to PDF'; btn.disabled = false; }
-          window.alert("PDF Generation Failed: " + err.message);
-        });
-    };
-
-    // --- DATABASE RESET PROTOCOLS ---
-    window.resetJudgeScores = function() {
-      window.showModal(
-        "Reset Judge Matrix", 
-        "Are you <b>absolutely sure</b>? This will permanently delete all official judge scores. This action is irreversible.", 
-        "confirm", 
-        async () => {
-          document.getElementById('loader-text').innerText = "Wiping Scores...";
-          document.getElementById('loader').classList.remove('hidden');
-          
-          try {
-            const querySnapshot = await getDocs(collection(db, "Scores"));
-            const deletePromises = [];
-            
-            querySnapshot.forEach((docSnap) => {
-              deletePromises.push(deleteDoc(doc(db, "Scores", docSnap.id)));
-            });
-
-            await Promise.all(deletePromises);
-            
-            document.getElementById('loader').classList.add('hidden');
-            window.alert("Database cleared. All official judge scores have been reset.");
-            
-          } catch (error) {
-            document.getElementById('loader').classList.add('hidden');
-            window.alert("Reset Failed: " + error.message);
-          }
-        }
-      );
-    };
-
-    // ── SCORE OVERRIDE LOGIC ───────────────────────────────────────
-    
-    // 1. Initialize the dropdowns when Admin loads
-    window.initOverridePanel = function() {
-      const candSelect = document.getElementById('override-candidate');
-      if(!candSelect) return;
-      candSelect.innerHTML = '<option value="">-- Select Candidate --</option>' + 
-          window.candidates.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-      document.getElementById('override-judge').classList.add('hidden');
-      document.getElementById('override-scores-container').classList.add('hidden');
-      document.getElementById('btn-override-save').classList.add('hidden');
-    };
-
-    // 2. When Candidate is selected, find which judges scored them
-    window.loadOverrideJudges = function() {
-      const candName = document.getElementById('override-candidate').value;
-      const judgeSelect = document.getElementById('override-judge');
-      if(!candName) { judgeSelect.classList.add('hidden'); return; }
-      
-      const judges = [...new Set((window.latestScores || []).filter(s => s.candidate === candName).map(s => s.judge))];
-      
-      if(judges.length === 0) {
-          judgeSelect.innerHTML = '<option value="">No scores found yet</option>';
-      } else {
-          judgeSelect.innerHTML = '<option value="">-- Select Judge --</option>' + 
-              judges.map(j => `<option value="${j}">${j}</option>`).join('');
-      }
-      judgeSelect.classList.remove('hidden');
-      document.getElementById('override-scores-container').classList.add('hidden');
-      document.getElementById('btn-override-save').classList.add('hidden');
-    };
-
-    // 3. When Judge is selected, load their specific scores into inputs
-    window.loadOverrideScores = function() {
-      const candName = document.getElementById('override-candidate').value;
-      const judgeName = document.getElementById('override-judge').value;
-      const container = document.getElementById('override-scores-container');
-      const saveBtn = document.getElementById('btn-override-save');
-      
-      if(!judgeName) { container.classList.add('hidden'); saveBtn.classList.add('hidden'); return; }
-      
-      const scoreRecord = window.latestScores.find(s => s.candidate === candName && s.judge === judgeName);
-      if(!scoreRecord) return;
-
-      let html = `<div class="text-[10px] font-bold theme-text-muted mb-2 uppercase text-center">Edit Raw Points</div>`;
-      let hasScoredCriteria = false;
-
-      window.criteria.forEach(crit => {
-          // FIX: Only render the input HTML if the score actually exists in the database
-          if (scoreRecord[crit.id] !== undefined && scoreRecord[crit.id] !== '') {
-              hasScoredCriteria = true;
-              const val = scoreRecord[crit.id];
-              
-              html += `
-                  <div class="flex justify-between items-center theme-bg-soft p-2 rounded border theme-border mb-2">
-                      <span class="text-xs font-bold theme-text">${crit.short} <span class="text-[9px] font-normal theme-text-muted">(Max: ${crit.max})</span></span>
-                      <input type="number" id="override-val-${crit.id}" value="${val}" step="0.5" max="${crit.max}" min="0" class="w-20 p-1 border theme-border rounded theme-text font-black text-center focus:outline-none focus:ring-2 focus:ring-[#b45309] theme-surface">
-                  </div>
-              `;
-          }
-      });
-
-      // If they haven't scored anything, show a message and hide the save button
-      if (!hasScoredCriteria) {
-          html += `<div class="text-xs text-center theme-text-muted py-4 italic">This judge has not scored any criteria for this candidate yet.</div>`;
-          saveBtn.classList.add('hidden');
-      } else {
-          saveBtn.classList.remove('hidden');
-      }
-
-      container.innerHTML = html;
-      container.classList.remove('hidden');
-    };
-
-    // 4. Save the new scores directly to the database
-    window.saveOverrideScore = async function() {
-      const candName = document.getElementById('override-candidate').value;
-      const judgeName = document.getElementById('override-judge').value;
-      if(!candName || !judgeName) return;
-      
-      window.showModal("Force Override", `Are you sure you want to alter <b>${judgeName}'s</b> official score for <b>${candName}</b>?`, "confirm", async () => {
-          document.getElementById('loader-text').innerText = "Overriding...";
-          document.getElementById('loader').classList.remove('hidden');
-          
-          try {
-              // Find the exact document in Firebase
-              const q = query(collection(db, "Scores"), where("candidate", "==", candName), where("judge", "==", judgeName));
-              const querySnapshot = await getDocs(q);
-              
-              if(querySnapshot.empty) throw new Error("Could not locate the original score document.");
-              
-              const docId = querySnapshot.docs[0].id;
-              let updates = { timestamp: Date.now() }; 
-              
-              window.criteria.forEach(crit => {
-                  const input = document.getElementById(`override-val-${crit.id}`);
-                  if(input) updates[crit.id] = parseFloat(input.value) || 0;
-              });
-              
-              // Apply the override
-              await setDoc(doc(db, "Scores", docId), updates, { merge: true });
-              
-              document.getElementById('loader').classList.add('hidden');
-              window.alert("Score successfully overridden! Dashboards have been updated.");
-              window.initOverridePanel();
-              
-          } catch(error) {
-              document.getElementById('loader').classList.add('hidden');
-              window.alert("Override failed: " + error.message);
-          }
-      });
-    };
-
-    window.resetPublicVotes = function() {
-      window.showModal(
-        "Reset Public Votes", 
-        "Are you <b>absolutely sure</b>? This will permanently delete all public votes.", 
-        "confirm", 
-        async () => {
-          document.getElementById('loader-text').innerText = "Wiping Votes...";
-          document.getElementById('loader').classList.remove('hidden');
-          
-          try {
-            const querySnapshot = await getDocs(collection(db, "PublicVotes"));
-            const deletePromises = [];
-            
-            querySnapshot.forEach((docSnap) => {
-              deletePromises.push(deleteDoc(doc(db, "PublicVotes", docSnap.id)));
-            });
-
-            await Promise.all(deletePromises);
-            
-            // NEW: Push a global reset token to Settings to unlock all audience devices instantly
-            await setDoc(doc(db, "Settings", "voting_reset_token"), { value: Date.now() }, { merge: true });
-            
-            document.getElementById('loader').classList.add('hidden');
-            window.alert("Database cleared. All public votes have been reset and devices unlocked.");
-            
-          } catch (error) {
-            document.getElementById('loader').classList.add('hidden');
-            window.alert("Reset Failed: " + error.message);
-          }
-        }
-      );
-    };
-
-    // ── DRAG AND DROP SORTING ENGINE ───────────────────────────────────────
-    window.initSortableLists = function() {
-      const candList = document.getElementById('admin-candidates-list');
-      const critList = document.getElementById('admin-criteria-list');
-    
-      // ── Candidate Sorting ────────────────────────────────────
-      if (candList && window.candidates.length > 1) {
-        // Destroy previous instance if it exists to prevent duplicates
-        if (window._sortableCands) window._sortableCands.destroy();
-    
-        window._sortableCands = new Sortable(candList, {
-          handle: '.drag-handle',
-          animation: 150,
-          ghostClass: 'opacity-40',
-          dragClass: 'shadow-2xl',
-          onEnd: async function() {
-            const items = candList.querySelectorAll('.candidate-sort-item');
-            if (!items.length) return;
-    
-            document.getElementById('loader-text').innerText = "Saving Candidate Order...";
-            document.getElementById('loader').classList.remove('hidden');
-    
-            try {
-              // Use individual setDoc with merge:true so the field is created
-              // even if candidateNumber never existed in old documents
-              const writes = [];
-              items.forEach((item, index) => {
-                const docId = item.getAttribute('data-id');
-                if (!docId) return;
-                const newNum = index + 1;
-                // Update the badge text immediately so the user sees the change
-                const badge = item.querySelector('b');
-                if (badge) badge.innerText = `#${newNum}`;
-                writes.push(
-                  setDoc(doc(db, "Candidates", String(docId)),
-                    { candidateNumber: newNum },
-                    { merge: true }
-                  )
-                );
-              });
-    
-              await Promise.all(writes);
-              document.getElementById('loader').classList.add('hidden');
-            } catch (error) {
-              document.getElementById('loader').classList.add('hidden');
-              window.alert("Failed to save order: " + error.message);
-            }
-          }
-        });
-      }
-    
-      // ── Criteria Sorting ─────────────────────────────────────
-      if (critList && window.criteria.length > 1) {
-        if (window._sortableCrit) window._sortableCrit.destroy();
-    
-        window._sortableCrit = new Sortable(critList, {
-          handle: '.drag-handle',
-          animation: 150,
-          ghostClass: 'opacity-40',
-          dragClass: 'shadow-2xl',
-          onEnd: async function() {
-            const items = critList.querySelectorAll('.criteria-sort-item');
-            if (!items.length) return;
-    
-            document.getElementById('loader-text').innerText = "Saving Criteria Order...";
-            document.getElementById('loader').classList.remove('hidden');
-    
-            try {
-              const writes = [];
-              items.forEach((item, index) => {
-                const docId = item.getAttribute('data-id');
-                if (!docId) return;
-                writes.push(
-                  setDoc(doc(db, "Criteria", String(docId)),
-                    { order: index },
-                    { merge: true }
-                  )
-                );
-              });
-    
-              await Promise.all(writes);
-              document.getElementById('loader').classList.add('hidden');
-            } catch (error) {
-              document.getElementById('loader').classList.add('hidden');
-              window.alert("Failed to save order: " + error.message);
-            }
-          }
-        });
-      }
-    };
-  </script>
+<body>
+<a class="visually-hidden" href="#main">Skip to main content</a>
+<header class="topbar">
+<a aria-label="Michael Borja home" class="brand" href="#home">MB</a>
+<button aria-controls="mobile-nav" aria-expanded="false" class="topbar__toggle">Menu</button>
+</header>
+<nav aria-label="Mobile navigation" class="mobile-nav" id="mobile-nav">
+<a href="#about">About</a>
+<a href="#work">Work</a>
+<a href="#healthcare">Flagship case study</a>
+<a href="#experience">Experience</a>
+<a href="#skills">Skills</a>
+<a href="#upwork">Upwork</a>
+<a href="#contact">Contact</a>
+</nav>
+<div class="shell">
+<aside aria-label="Primary navigation" class="rail">
+<a class="rail__mark" href="#home">Michael<br/>Borja</a>
+<nav class="rail__nav">
+<a href="#home">Home</a>
+<a href="#about">About</a>
+<a href="#work">Work</a>
+<a href="#healthcare">Case study</a>
+<a href="#experience">Experience</a>
+<a href="#skills">Skills</a>
+<a href="#upwork">Upwork</a>
+<a href="#contact">Contact</a>
+</nav>
+<span class="rail__label">Reporting / Data / Automation</span>
+</aside>
+<main id="main">
+<section class="hero section" id="home">
+<div class="section-inner hero__grid">
+<div class="reveal">
+<p class="eyebrow">Operations &amp; Data Analyst — Reporting, Dashboards &amp; Workflow Automation</p>
+<h1>I turn operational data and manual workflows into reports, dashboards, and practical business tools.</h1>
+<p class="lede">More than a decade in BPO and e-commerce operations, with hands-on experience in reporting, data quality, automation, client-facing analytics, and production workflow applications.</p>
+<div class="hero__cta">
+<a class="btn" href="#work">View featured work</a>
+<a class="btn btn--ghost" download="" href="assets/resume/Michael-Borja-Resume-Public.pdf">Download public résumé</a>
+</div>
+<div aria-label="Profile links" class="hero__links">
+<a href="https://www.linkedin.com/in/michael-borja-20417b2a4" rel="noopener" target="_blank">LinkedIn</a>
+<a href="https://github.com/mikeborja-lab" rel="noopener" target="_blank">GitHub</a>
+<a href="https://www.upwork.com/freelancers/~0131b7353fd7c17814" rel="noopener" target="_blank">Upwork</a>
+</div>
+</div>
+<div aria-label="Career highlights" class="ledger reveal">
+<div class="ledger__row">
+<span class="ledger__label">Operations &amp; BPO experience</span>
+<strong class="ledger__value">10+ yrs</strong>
+</div>
+<div class="ledger__row">
+<span class="ledger__label">Upwork client rating</span>
+<strong class="ledger__value">5.0 / 5.0</strong>
+</div>
+<div class="ledger__row">
+<span class="ledger__label">Upwork engagements</span>
+<strong class="ledger__value">3</strong>
+</div>
+<div class="ledger__row ledger__row--note">
+<span class="ledger__label">Client relationships</span>
+<strong class="ledger__value">2 — US &amp; Australia</strong>
+</div>
+</div>
+</div>
+</section>
+<section class="section section--muted" id="about">
+<div class="section-inner split">
+<div>
+<div class="section-head">
+<span class="section-head__index">02</span>
+<h2>About</h2>
+</div>
+<p>I started in customer support and gradually moved toward the systems behind the work: performance reports, data checks, shared trackers, dashboards, quality workflows, and operational tools. That progression took me from frontline support to SME, Data Analyst, Quality Analyst, Team Leader, and senior leadership roles supporting a large e-commerce account.</p>
+<p>At Office Partners 360, supporting Wayfair, I worked across product-data accuracy, quality monitoring, internal tools, KPI reporting, and client-facing operations. In senior leadership, I developed and managed dashboards and performance trackers using Google Sheets and Looker Studio, with hands-on SQL and BigQuery work supporting the reporting process.</p>
+<p>Since 2025, I have applied that same operational perspective across three concurrent part-time Upwork engagements for two clients in the US and Australia. One client relationship evolved from spreadsheet automation into a production healthcare workflow application: I first built the operational solution in Google Sheets, then proposed and developed a Web App frontend so users could work through a controlled interface instead of editing the underlying Google Sheets data store directly. I am continuing to deepen my analytics capability while building on real reporting, operations, and automation experience already used in client environments.</p>
+</div>
+<div class="facts-card">
+<div class="fact-row"><span>Based in</span><strong>Philippines · remote, cross-timezone</strong></div>
+<div class="fact-row"><span>Education</span><strong>BS Computer Engineering</strong></div>
+<div class="fact-row"><span>Core tools</span><strong>Excel · Sheets · Looker Studio · SQL · BigQuery · Apps Script</strong></div>
+<div class="fact-row"><span>Strength</span><strong>Operations context + data + automation</strong></div>
+<div class="fact-row"><span>Current direction</span><strong>Deeper analytics and reporting roles</strong></div>
+</div>
+</div>
+</section>
+<section class="section" id="work">
+<div class="section-inner">
+<div class="section-head">
+<span class="section-head__index">03</span>
+<h2>Featured Work</h2>
+</div>
+<p class="lede section-intro">Real freelance and employment work. Confidential material is anonymized; de-identified/demo screenshots are used where permitted, and any recreated visuals are clearly labeled.</p>
+<div class="work-grid">
+<article class="work-card work-card--featured">
+<div class="featured-project__copy">
+<div class="work-card__topline"><span class="tag">Flagship · Same client · Sheets → Web App</span><span class="work-card__year">2025–2026</span></div>
+<h3>Healthcare Operations &amp; Billing System — Sheets to Web App</h3>
+<p>A continuous engagement for a healthcare client presented publicly as <strong>Demo Healthcare Group</strong>: I first built the operational workflow in Google Sheets, then proposed and developed a production Web App frontend so users could work through a controlled interface instead of editing the underlying data sheet directly.</p>
+<div class="chip-row"><span class="chip">Google Sheets</span><span class="chip">Google Apps Script</span><span class="chip">HTML/CSS/JavaScript</span><span class="chip">Gmail</span><span class="chip">Calendar</span></div>
+<a class="text-link" href="#healthcare">Explore flagship case study →</a>
+</div>
+<button class="featured-project__proof" data-caption="Demo healthcare dashboard — Demo Healthcare Group" data-lightbox="assets/images/healthcare/screenshot-dashboard.png" type="button">
+<span class="proof-label">Production interface / sanitized</span>
+<img alt="Sanitized production dashboard from the healthcare workflow application." src="assets/images/healthcare/screenshot-dashboard.png"/>
+<span class="proof-action">Open screenshot ↗</span>
+</button>
+</article>
+<article class="work-card">
+<div class="work-card__topline"><span class="tag">Dashboards &amp; reporting</span><span class="work-card__year">2022–2025</span></div>
+<h3>Operational Dashboard &amp; KPI Reporting</h3>
+<p>Developed and managed reporting for a distributed e-commerce team, using Google Sheets, Looker Studio, SQL, and BigQuery while serving as a primary client reporting contact.</p>
+<div class="chip-row"><span class="chip">Looker Studio</span><span class="chip">SQL</span><span class="chip">BigQuery</span><span class="chip">Google Sheets</span></div>
+<button class="text-link button-link" data-open-case="cs-dashboard">Read case study →</button>
+</article>
+<article class="work-card">
+<div class="work-card__topline"><span class="tag">Data analysis</span><span class="work-card__year">2025–2026</span></div>
+<h3>Workforce Data &amp; Working-Pattern Analysis</h3>
+<p>Analyzed shift incidences, durations, and employee working patterns in Excel to support budgeting and operational planning.</p>
+<div class="chip-row"><span class="chip">Excel</span><span class="chip">Large datasets</span><span class="chip">Reporting</span></div>
+<button class="text-link button-link" data-open-case="cs-workforce">Read case study →</button>
+</article>
+<article class="work-card">
+<div class="work-card__topline"><span class="tag">E-commerce data</span><span class="work-card__year">2019</span></div>
+<h3>Product &amp; SKU Data Management</h3>
+<p>Resolved client-submitted product-data issues across large Excel workbooks so listings remained accurate, consistent, and sellable online.</p>
+<div class="chip-row"><span class="chip">Excel</span><span class="chip">Jira</span><span class="chip">Data quality</span></div>
+<button class="text-link button-link" data-open-case="cs-ecommerce">Read case study →</button>
+</article>
+<article class="work-card">
+<div class="work-card__topline"><span class="tag">Quality &amp; internal tools</span><span class="work-card__year">2019–2021</span></div>
+<h3>Quality Monitoring &amp; All-In-One Access Portal</h3>
+<p>Built the team’s first centralized access portal and supporting Sheets trackers while leading ticket audits, calibration, coaching, and client quality reporting.</p>
+<div class="chip-row"><span class="chip">Google Sites</span><span class="chip">Google Sheets</span><span class="chip">QA</span></div>
+<button class="text-link button-link" data-open-case="cs-quality">Read case study →</button>
+</article>
+</div>
+</div>
+</section>
+<section class="section flagship section--dark" id="healthcare">
+<div class="section-inner">
+<div class="flagship__head">
+<div>
+<p class="eyebrow eyebrow--light">Flagship case study · Freelance · Upwork</p>
+<h2>Healthcare Operations &amp; Billing System — Sheets to Web App</h2>
+<p class="lede lede--light">One continuous client relationship that began as a Google Sheets operations and reporting system, then evolved into a production Web App frontend after I proposed separating the user experience from the underlying data layer.</p>
+</div>
+<div class="case-meta"><span>May 2025 – Jul 2026</span><span>320 billed hours across 2 contracts</span><span>5.0 / 5.0 on both contracts</span><span>Same healthcare client · 2 phases</span></div>
+</div>
+<div class="privacy-note"><strong>Portfolio privacy note.</strong> This case study represents a real client engagement, but the public presentation uses the fictional name “Demo Healthcare Group.” The Phase 1 spreadsheet image and all Phase 2 Web App images shown in this portfolio use fictional/demo names, record IDs, room numbers, facilities, provider/administrator names, dates, diagnoses, insurance labels, CPT codes, activity entries, counts, and statistics. The screenshots are not taken from or derived from actual patient or production records. Client-identifying branding, credentials, internal URLs, and private system details are excluded from the public portfolio.</div>
+<div aria-label="Project evolution from spreadsheet solution to web application" class="project-evolution"><div class="project-evolution__label">One client relationship · two Upwork contracts</div><article>
+<span class="project-evolution__phase">Phase 1 · May 2025 – Mar 2026</span>
+<strong>Google Sheets operations system</strong>
+<p>Built the client’s first structured operational interface in Google Sheets, combining data entry, updates, search, filters, archive controls, status tracking, billing fields, and reporting logic.</p>
+<small>Upwork title: Excel Spreadsheet Automation Specialist · 212 billed hours · 5.0 / 5.0</small>
+</article><div aria-hidden="true" class="project-evolution__arrow">→</div><article>
+<span class="project-evolution__phase">Phase 2 · Mar 2026 – Jul 2026</span>
+<strong>Production Web App frontend</strong>
+<p>After the spreadsheet workflow had been in use for several months, I proposed a dedicated frontend so users could complete operational work without editing the Google Sheets data store directly.</p>
+<small>Upwork title: Full-Stack Google Workspace Developer · 108 billed hours · 5.0 / 5.0</small>
+</article></div>
+<div class="flagship-story">
+<div class="flagship-role"><span>My role across the engagement</span><strong>Spreadsheet Automation Specialist → Full-Stack Google Workspace Developer</strong><p>I designed the first working solution in Google Sheets, supported the client as the workflow matured, identified the limitations of direct spreadsheet interaction, proposed the Web App architecture, and then built the frontend and supporting Google Workspace integrations.</p></div>
+<div aria-label="Problem, approach, solution and result" class="pasr pasr--flagship"><article><span class="pasr__number">01</span><b>Problem</b><p>The client needed one structured way to manage healthcare operational records, visits, billing activity, provider assignments, scheduling, and reporting. A spreadsheet was the practical starting point, but as the workflow grew, users were still working directly inside the same Google Sheet that also held the operational data.</p></article><article><span class="pasr__number">02</span><b>Approach</b><p>I first turned Google Sheets into a controlled working interface using structured entry fields, dropdowns, validation, conditional formatting, search and filtering controls, update actions, archive functions, and status-driven tracking. After observing the workflow in use, I proposed separating the user interface from the underlying data layer.</p></article><article><span class="pasr__number">03</span><b>Solution</b><p>Phase 1 delivered the Google Sheets operations system that centralized the workflow. Phase 2 evolved that foundation into a role-based Web App for records, visits, billing visibility, weekly matrix reporting, provider workload, calendar workflows, dashboards, and Google Workspace integrations—without requiring users to edit the database sheet directly.</p></article><article><span class="pasr__number">04</span><b>Result</b><p>The client moved through an incremental solution path rather than replacing the working process all at once: spreadsheet system first, dedicated Web App second. The same client relationship continued across two Upwork contracts totaling 320 billed hours, and both contracts received 5.0/5.0 ratings.</p></article></div>
+<aside aria-label="Application workflow summary" class="workflow-card">
+<div class="workflow-card__label">System workflow</div>
+<div class="workflow-step"><span>01</span><strong>Records</strong><small>Search, review, update</small></div>
+<div class="workflow-step"><span>02</span><strong>Visits</strong><small>Status &amp; date logic</small></div>
+<div class="workflow-step"><span>03</span><strong>Billing</strong><small>Status visibility &amp; matrix reporting</small></div>
+<div class="workflow-step"><span>04</span><strong>Providers</strong><small>Workload visibility</small></div>
+<div class="workflow-step"><span>05</span><strong>Calendar</strong><small>Appointments &amp; scheduling</small></div>
+<div class="workflow-step"><span>06</span><strong>Dashboard</strong><small>Operational overview</small></div>
+</aside>
+</div>
+<div class="evidence-head">
+<div>
+<h3>Visual evidence — solution evolution</h3>
+<p>The images below show how the same client solution evolved. <strong>Phase 1</strong> is a sanitized portfolio version of the original Google Sheets operations interface. <strong>Phase 2</strong> uses sanitized production screenshots from the Web App.</p>
+</div>
+</div>
+<div class="evidence-phase">
+<span>Phase 1</span><strong>Google Sheets operations system</strong><p>The first working interface centralized data entry, updates, filters, archive controls, status tracking, billing fields, and reporting directly in Google Sheets.</p>
+</div><div class="evidence-grid evidence-grid--single">
+<figure class="evidence-card evidence-card--wide">
+<button class="evidence-card__image" data-caption="Phase 1 — sanitized Google Sheets operations system" data-lightbox="assets/images/healthcare/screenshot-sheets-phase1.png" type="button">
+<img alt="Sanitized portfolio version of the Google Sheets healthcare operations and reporting system built during Phase 1." class="evidence-shot" src="assets/images/healthcare/screenshot-sheets-phase1.png"/>
+<span>View full size ↗</span>
+</button>
+<figcaption><strong>Google Sheets operations system</strong><span>Phase 1 — the working spreadsheet interface that became the operational foundation for the later Web App.</span></figcaption>
+</figure>
+</div><div class="evidence-phase evidence-phase--phase2">
+<span>Phase 2</span><strong>Production Web App frontend</strong><p>The second phase moved day-to-day interaction into a dedicated frontend while retaining Google Sheets as part of the underlying data workflow. The selected views below show the strongest evidence of the operational, reporting, and security layers of the Web App.</p>
+</div><div class="evidence-grid"><figure class="evidence-card"><button class="evidence-card__image" data-caption="Operational dashboard — sanitized production screenshot" data-lightbox="assets/images/healthcare/screenshot-dashboard.png" type="button"><img alt="Sanitized operational dashboard showing healthcare workflow metrics, billing status, provider workload, recent activity, and anonymized record information." class="evidence-shot" src="assets/images/healthcare/screenshot-dashboard.png"/><span>View full size ↗</span></button><figcaption><strong>Operational dashboard</strong><span>Top-level visibility into visits, pending billing, chart completion, active patients, provider workload, and recent activity.</span></figcaption></figure><figure class="evidence-card"><button class="evidence-card__image" data-caption="Visiting dashboard — sanitized production screenshot" data-lightbox="assets/images/healthcare/screenshot-visits.png" type="button"><img alt="Sanitized visiting dashboard showing visit metrics, filters, anonymized patient rows, status, diagnosis, insurance, and next-visit information." class="evidence-shot" src="assets/images/healthcare/screenshot-visits.png"/><span>View full size ↗</span></button><figcaption><strong>Visiting dashboard</strong><span>Visit-focused workflow with filters for patients, facilities, providers, and diagnoses, plus seen/not-seen status and next-visit monitoring.</span></figcaption></figure><figure class="evidence-card"><button class="evidence-card__image" data-caption="Master List dashboard — sanitized production screenshot" data-lightbox="assets/images/healthcare/screenshot-master-list.png" type="button"><img alt="Sanitized master list dashboard showing anonymized facility census cards, search controls, and latest patient visit information." class="evidence-shot" src="assets/images/healthcare/screenshot-master-list.png"/><span>View full size ↗</span></button><figcaption><strong>Master List dashboard</strong><span>Facility census and a searchable master view for reviewing the latest patient visit information across facilities.</span></figcaption></figure><figure class="evidence-card"><button class="evidence-card__image" data-caption="Facility performance dashboard — sanitized production screenshot" data-lightbox="assets/images/healthcare/screenshot-facility-performance.png" type="button"><img alt="Sanitized facility performance dashboard showing KPIs, monthly visit trends, facility census, and anonymized follow-up items." class="evidence-shot" src="assets/images/healthcare/screenshot-facility-performance.png"/><span>View full size ↗</span></button><figcaption><strong>Facility performance dashboard</strong><span>Analytics view combining operational KPIs, visit trends, facility census, and follow-up items that need attention.</span></figcaption></figure><figure class="evidence-card"><button class="evidence-card__image" data-caption="Billing weekly matrix — sanitized production screenshot" data-lightbox="assets/images/healthcare/screenshot-billing-matrix.png" type="button"><img alt="Sanitized billing weekly matrix screen with billing month and week filters." class="evidence-shot" src="assets/images/healthcare/screenshot-billing-matrix.png"/><span>View full size ↗</span></button><figcaption><strong>Billing weekly matrix</strong><span>Billing-focused reporting for filtering by billing month and week and generating a structured weekly matrix.</span></figcaption></figure><figure class="evidence-card"><button class="evidence-card__image" data-caption="Session timeout — sanitized production screenshot" data-lightbox="assets/images/healthcare/screenshot-session-timeout.png" type="button"><img alt="Sanitized session-expired message shown after user inactivity." class="evidence-shot" src="assets/images/healthcare/screenshot-session-timeout.png"/><span>View full size ↗</span></button><figcaption><strong>Session timeout</strong><span>Security-oriented session expiration after user inactivity.</span></figcaption></figure></div>
+<div class="tech-strip">
+<span>Google Apps Script</span><span>Google Sheets</span><span>Gmail integration</span><span>Google Calendar</span><span>HTML/CSS/JavaScript</span><span>Workflow automation</span>
+</div>
+</div>
+</section>
+<section class="section" id="case-studies">
+<div class="section-inner">
+<div class="section-head"><span class="section-head__index">05</span><h2>Additional Case Studies</h2></div>
+<div class="case-stack">
+<details class="case-study" id="cs-dashboard">
+<summary>
+<div class="case-study__summary-copy">
+<span class="case-study__title">Operational Dashboard &amp; KPI Reporting</span>
+<small>Employment project</small>
+</div>
+<div class="case-study__summary-action" aria-hidden="true">
+<span class="case-study__action-label"><span class="case-study__label-closed">View case study</span><span class="case-study__label-open">Close study</span></span>
+<span class="case-study__toggle"></span>
+</div>
+</summary>
+<div class="case-study__body">
+<div class="case-study__meta"><span>Office Partners 360 · Wayfair account</span><span>Aug 2022 – Apr 2025</span><span>Sheets · Looker Studio · SQL · BigQuery</span></div>
+<div class="pasr">
+<div><b>Problem</b><p>A distributed e-commerce team needed consistent visibility into performance metrics and priorities across client and internal stakeholders.</p></div>
+<div><b>Approach</b><p>Developed and managed dashboards and trackers using Google Sheets and Looker Studio, with hands-on SQL and BigQuery work supporting the reporting process.</p></div>
+<div><b>Solution</b><p>Combined dashboard maintenance with a recurring client-reporting rhythm, weekly reviews, and cross-timezone coordination.</p></div>
+<div><b>Result</b><p>Supported a reliable reporting process for roughly three years while serving as a primary contact for client reporting needs and performance metrics.</p></div>
+</div>
+</div>
+</details>
+<details class="case-study" id="cs-workforce">
+<summary>
+<div class="case-study__summary-copy">
+<span class="case-study__title">Workforce Data &amp; Working-Pattern Analysis</span>
+<small>Freelance client work</small>
+</div>
+<div class="case-study__summary-action" aria-hidden="true">
+<span class="case-study__action-label"><span class="case-study__label-closed">View case study</span><span class="case-study__label-open">Close study</span></span>
+<span class="case-study__toggle"></span>
+</div>
+</summary>
+<div class="case-study__body">
+<div class="case-study__meta"><span>Upwork · concurrent part-time engagement</span><span>Nov 2025 – Jul 2026</span><span>206 hrs · 5.0/5.0</span><span>Excel</span></div>
+<div class="pasr">
+<div><b>Problem</b><p>The client needed dependable analysis of shift incidences, durations, and employee working patterns for budgeting and operational planning.</p></div>
+<div><b>Approach</b><p>Worked directly with large, figure-heavy Excel datasets and applied careful validation to maintain reporting accuracy.</p></div>
+<div><b>Solution</b><p>Translated raw working-pattern data into reports the client could use for budgeting and operational decisions.</p></div>
+<div><b>Result</b><p>Completed 206 billed hours with a 5.0/5.0 client rating and a strong emphasis on accuracy throughout the engagement.</p></div>
+</div>
+</div>
+</details>
+<details class="case-study" id="cs-ecommerce">
+<summary>
+<div class="case-study__summary-copy">
+<span class="case-study__title">E-commerce Product &amp; SKU Data Management</span>
+<small>Employment project</small>
+</div>
+<div class="case-study__summary-action" aria-hidden="true">
+<span class="case-study__action-label"><span class="case-study__label-closed">View case study</span><span class="case-study__label-open">Close study</span></span>
+<span class="case-study__toggle"></span>
+</div>
+</summary>
+<div class="case-study__body">
+<div class="case-study__meta"><span>Office Partners 360 · Wayfair account</span><span>Jan 2019 – Aug 2019</span><span>Excel · Jira</span></div>
+<div class="pasr">
+<div><b>Problem</b><p>Client-submitted tickets identified product and SKU issues that could leave listings inaccurate or unsellable online.</p></div>
+<div><b>Approach</b><p>Reviewed variations, product names, options, details, and highlights against client requirements across large Excel workbooks.</p></div>
+<div><b>Solution</b><p>Investigated discrepancies, applied corrections, and tracked each request through Jira.</p></div>
+<div><b>Result</b><p>Processed high-volume product updates while maintaining accuracy, consistency, and workflow transparency.</p></div>
+</div>
+</div>
+</details>
+<details class="case-study" id="cs-quality">
+<summary>
+<div class="case-study__summary-copy">
+<span class="case-study__title">Quality Monitoring &amp; Internal Access Portal</span>
+<small>Employment project</small>
+</div>
+<div class="case-study__summary-action" aria-hidden="true">
+<span class="case-study__action-label"><span class="case-study__label-closed">View case study</span><span class="case-study__label-open">Close study</span></span>
+<span class="case-study__toggle"></span>
+</div>
+</summary>
+<div class="case-study__body">
+<div class="case-study__meta"><span>Office Partners 360 · Wayfair account</span><span>Aug 2019 – Mar 2021</span><span>Google Sites · Google Sheets</span></div>
+<div class="pasr">
+<div><b>Problem</b><p>The team lacked a centralized place for shared resources and needed a consistent quality-review process.</p></div>
+<div><b>Approach</b><p>Built the team’s first All-In-One Access portal and supporting Sheets trackers, while auditing agent-executed tickets against client standards.</p></div>
+<div><b>Solution</b><p>Combined the portal with calibration meetings, targeted coaching, and recurring client quality feedback.</p></div>
+<div><b>Result</b><p>Established a centralized internal access tool and a consistent quality-reporting rhythm with the client.</p></div>
+</div>
+</div>
+</details>
+</div>
+</div>
+</section>
+<section class="section section--muted" id="experience">
+<div class="section-inner">
+<div class="section-head"><span class="section-head__index">06</span><h2>Experience</h2></div>
+<div class="timeline">
+<article class="timeline__item"><div class="timeline__when">May 2025 – Jul 2026</div><div><span class="timeline__org">Upwork · 3 part-time contracts · 2 clients</span><h3>Freelance — Data Analysis, Spreadsheet Automation &amp; Web Development</h3><p>Worked across two clients in the US and Australia. For the healthcare client presented publicly as Demo Healthcare Group, two consecutive contracts formed one continuous solution journey: I first built a Google Sheets operations system, then proposed and developed the production Web App frontend. A separate Australian contract focused on workforce and working-pattern analysis. All three contracts received 5.0/5.0 ratings.</p></div></article>
+<article class="timeline__item"><div class="timeline__when">Aug 2022 – Apr 2025</div><div><span class="timeline__org">Office Partners 360 · Wayfair account</span><h3>Head Team Lead → Senior Team Lead</h3><p>Developed and managed internal dashboards and performance trackers, supported reporting with SQL/BigQuery, led weekly client/internal reviews, and served as a primary point of contact for reporting needs.</p></div></article>
+<article class="timeline__item"><div class="timeline__when">Mar 2021 – Aug 2022</div><div><span class="timeline__org">Office Partners 360 · Wayfair account</span><h3>Team Leader</h3><p>Managed coaching and client-call calendars, led one-on-one and team coaching, tracked actions from meetings, and coordinated daily with client stakeholders on goals and KPIs.</p></div></article>
+<article class="timeline__item"><div class="timeline__when">Aug 2019 – Mar 2021</div><div><span class="timeline__org">Office Partners 360 · Wayfair account</span><h3>Quality Analyst</h3><p>Built an internal access portal and Sheets trackers, audited tickets, led calibration, coached outliers, and reported quality performance to the client.</p></div></article>
+<article class="timeline__item"><div class="timeline__when">Jan 2019 – Aug 2019</div><div><span class="timeline__org">Office Partners 360 · Wayfair account</span><h3>Data Analyst</h3><p>Corrected high-volume product and SKU data in Excel and resolved client-submitted listing issues tracked through Jira.</p></div></article>
+<article class="timeline__item timeline__item--minor"><div class="timeline__when">Jul 2016 – Jun 2018</div><div><span class="timeline__org">247.ai Philippines</span><h3>Subject Matter Expert</h3><p>Provided operational support, prepared daily team and individual performance reports, coached teammates, and monitored progress against monthly targets.</p></div></article>
+<article class="timeline__item timeline__item--minor"><div class="timeline__when">May 2015 – Jul 2016</div><div><span class="timeline__org">247.ai Philippines</span><h3>Chat Support Representative</h3><p>Handled real-time customer support for billing, purchases, account changes, and product concerns.</p></div></article>
+<article class="timeline__item timeline__item--minor"><div class="timeline__when">Feb 2014 – Apr 2015</div><div><span class="timeline__org">Qualfon Philippines</span><h3>Customer Support Representative</h3><p>Supported telecommunications customers, diagnosed handset issues, and created escalation/support tickets.</p></div></article>
+</div>
+</div>
+</section>
+<section class="section" id="skills">
+<div class="section-inner">
+<div class="section-head"><span class="section-head__index">07</span><h2>Skills</h2></div>
+<div class="skills-grid">
+<article><h3>Data &amp; Reporting</h3><ul><li>Excel: advanced formulas, VLOOKUP, pivot tables</li><li>Google Sheets</li><li>Looker Studio</li><li>SQL</li><li>Google BigQuery</li><li>KPI reporting &amp; trend analysis</li><li>Dashboard creation</li></ul></article>
+<article><h3>Automation &amp; Development</h3><ul><li>Google Apps Script</li><li>Excel macros</li><li>Formula-driven automation</li><li>Conditional-formatting systems</li><li>Workflow automation</li><li>HTML/CSS/JavaScript web apps</li></ul></article>
+<article><h3>Operations</h3><ul><li>Operations reporting</li><li>E-commerce product/SKU management</li><li>Quality monitoring &amp; calibration</li><li>Process documentation</li><li>Client &amp; stakeholder communication</li><li>Team leadership &amp; coaching</li></ul></article>
+<article><h3>Platforms</h3><ul><li>Google Workspace</li><li>Microsoft Office</li><li>Jira</li><li>Slack</li><li>Google Sites</li><li>Canva</li></ul></article>
+</div>
+</div>
+</section>
+<section class="section section--muted" id="upwork">
+<div class="section-inner">
+<div class="section-head"><span class="section-head__index">08</span><h2>Upwork</h2></div>
+<p class="lede section-intro">Three part-time Upwork contracts across two clients in the US and Australia. The two healthcare contracts are presented together below because they were consecutive phases of one client relationship.</p>
+<div class="upwork-grid upwork-grid--two"><article class="upwork-card upwork-card--relationship">
+<div class="rating">5.0 / 5.0</div>
+<div class="hours">320 billed hours across 2 contracts</div>
+<div class="dates">May 2025 – Jul 2026</div>
+<div class="client-phase">Demo Healthcare Group · one continuous relationship</div>
+<h3>Google Sheets Automation → Full-Stack Web App</h3>
+<p><strong>Phase 1:</strong> Excel Spreadsheet Automation Specialist — built the Google Sheets operations and reporting system. <strong>Phase 2:</strong> Full-Stack Google Workspace Developer — proposed and built the Web App frontend so users no longer needed to edit the data sheet directly.</p>
+<a class="text-link" href="#healthcare">View continuous case study →</a>
+</article><article class="upwork-card">
+<div class="rating">5.0 / 5.0</div>
+<div class="hours">206 billed hours</div>
+<div class="dates">Nov 2025 – Jul 2026</div>
+<div class="client-phase">Australian client</div>
+<h3>Excel Data Analyst for Working Patterns</h3>
+<p>Analyzed large workforce datasets to support budgeting and operational decision-making, with a strong emphasis on accuracy in figure-heavy reporting.</p>
+<button class="text-link button-link" data-open-case="cs-workforce">View case study →</button>
+</article></div>
+</div>
+</section>
+<section class="section contact-section" id="contact">
+<div class="section-inner split contact-grid">
+<div>
+<div class="section-head"><span class="section-head__index">09</span><h2>Résumé</h2></div>
+<p>A public-facing résumé is included with the phone number removed. It covers the roles, dates, tools, and freelance experience referenced in this portfolio.</p>
+<a class="btn" download="" href="assets/resume/Michael-Borja-Resume-Public.pdf">Download public résumé</a>
+</div>
+<div>
+<div class="section-head"><span class="section-head__index">10</span><h2>Contact</h2></div>
+<p>Open to operations analyst, reporting analyst, e-commerce data, analytics-support, and reporting/automation opportunities.</p>
+<ul class="contact-list">
+<li><span>Email</span><a href="mailto:ajrob.leachim@gmail.com">ajrob.leachim@gmail.com</a></li>
+<li><span>LinkedIn</span><a href="https://www.linkedin.com/in/michael-borja-20417b2a4" rel="noopener" target="_blank">michael-borja-20417b2a4</a></li>
+<li><span>Upwork</span><a href="https://www.upwork.com/freelancers/~0131b7353fd7c17814" rel="noopener" target="_blank">View profile</a></li>
+<li><span>GitHub</span><a href="https://github.com/mikeborja-lab" rel="noopener" target="_blank">mikeborja-lab</a></li>
+</ul>
+</div>
+</div>
+</section>
+</main>
+</div>
+<footer>
+<span>© <span id="year"></span> Michael Borja</span>
+<span>HTML · CSS · vanilla JavaScript · static-hosting ready</span>
+</footer>
+<dialog aria-label="Screenshot preview" class="lightbox" id="lightbox">
+<div class="lightbox__bar">
+<p id="lightbox-caption"></p>
+<button aria-label="Close screenshot preview" class="lightbox__close" type="button">Close ×</button>
+</div>
+<img alt="Expanded project screenshot" id="lightbox-image"/>
+</dialog>
+<script src="assets/js/main.js"></script>
 </body>
 </html>
